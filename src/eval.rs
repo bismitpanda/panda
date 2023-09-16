@@ -1,24 +1,22 @@
-use ahash::AHasher;
 use hashbrown::{hash_map::Entry, HashMap};
-use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 
 use crate::ast::{
-    AssignAst, Assignable, BlockStatement, CallAst, ClassStatement, Constructable, ConstructorAst,
-    DeclarationAst, DeleteAst, ExpressionStmtAst, ForAst, FunctionAst, IdentifierAst, IfAst,
-    ImportAst, IndexAst, InfixAst, LambdaAst, LiteralAst, MethodAst, PrefixAst, RangeAst,
-    ReturnAst, ScopeAst, WhileAst,
+    AssignAst, Assignable, BlockStatement, CallAst, ClassStatement, Constructable, Constructor,
+    Declaration, Delete, ExpressionStmt, For, Function, Identifier, IfAst, Import, IndexAst,
+    InfixAst, LambdaAst, LiteralAst, Method, PrefixAst, Range, Return, ScopeAst, While,
 };
 use crate::object::builtins::get_builtin_by_name;
-use crate::object::{ClassMember, EvaluatedModuleObject, Iterable, DIR_ENV_VAR_NAME};
+use crate::object::{
+    hash_method_name, ClassMember, EvaluatedModuleObject, Iterable, DIR_ENV_VAR_NAME,
+};
 use crate::{
     ast::{Expression, Literal, Node, Operator, Statement},
     lexer::Lexer,
     object::{
-        allowed_in_array, ArrayObject, BoolObject, BuiltinObject, CharObject, ClassObject,
-        ControlFlowObject, ErrorObject, EvaluatedFunctionObject, FloatObject, HashObject, HashPair,
-        Hashable, IntObject, Object, RangeObject, ReturnValueObject, StrObject, TypeObject, FALSE,
-        NULL, TRUE,
+        allowed_in_array, Array, Bool, Builtin, Char, Class, ControlFlow, Dict, Error,
+        EvaluatedFunction, Float, HashPair, Hashable, Int, Object, Range as RangeObj, ReturnValue,
+        Str, Type, FALSE, NULL_OBJ, TRUE,
     },
     parser::Parser,
 };
@@ -37,7 +35,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
         }
 
         Node::Stmt(stmt) => match stmt {
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 expression,
                 returns,
                 ..
@@ -49,19 +47,19 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 }
             }
 
-            Statement::Return(ReturnAst { return_value, .. }) => {
+            Statement::Return(Return { return_value, .. }) => {
                 let value = eval(Node::Expr(return_value), env)?;
 
                 if is_error(&value) {
                     return Some(value);
                 }
 
-                return Some(Object::ReturnValue(ReturnValueObject {
+                return Some(Object::ReturnValue(ReturnValue {
                     value: Box::new(value),
                 }));
             }
 
-            Statement::Declaration(DeclarationAst {
+            Statement::Declaration(Declaration {
                 name,
                 mutable,
                 value,
@@ -70,7 +68,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 let val = if let Some(value) = value {
                     eval(Node::Expr(value), env)?
                 } else {
-                    NULL
+                    NULL_OBJ
                 };
 
                 if is_error(&val) {
@@ -80,7 +78,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 env.set(name, val, mutable);
             }
 
-            Statement::Function(FunctionAst {
+            Statement::Function(Function {
                 ident,
                 parameters,
                 body,
@@ -88,7 +86,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
             }) => {
                 env.set(
                     ident,
-                    Object::EvaluatedFunction(EvaluatedFunctionObject {
+                    Object::EvaluatedFunction(EvaluatedFunction {
                         parameters,
                         env: env.clone(),
                         body,
@@ -97,7 +95,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 );
             }
 
-            Statement::While(WhileAst {
+            Statement::While(While {
                 condition, body, ..
             }) => {
                 let mut condition_obj = eval(Node::Expr(condition.clone()), env)?;
@@ -110,9 +108,9 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                     if let Some(obj) = eval_loop_block_statement(&body, env) {
                         if is_error(&obj) {
                             return Some(obj);
-                        } else if matches!(obj, Object::ControlFlow(ControlFlowObject::Continue)) {
+                        } else if matches!(obj, Object::ControlFlow(ControlFlow::Continue)) {
                             continue;
-                        } else if matches!(obj, Object::ControlFlow(ControlFlowObject::Break)) {
+                        } else if matches!(obj, Object::ControlFlow(ControlFlow::Break)) {
                             break;
                         }
                     }
@@ -125,7 +123,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 }
             }
 
-            Statement::For(ForAst {
+            Statement::For(For {
                 ident,
                 iterator,
                 body,
@@ -146,7 +144,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
 
             Statement::ClassDecl(ast_node) => env.set_type(ast_node.ident.clone(), ast_node),
 
-            Statement::Import(ImportAst { path, alias, .. }) => {
+            Statement::Import(Import { path, alias, .. }) => {
                 let path_buf = PathBuf::from(&path);
                 let start_dir = std::env::var(DIR_ENV_VAR_NAME).ok()?;
 
@@ -197,20 +195,20 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
             }
 
             Statement::Break(_) => {
-                return Some(Object::ControlFlow(ControlFlowObject::Break));
+                return Some(Object::ControlFlow(ControlFlow::Break));
             }
 
             Statement::Continue(_) => {
-                return Some(Object::ControlFlow(ControlFlowObject::Continue));
+                return Some(Object::ControlFlow(ControlFlow::Continue));
             }
 
-            Statement::Delete(DeleteAst { delete_ident, .. }) => {
-                if let Some(obj) = env.delete(&delete_ident) {
-                    return Some(obj);
+            Statement::Delete(Delete { delete_ident, .. }) => {
+                return if let Some(obj) = env.delete(&delete_ident) {
+                    Some(obj)
                 } else {
-                    return Some(new_error(format!(
-                        "no identifier named `{delete_ident}` found."
-                    )));
+                    Some(new_error(format!(
+                        "no identifier named \"{delete_ident}\" found."
+                    )))
                 }
             }
         },
@@ -258,14 +256,14 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return eval_if_expression(*condition, &consequence, alternative, env);
             }
 
-            Expression::Identifier(IdentifierAst { value, .. }) => {
+            Expression::Identifier(Identifier { value, .. }) => {
                 return Some(eval_identifier(value, env));
             }
 
             Expression::Lambda(LambdaAst {
                 parameters, body, ..
             }) => {
-                return Some(Object::EvaluatedFunction(EvaluatedFunctionObject {
+                return Some(Object::EvaluatedFunction(EvaluatedFunction {
                     parameters,
                     env: env.clone(),
                     body,
@@ -312,7 +310,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return eval_assign_expression(to, &value, env);
             }
 
-            Expression::Method(MethodAst {
+            Expression::Method(Method {
                 left,
                 method,
                 arguments,
@@ -327,11 +325,11 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return Some(eval_method_expression(arguments, left, method, env));
             }
 
-            Expression::Constructor(ConstructorAst { constructable, .. }) => {
+            Expression::Constructor(Constructor { constructable, .. }) => {
                 return eval_constructor_expression(constructable, env);
             }
 
-            Expression::Range(RangeAst {
+            Expression::Range(Range {
                 start: node_start,
                 stop: node_stop,
                 step: node_step,
@@ -361,7 +359,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 }
 
                 let start = match start {
-                    Object::Int(IntObject { value }) => value.to_isize().unwrap(),
+                    Object::Int(Int { value }) => value.to_isize().unwrap(),
                     _ => {
                         return Some(new_error(format!(
                             "cannot use {} as start in range. expected: INT",
@@ -371,7 +369,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 };
 
                 let stop = match stop {
-                    Object::Int(IntObject { value }) => value.to_isize().unwrap(),
+                    Object::Int(Int { value }) => value.to_isize().unwrap(),
                     _ => {
                         return Some(new_error(format!(
                             "cannot use {} as stop in range. expected: INT",
@@ -384,7 +382,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
 
                 let step = if let Some(step) = step {
                     match step {
-                        Object::Int(IntObject { value }) => value.to_isize().unwrap(),
+                        Object::Int(Int { value }) => value.to_isize().unwrap(),
                         _ => {
                             return Some(new_error(format!(
                                 "cannot use {} as step in range. expected: INT",
@@ -398,17 +396,17 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                     1
                 };
 
-                return Some(Object::Range(RangeObject { start, stop, step }));
+                return Some(Object::Range(RangeObj { start, stop, step }));
             }
 
             Expression::Scope(ScopeAst { module, member, .. }) => {
                 let import = match env.get_import(&module) {
                     Some(obj) => obj,
-                    None => return Some(new_error(format!("no module named '{module}' found"))),
+                    None => return Some(new_error(format!("no module named \"{module}\" found"))),
                 };
 
                 match *member {
-                    Expression::Identifier(IdentifierAst { ref value, .. }) => {
+                    Expression::Identifier(Identifier { ref value, .. }) => {
                         let (member, _) = match import.env.get(value.clone()) {
                             Some(member) => member,
                             None => {
@@ -426,7 +424,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                         ..
                     }) => {
                         let member_name =
-                            if let Expression::Identifier(IdentifierAst { value, .. }) =
+                            if let Expression::Identifier(Identifier { value, .. }) =
                                 *function.clone()
                             {
                                 value
@@ -463,13 +461,13 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
             }
 
             Expression::Literal(LiteralAst { lit, .. }) => match lit {
-                Literal::Int { value } => return Some(Object::Int(IntObject { value })),
+                Literal::Int { value } => return Some(Object::Int(Int { value })),
 
-                Literal::Float { value } => return Some(Object::Float(FloatObject { value })),
+                Literal::Float { value } => return Some(Object::Float(Float { value })),
 
                 Literal::Bool { value } => return Some(if value { TRUE } else { FALSE }),
 
-                Literal::Str { value } => return Some(Object::Str(StrObject { value })),
+                Literal::Str { value } => return Some(Object::Str(Str { value })),
 
                 Literal::Array { elements } => {
                     let elements = eval_array_expressions(&elements, env)?;
@@ -477,16 +475,16 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                         return Some(elements[0].clone());
                     }
 
-                    return Some(Object::Array(ArrayObject { elements }));
+                    return Some(Object::Array(Array { elements }));
                 }
 
-                Literal::Char { value } => return Some(Object::Char(CharObject { value })),
+                Literal::Char { value } => return Some(Object::Char(Char { value })),
 
                 Literal::Hash { pairs } => {
                     return eval_hash_literal(&pairs, env);
                 }
 
-                Literal::Null => return Some(NULL),
+                Literal::Null => return Some(NULL_OBJ),
             },
         },
     };
@@ -499,10 +497,9 @@ fn eval_constructor_expression(
     env: &mut Environment,
 ) -> Option<Object> {
     match constructable {
-        Constructable::Identifier(IdentifierAst { ref value, .. }) => {
-            let class = match env.get_type(value) {
-                Some(class) => class,
-                None => return Some(new_error(format!("no class named '{value}' found."))),
+        Constructable::Identifier(Identifier { ref value, .. }) => {
+            let Some(class) = env.get_type(value) else {
+                return Some(new_error(format!("no class named '{value}' found.")));
             };
 
             if !class.initializers.is_empty() {
@@ -518,7 +515,7 @@ fn eval_constructor_expression(
                     ClassStatement::Declaration(decl) => {
                         let obj = decl
                             .value
-                            .map_or(NULL, |val| eval(Node::Expr(val), env).unwrap());
+                            .map_or(NULL_OBJ, |val| eval(Node::Expr(val), env).unwrap());
                         members.insert(
                             hash_method_name(&decl.name),
                             ClassMember::new(decl.name, obj, decl.mutable),
@@ -526,7 +523,7 @@ fn eval_constructor_expression(
                     }
 
                     ClassStatement::Function(func) => {
-                        let obj = Object::EvaluatedFunction(EvaluatedFunctionObject {
+                        let obj = Object::EvaluatedFunction(EvaluatedFunction {
                             parameters: func.parameters,
                             env: env.clone(),
                             body: func.body,
@@ -539,7 +536,7 @@ fn eval_constructor_expression(
                 }
             }
 
-            Some(Object::Class(ClassObject {
+            Some(Object::Class(Class {
                 name: value.clone(),
                 members,
             }))
@@ -550,9 +547,7 @@ fn eval_constructor_expression(
             arguments,
             ..
         }) => {
-            let member = if let Expression::Identifier(IdentifierAst { value, .. }) = *function {
-                value
-            } else {
+            let Expression::Identifier(Identifier { value: member, .. }) = *function else {
                 return Some(new_error(String::new()));
             };
 
@@ -578,7 +573,7 @@ fn eval_constructor_expression(
                     ClassStatement::Declaration(decl) => {
                         let obj = decl
                             .value
-                            .map_or(NULL, |val| eval(Node::Expr(val), env).unwrap());
+                            .map_or(NULL_OBJ, |val| eval(Node::Expr(val), env).unwrap());
                         members.insert(
                             hash_method_name(&decl.name),
                             ClassMember::new(decl.name, obj, decl.mutable),
@@ -586,7 +581,7 @@ fn eval_constructor_expression(
                     }
 
                     ClassStatement::Function(func) => {
-                        let obj = Object::EvaluatedFunction(EvaluatedFunctionObject {
+                        let obj = Object::EvaluatedFunction(EvaluatedFunction {
                             parameters: func.parameters,
                             env: env.clone(),
                             body: func.body,
@@ -606,7 +601,7 @@ fn eval_constructor_expression(
                 );
             }
 
-            Some(Object::Class(ClassObject {
+            Some(Object::Class(Class {
                 name: member,
                 members,
             }))
@@ -623,7 +618,7 @@ fn eval_constructor_expression(
             };
 
             match *member.clone() {
-                Expression::Identifier(IdentifierAst { value, .. }) => {
+                Expression::Identifier(Identifier { value, .. }) => {
                     let class = match module.env.get_type(&value) {
                         Some(class) => class,
                         None => {
@@ -647,7 +642,7 @@ fn eval_constructor_expression(
                             ClassStatement::Declaration(decl) => {
                                 let obj = decl
                                     .value
-                                    .map_or(NULL, |val| eval(Node::Expr(val), env).unwrap());
+                                    .map_or(NULL_OBJ, |val| eval(Node::Expr(val), env).unwrap());
                                 members.insert(
                                     hash_method_name(&decl.name),
                                     ClassMember::new(decl.name, obj, decl.mutable),
@@ -655,7 +650,7 @@ fn eval_constructor_expression(
                             }
 
                             ClassStatement::Function(func) => {
-                                let obj = Object::EvaluatedFunction(EvaluatedFunctionObject {
+                                let obj = Object::EvaluatedFunction(EvaluatedFunction {
                                     parameters: func.parameters,
                                     env: env.clone(),
                                     body: func.body,
@@ -668,7 +663,7 @@ fn eval_constructor_expression(
                         }
                     }
 
-                    Some(Object::Class(ClassObject {
+                    Some(Object::Class(Class {
                         name: value,
                         members,
                     }))
@@ -679,12 +674,12 @@ fn eval_constructor_expression(
                     arguments,
                     ..
                 }) => {
-                    let member =
-                        if let Expression::Identifier(IdentifierAst { value, .. }) = *function {
-                            value
-                        } else {
-                            return Some(new_error(String::new()));
-                        };
+                    let member = if let Expression::Identifier(Identifier { value, .. }) = *function
+                    {
+                        value
+                    } else {
+                        return Some(new_error(String::new()));
+                    };
 
                     let class = match module.env.get_type(&member) {
                         Some(class) => class,
@@ -713,12 +708,12 @@ fn eval_constructor_expression(
                             ClassStatement::Declaration(decl) => {
                                 let obj = decl
                                     .value
-                                    .map_or(NULL, |val| eval(Node::Expr(val), env).unwrap());
+                                    .map_or(NULL_OBJ, |val| eval(Node::Expr(val), env).unwrap());
                                 members.insert(decl.name, (obj, decl.mutable));
                             }
 
                             ClassStatement::Function(func) => {
-                                let obj = Object::EvaluatedFunction(EvaluatedFunctionObject {
+                                let obj = Object::EvaluatedFunction(EvaluatedFunction {
                                     parameters: func.parameters,
                                     env: env.clone(),
                                     body: func.body,
@@ -733,7 +728,7 @@ fn eval_constructor_expression(
                         members.insert(name.clone(), (value.clone(), true));
                     }
 
-                    Some(Object::Class(ClassObject {
+                    Some(Object::Class(Class {
                         name: member,
                         members: HashMap::new(),
                     }))
@@ -799,9 +794,9 @@ fn eval_for_statement(
         if let Some(obj) = eval_loop_block_statement(&body, env) {
             if is_error(&obj) {
                 return Some(obj);
-            } else if matches!(obj, Object::ControlFlow(ControlFlowObject::Continue)) {
+            } else if matches!(obj, Object::ControlFlow(ControlFlow::Continue)) {
                 continue;
-            } else if matches!(obj, Object::ControlFlow(ControlFlowObject::Break)) {
+            } else if matches!(obj, Object::ControlFlow(ControlFlow::Break)) {
                 break;
             }
         }
@@ -818,7 +813,7 @@ fn eval_program(stmts: &[Statement], env: &mut Environment) -> Option<Object> {
 
         if let Some(ref result) = result {
             match result {
-                Object::ReturnValue(ReturnValueObject { value }) => return Some(*value.clone()),
+                Object::ReturnValue(ReturnValue { value }) => return Some(*value.clone()),
                 Object::Error(_) => return Some(result.clone()),
                 _ => {}
             }
@@ -885,8 +880,8 @@ fn eval_bang_operator_expression(right: Object) -> Object {
 
 fn eval_minus_prefix_operator_expression(right: Object) -> Object {
     match right {
-        Object::Int(IntObject { value }) => Object::Int(IntObject { value: -value }),
-        Object::Float(FloatObject { value }) => Object::Float(FloatObject { value: -value }),
+        Object::Int(Int { value }) => Object::Int(Int { value: -value }),
+        Object::Float(Float { value }) => Object::Float(Float { value: -value }),
         _ => new_error(format!("unknown operator: -{}", right.kind())),
     }
 }
@@ -937,31 +932,29 @@ fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Obj
                 right
             }
         }
-        (Object::Int(IntObject { value: left }), Object::Int(IntObject { value: right })) => {
+        (Object::Int(Int { value: left }), Object::Int(Int { value: right })) => {
             eval_integer_infix_expression(operator, left, right)
         }
-        (
-            Object::Float(FloatObject { value: left }),
-            Object::Float(FloatObject { value: right }),
-        ) => eval_float_infix_expression(operator, left, right),
-        (Object::Char(CharObject { value: left }), Object::Char(CharObject { value: right })) => {
+        (Object::Float(Float { value: left }), Object::Float(Float { value: right })) => {
+            eval_float_infix_expression(operator, left, right)
+        }
+        (Object::Char(Char { value: left }), Object::Char(Char { value: right })) => {
             eval_char_infix_expression(operator, left, right)
         }
-        (Object::Bool(BoolObject { value: left }), Object::Bool(BoolObject { value: right })) => {
-            match operator {
-                Operator::Eq => native_bool_boolean_object(left == right),
-                Operator::NotEq => native_bool_boolean_object(left != right),
-                _ => new_error(format!("unknown operator: BOOL {operator} BOOL",)),
-            }
-        }
-        (Object::Type(TypeObject { id: left, .. }), Object::Type(TypeObject { id: right, .. })) => {
+        (Object::Bool(Bool { value: left }), Object::Bool(Bool { value: right })) => match operator
+        {
+            Operator::Eq => native_bool_boolean_object(left == right),
+            Operator::NotEq => native_bool_boolean_object(left != right),
+            _ => new_error(format!("unknown operator: BOOL {operator} BOOL",)),
+        },
+        (Object::Type(Type { id: left, .. }), Object::Type(Type { id: right, .. })) => {
             match operator {
                 Operator::Eq => native_bool_boolean_object(left == right),
                 Operator::NotEq => native_bool_boolean_object(left != right),
                 _ => new_error(format!("unknown operator: TYPE {operator} TYPE",)),
             }
         }
-        (Object::Str(StrObject { value: left }), Object::Str(StrObject { value: right })) => {
+        (Object::Str(Str { value: left }), Object::Str(Str { value: right })) => {
             eval_string_infix_expression(operator, left, right)
         }
         _ if left.kind() != right.kind() => new_error(format!(
@@ -981,31 +974,31 @@ fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Obj
 
 fn eval_integer_infix_expression(operator: Operator, left: BigInt, right: BigInt) -> Object {
     match operator {
-        Operator::Add => Object::Int(IntObject {
+        Operator::Add => Object::Int(Int {
             value: left + right,
         }),
-        Operator::Sub => Object::Int(IntObject {
+        Operator::Sub => Object::Int(Int {
             value: left - right,
         }),
-        Operator::Mul => Object::Int(IntObject {
+        Operator::Mul => Object::Int(Int {
             value: left * right,
         }),
-        Operator::Div => Object::Int(IntObject {
+        Operator::Div => Object::Int(Int {
             value: left / right,
         }),
-        Operator::BitXor => Object::Int(IntObject {
+        Operator::BitXor => Object::Int(Int {
             value: left ^ right,
         }),
-        Operator::BitAnd => Object::Int(IntObject {
+        Operator::BitAnd => Object::Int(Int {
             value: left & right,
         }),
-        Operator::BitOr => Object::Int(IntObject {
+        Operator::BitOr => Object::Int(Int {
             value: left | right,
         }),
-        Operator::Shr => Object::Int(IntObject {
+        Operator::Shr => Object::Int(Int {
             value: left >> right.to_isize().unwrap(),
         }),
-        Operator::Shl => Object::Int(IntObject {
+        Operator::Shl => Object::Int(Int {
             value: left << right.to_isize().unwrap(),
         }),
         Operator::Lt => native_bool_boolean_object(left < right),
@@ -1020,16 +1013,16 @@ fn eval_integer_infix_expression(operator: Operator, left: BigInt, right: BigInt
 
 fn eval_float_infix_expression(operator: Operator, left: f64, right: f64) -> Object {
     match operator {
-        Operator::Add => Object::Float(FloatObject {
+        Operator::Add => Object::Float(Float {
             value: left + right,
         }),
-        Operator::Sub => Object::Float(FloatObject {
+        Operator::Sub => Object::Float(Float {
             value: left - right,
         }),
-        Operator::Mul => Object::Float(FloatObject {
+        Operator::Mul => Object::Float(Float {
             value: left * right,
         }),
-        Operator::Div => Object::Float(FloatObject {
+        Operator::Div => Object::Float(Float {
             value: left / right,
         }),
         Operator::Lt => native_bool_boolean_object(left < right),
@@ -1048,7 +1041,7 @@ fn eval_char_infix_expression(operator: Operator, left: char, right: char) -> Ob
         Operator::Gt => native_bool_boolean_object(left > right),
         Operator::Eq => native_bool_boolean_object(left == right),
         Operator::NotEq => native_bool_boolean_object(left != right),
-        Operator::Add => Object::Str(StrObject {
+        Operator::Add => Object::Str(Str {
             value: format!("{left}{right}"),
         }),
         _ => new_error(format!("unknown operator: CHAR {operator} CHAR",)),
@@ -1060,12 +1053,12 @@ fn eval_string_infix_expression(operator: Operator, left: String, right: String)
         Operator::Add => {
             let mut new_val = left;
             new_val.push_str(&right);
-            Object::Str(StrObject { value: new_val })
+            Object::Str(Str { value: new_val })
         }
-        Operator::Eq => Object::Bool(BoolObject {
+        Operator::Eq => Object::Bool(Bool {
             value: left == right,
         }),
-        Operator::NotEq => Object::Bool(BoolObject {
+        Operator::NotEq => Object::Bool(Bool {
             value: left != right,
         }),
         _ => new_error(format!("unknown operator: STR {operator} STR",)),
@@ -1089,7 +1082,7 @@ fn eval_if_expression(
     } else if let Some(alternative) = alternative {
         eval_block_statement(&alternative, env)
     } else {
-        Some(NULL)
+        Some(NULL_OBJ)
     }
 }
 
@@ -1097,7 +1090,7 @@ fn eval_identifier(value: String, env: &Environment) -> Object {
     if let Some((val, _)) = env.get(value.clone()) {
         val
     } else if let Some(func) = get_builtin_by_name(&value) {
-        Object::Builtin(BuiltinObject {
+        Object::Builtin(Builtin {
             name: value,
             func,
             caller: None,
@@ -1148,7 +1141,7 @@ pub fn apply_function(func: &Object, args: Vec<Object>) -> Object {
     match func {
         Object::EvaluatedFunction(func) => {
             let mut extended_env = extend_function_env(func.clone(), &args);
-            let evaluated = eval_block_statement(&func.body, &mut extended_env).unwrap_or(NULL);
+            let evaluated = eval_block_statement(&func.body, &mut extended_env).unwrap_or(NULL_OBJ);
 
             if is_error(&evaluated) {
                 return evaluated;
@@ -1157,15 +1150,16 @@ pub fn apply_function(func: &Object, args: Vec<Object>) -> Object {
             unwrap_return_value(evaluated)
         }
 
-        Object::Builtin(BuiltinObject { func, caller, .. }) => {
-            func(&(caller.clone().unwrap_or_else(|| Box::new(NULL))), &args)
-        }
+        Object::Builtin(Builtin { func, caller, .. }) => func(
+            &(caller.clone().unwrap_or_else(|| Box::new(NULL_OBJ))),
+            &args,
+        ),
 
         _ => new_error(format!("not a function: {}", func.kind())),
     }
 }
 
-fn extend_function_env(func: EvaluatedFunctionObject, args: &[Object]) -> Environment {
+fn extend_function_env(func: EvaluatedFunction, args: &[Object]) -> Environment {
     let mut env = Environment::new_enclosed(func.env);
 
     for (param_idx, param) in func.parameters.iter().enumerate() {
@@ -1176,7 +1170,7 @@ fn extend_function_env(func: EvaluatedFunctionObject, args: &[Object]) -> Enviro
 }
 
 fn unwrap_return_value(obj: Object) -> Object {
-    if let Object::ReturnValue(ReturnValueObject { value }) = obj {
+    if let Object::ReturnValue(ReturnValue { value }) = obj {
         return *value;
     }
     obj
@@ -1184,20 +1178,19 @@ fn unwrap_return_value(obj: Object) -> Object {
 
 fn eval_index_expression(left: Object, index: Object) -> Object {
     match (left.clone(), index.clone()) {
-        (Object::Array(ArrayObject { elements }), Object::Int(IntObject { value })) => {
+        (Object::Array(Array { elements }), Object::Int(Int { value })) => {
             eval_array_index_expression(elements, value.to_isize().unwrap())
         }
-        (Object::Str(StrObject { value: left }), Object::Int(IntObject { value })) => {
+        (Object::Str(Str { value: left }), Object::Int(Int { value })) => {
             eval_string_index_expression(left, value.to_isize().unwrap())
         }
-        (
-            Object::Array(ArrayObject { elements }),
-            Object::Range(RangeObject { start, stop, step }),
-        ) => eval_array_slice_expression(elements, start, stop, step),
-        (Object::Str(StrObject { value }), Object::Range(RangeObject { start, stop, step })) => {
+        (Object::Array(Array { elements }), Object::Range(RangeObj { start, stop, step })) => {
+            eval_array_slice_expression(elements, start, stop, step)
+        }
+        (Object::Str(Str { value }), Object::Range(RangeObj { start, stop, step })) => {
             eval_string_slice_expression(value, start, stop, step)
         }
-        (Object::Hash(HashObject { pairs }), _) => eval_hash_index_expression(&pairs, &index),
+        (Object::Dict(Dict { pairs }), _) => eval_hash_index_expression(&pairs, &index),
         _ => new_error(format!(
             "index operator not supported: {}[{}]",
             left.kind(),
@@ -1210,7 +1203,7 @@ fn eval_array_index_expression(array: Vec<Object>, idx: isize) -> Object {
     let max = (array.len() - 1) as isize;
 
     if idx < 0 || idx > max {
-        return NULL;
+        return NULL_OBJ;
     }
 
     array[idx as usize].clone()
@@ -1220,10 +1213,10 @@ fn eval_string_index_expression(string: String, idx: isize) -> Object {
     let max = (string.len() - 1) as isize;
 
     if idx < 0 || idx > max {
-        return NULL;
+        return NULL_OBJ;
     }
 
-    Object::Char(CharObject {
+    Object::Char(Char {
         value: string.chars().nth(idx as usize).unwrap(),
     })
 }
@@ -1248,7 +1241,7 @@ fn eval_array_slice_expression(
         i += step;
     }
 
-    Object::Array(ArrayObject { elements })
+    Object::Array(Array { elements })
 }
 
 fn eval_string_slice_expression(string: String, start: isize, stop: isize, step: isize) -> Object {
@@ -1266,7 +1259,7 @@ fn eval_string_slice_expression(string: String, start: isize, stop: isize, step:
         i += step;
     }
 
-    Object::Str(StrObject { value })
+    Object::Str(Str { value })
 }
 
 fn eval_hash_index_expression(pairs: &HashMap<u64, HashPair>, index: &Object) -> Object {
@@ -1276,7 +1269,7 @@ fn eval_hash_index_expression(pairs: &HashMap<u64, HashPair>, index: &Object) ->
 
     pairs
         .get(&hashable.hash_key())
-        .map_or(NULL, |pair| pair.value.clone())
+        .map_or(NULL_OBJ, |pair| pair.value.clone())
 }
 
 fn eval_hash_literal(pairs: &[(Expression, Expression)], env: &mut Environment) -> Option<Object> {
@@ -1308,7 +1301,7 @@ fn eval_hash_literal(pairs: &[(Expression, Expression)], env: &mut Environment) 
         );
     }
 
-    Some(Object::Hash(HashObject { pairs: obj_pairs }))
+    Some(Object::Dict(Dict { pairs: obj_pairs }))
 }
 
 fn eval_assign_expression(
@@ -1323,7 +1316,7 @@ fn eval_assign_expression(
     }
 
     match to {
-        Assignable::Identifier(IdentifierAst { value, .. }) => {
+        Assignable::Identifier(Identifier { value, .. }) => {
             if let Some((_, mutable)) = env.get(value.clone()) {
                 if mutable {
                     env.set(value, val.clone(), mutable);
@@ -1342,7 +1335,7 @@ fn eval_assign_expression(
                 return Some(index);
             }
 
-            if let Expression::Identifier(IdentifierAst {
+            if let Expression::Identifier(Identifier {
                 value: index_ident, ..
             }) = *left
             {
@@ -1350,8 +1343,8 @@ fn eval_assign_expression(
                     if mutable {
                         match (data.clone(), index.clone()) {
                             (
-                                Object::Array(ArrayObject { elements }),
-                                Object::Int(IntObject { value: idx }),
+                                Object::Array(Array { elements }),
+                                Object::Int(Int { value: idx }),
                             ) => {
                                 let mut new_data = elements.clone();
                                 let max = BigInt::from(elements.len() - 1);
@@ -1361,21 +1354,18 @@ fn eval_assign_expression(
 
                                 env.set(
                                     index_ident,
-                                    Object::Array(ArrayObject { elements: new_data }),
+                                    Object::Array(Array { elements: new_data }),
                                     true,
                                 );
                             }
 
-                            (
-                                Object::Str(StrObject { value }),
-                                Object::Int(IntObject { value: idx }),
-                            ) => {
+                            (Object::Str(Str { value }), Object::Int(Int { value: idx })) => {
                                 let mut new_data = value.chars().collect::<Vec<_>>();
-                                if let Object::Char(CharObject { value: ch }) = val {
+                                if let Object::Char(Char { value: ch }) = val {
                                     new_data[idx.to_usize().unwrap()] = ch;
                                     env.set(
                                         index_ident,
-                                        Object::Str(StrObject {
+                                        Object::Str(Str {
                                             value: new_data.iter().collect(),
                                         }),
                                         true,
@@ -1388,7 +1378,7 @@ fn eval_assign_expression(
                                 }
                             }
 
-                            (Object::Hash(HashObject { pairs }), _) => {
+                            (Object::Dict(Dict { pairs }), _) => {
                                 let mut new_data = pairs;
 
                                 let Some(hashable) = Hashable::from_object(&index) else {
@@ -1405,11 +1395,7 @@ fn eval_assign_expression(
                                         value: val.clone(),
                                     },
                                 );
-                                env.set(
-                                    index_ident,
-                                    Object::Hash(HashObject { pairs: new_data }),
-                                    true,
-                                );
+                                env.set(index_ident, Object::Dict(Dict { pairs: new_data }), true);
                             }
 
                             _ => {
@@ -1430,8 +1416,8 @@ fn eval_assign_expression(
             Some(new_error("cannot assign".to_string()))
         }
 
-        Assignable::Method(MethodAst { left, method, .. }) => {
-            if let Expression::Identifier(IdentifierAst { value, .. }) = *left {
+        Assignable::Method(Method { left, method, .. }) => {
+            if let Expression::Identifier(Identifier { value, .. }) = *left {
                 if let Some((data, mutable)) = env.get(value.clone()) {
                     if mutable {
                         let mut new_obj = data.clone();
@@ -1473,13 +1459,13 @@ fn eval_assign_expression(
 fn is_truthy(obj: &Object) -> bool {
     match obj {
         Object::Null => false,
-        Object::Bool(BoolObject { value }) => *value,
-        Object::Int(IntObject { value }) => *value != Zero::zero(),
-        Object::Str(StrObject { value }) => !value.is_empty(),
-        Object::Char(CharObject { value }) => *value != '\0',
-        Object::Array(ArrayObject { elements }) => !elements.is_empty(),
-        Object::Hash(HashObject { pairs }) => !pairs.is_empty(),
-        Object::Float(FloatObject { value }) => !(value.is_nan() || *value == 0f64),
+        Object::Bool(Bool { value }) => *value,
+        Object::Int(Int { value }) => *value != Zero::zero(),
+        Object::Str(Str { value }) => !value.is_empty(),
+        Object::Char(Char { value }) => *value != '\0',
+        Object::Array(Array { elements }) => !elements.is_empty(),
+        Object::Dict(Dict { pairs }) => !pairs.is_empty(),
+        Object::Float(Float { value }) => !(value.is_nan() || *value == 0f64),
         _ => true,
     }
 }
@@ -1493,36 +1479,23 @@ fn native_bool_boolean_object(b: bool) -> Object {
 }
 
 fn new_error(message: String) -> Object {
-    Object::Error(ErrorObject { message })
+    Object::Error(Error { message })
 }
 
 fn is_error(obj: &Object) -> bool {
     matches!(obj, Object::Error { .. })
 }
 
-fn validate_range(range: &RangeObject) -> Result<(), ErrorObject> {
+fn validate_range(range: &RangeObj) -> Result<(), Error> {
     let rev = range.start > range.stop;
 
     match (rev, range.step.is_negative()) {
-        (true, false) => Err(ErrorObject {
+        (true, false) => Err(Error {
             message: "start must be less than stop in range".to_string(),
         }),
-        (false, true) => Err(ErrorObject {
+        (false, true) => Err(Error {
             message: "step cannot be negative when start is less than stop".to_string(),
         }),
         _ => Ok(()),
     }
-}
-
-fn hash_method_name(name: &str) -> u8 {
-    let mut hasher = AHasher::default();
-    name.hash(&mut hasher);
-    let hash = hasher.finish();
-
-    let mut out = 0u8;
-    for i in 0..8 {
-        out ^= (hash >> (i * 8)) as u8
-    }
-
-    out
 }

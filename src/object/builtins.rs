@@ -1,9 +1,9 @@
 use std::process::exit;
 
 use super::{
-    allowed_in_array, intersperse, new_error, AHasher, ArrayObject, BoolObject, BuiltinFunction,
-    CharObject, ClassObject, FloatObject, HashObject, HashPair, Hashable, Hasher, IntObject,
-    Object, Signed, StdHash, StrObject, ToPrimitive, TypeObject, Write, NULL,
+    allowed_in_array, intersperse, new_error, AHasher, Array, Bool, BuiltinFunction, Char, Class,
+    Dict, Float, HashPair, Hashable, Hasher, Int, Object, Signed, StdHash, Str, ToPrimitive, Type,
+    Write, NULL_OBJ,
 };
 
 pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
@@ -26,14 +26,14 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
             ));
         }
 
-        if let Object::Str(StrObject { value }) = &args[0] {
+        if let Object::Str(Str { value }) = &args[0] {
             print!("{}", value);
             std::io::stdout().flush().unwrap();
 
             let mut input = String::new();
             std::io::stdin().read_line(&mut input).unwrap();
 
-            Object::Str(StrObject {
+            Object::Str(Str {
                 value: input.trim().to_string(),
             })
         } else {
@@ -56,7 +56,7 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
         }
 
         print!("{}", str_args.join(" "));
-        NULL
+        NULL_OBJ
     }),
     ("println", |_, args| {
         let mut str_args = Vec::new();
@@ -71,21 +71,21 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
         }
 
         println!("{}", str_args.join(" "));
-        NULL
+        NULL_OBJ
     }),
 ];
 
 fn get_type(obj: &Object) -> Object {
     match obj {
-        Object::Class(ClassObject { name, .. }) => {
+        Object::Class(Class { name, .. }) => {
             let mut hasher = AHasher::default();
             name.hash(&mut hasher);
-            Object::Type(TypeObject {
+            Object::Type(Type {
                 id: hasher.finish() as usize,
                 lit: name.to_string(),
             })
         }
-        _ => Object::Type(TypeObject {
+        _ => Object::Type(Type {
             id: 0,
             lit: String::new(),
         }),
@@ -148,11 +148,11 @@ pub fn get_builtin_by_name(name: &str) -> Option<BuiltinFunction> {
 pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
     &[
         ("bits", |caller, params| {
-            let Object::Int(IntObject { value }) = caller else {
+            let Object::Int(Int { value }) = caller else {
                 return new_error(format!("expected INT, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Str(StrObject {
+                Object::Str(Str {
                     value: format!("{value:b}"),
                 })
             } else {
@@ -160,11 +160,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("abs", |caller, params| {
-            let Object::Int(IntObject { value }) = caller else {
+            let Object::Int(Int { value }) = caller else {
                 return new_error(format!("expected INT, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Int(IntObject { value: value.abs() })
+                Object::Int(Int { value: value.abs() })
             } else {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
@@ -172,11 +172,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
     ],
     &[
         ("bits", |caller, params| {
-            let Object::Float(FloatObject { value }) = caller else {
+            let Object::Float(Float { value }) = caller else {
                 return new_error(format!("expected FLOAT, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Str(StrObject {
+                Object::Str(Str {
                     value: format!("{:b}", value.to_bits()),
                 })
             } else {
@@ -184,11 +184,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("abs", |caller, params| {
-            let Object::Float(FloatObject { value }) = caller else {
+            let Object::Float(Float { value }) = caller else {
                 return new_error(format!("expected FLOAT, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Float(FloatObject { value: value.abs() })
+                Object::Float(Float { value: value.abs() })
             } else {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
@@ -196,11 +196,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
     ],
     &[
         ("len", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Int(IntObject {
+                Object::Int(Int {
                     value: value.len().into(),
                 })
             } else {
@@ -208,14 +208,14 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("contains", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if params.len() != 1 {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))
             } else {
                 match params[0] {
-                    Object::Char(CharObject { value: ch }) => Object::Bool(BoolObject {
+                    Object::Char(Char { value: ch }) => Object::Bool(Bool {
                         value: value.contains(ch),
                     }),
                     _ => new_error(format!(
@@ -226,18 +226,18 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("push", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if params.len() != 1 {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))
             } else {
                 match params[0] {
-                    Object::Char(CharObject { value: ch }) => {
+                    Object::Char(Char { value: ch }) => {
                         let mut new_value = value.clone();
                         new_value.push(ch);
 
-                        Object::Str(StrObject { value: new_value })
+                        Object::Str(Str { value: new_value })
                     }
                     _ => new_error(format!(
                         "STR cannot contain {}, expected: CHAR",
@@ -247,22 +247,22 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("split", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if params.len() != 1 {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))
             } else {
                 match params[0] {
-                    Object::Char(CharObject { value: ch }) => {
+                    Object::Char(Char { value: ch }) => {
                         let mut new_value = value.clone();
                         new_value.push(ch);
 
-                        Object::Array(ArrayObject {
+                        Object::Array(Array {
                             elements: value
                                 .split(|c| c == ch)
                                 .map(|part| {
-                                    Object::Str(StrObject {
+                                    Object::Str(Str {
                                         value: part.to_string(),
                                     })
                                 })
@@ -277,64 +277,64 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("toAsciiLowercase", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Str(StrObject {
+                Object::Str(Str {
                     value: value.chars().map(|ch| ch.to_ascii_lowercase()).collect(),
                 })
             }
         }),
         ("toAsciiUppercase", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Str(StrObject {
+                Object::Str(Str {
                     value: value.chars().map(|ch| ch.to_ascii_uppercase()).collect(),
                 })
             }
         }),
         ("chars", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Array(ArrayObject {
+                Object::Array(Array {
                     elements: value
                         .chars()
-                        .map(|value| Object::Char(CharObject { value }))
+                        .map(|value| Object::Char(Char { value }))
                         .collect(),
                 })
             }
         }),
         ("trimWhitespace", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Str(StrObject {
+                Object::Str(Str {
                     value: value.trim().to_string(),
                 })
             }
         }),
         ("isAscii", |caller, params| {
-            let Object::Str(StrObject { value }) = caller else {
+            let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.chars().all(|ch| ch.is_ascii()),
                 })
             }
@@ -342,218 +342,218 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
     ],
     &[
         ("isAlphabetic", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_alphabetic(),
                 })
             }
         }),
         ("isAlphanumeric", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_alphanumeric(),
                 })
             }
         }),
         ("isAscii", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii(),
                 })
             }
         }),
         ("isAsciiAlphabetic", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_alphabetic(),
                 })
             }
         }),
         ("isAsciiAlphanumeric", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_alphanumeric(),
                 })
             }
         }),
         ("isAsciiControl", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_control(),
                 })
             }
         }),
         ("isAsciiDigit", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_digit(),
                 })
             }
         }),
         ("isDecDigit", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_digit(),
                 })
             }
         }),
         ("isAsciiGraphic", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_graphic(),
                 })
             }
         }),
         ("isAsciiLowercase", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_lowercase(),
                 })
             }
         }),
         ("isAsciiPunctuation", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_punctuation(),
                 })
             }
         }),
         ("isAsciiUppercase", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_uppercase(),
                 })
             }
         }),
         ("isAsciiWhitespace", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_whitespace(),
                 })
             }
         }),
         ("isControl", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_control(),
                 })
             }
         }),
         ("isHexDigit", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_ascii_hexdigit(),
                 })
             }
         }),
         ("isOctDigit", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_digit(8),
                 })
             }
         }),
         ("isBinDigit", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_digit(2),
                 })
             }
         }),
         ("isDigit", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected: CHAR, got: {}", caller.kind()));
             };
             if params.len() != 1 {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))
             } else {
                 match &params[0] {
-                    Object::Int(IntObject { value: i }) => Object::Bool(BoolObject {
+                    Object::Int(Int { value: i }) => Object::Bool(Bool {
                         value: value.is_digit(i.to_u32().unwrap()),
                     }),
                     _ => new_error(format!(
@@ -564,47 +564,47 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("isLowercase", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_lowercase(),
                 })
             }
         }),
         ("isNumeric", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_numeric(),
                 })
             }
         }),
         ("isUppercase", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if !params.is_empty() {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             } else {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_uppercase(),
                 })
             }
         }),
         ("isWhitespace", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: value.is_whitespace(),
                 })
             } else {
@@ -612,11 +612,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("toAsciiLowercase", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Char(CharObject {
+                Object::Char(Char {
                     value: value.to_ascii_lowercase(),
                 })
             } else {
@@ -624,11 +624,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("toAsciiUppercase", |caller, params| {
-            let Object::Char(CharObject { value }) = caller else {
+            let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Char(CharObject {
+                Object::Char(Char {
                     value: value.to_ascii_uppercase(),
                 })
             } else {
@@ -638,11 +638,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
     ],
     &[
         ("len", |caller, params| {
-            let Object::Array(ArrayObject { elements }) = caller else {
+            let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Int(IntObject {
+                Object::Int(Int {
                     value: elements.len().into(),
                 })
             } else {
@@ -650,7 +650,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("contains", |caller, params| {
-            let Object::Array(ArrayObject { elements }) = caller else {
+            let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
             if params.len() == 1 {
@@ -660,28 +660,24 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                     }
 
                     let contains = match (&params[0], elem) {
+                        (Object::Int(Int { value: lhs }), Object::Int(Int { value: rhs })) => {
+                            *lhs == *rhs
+                        }
                         (
-                            Object::Int(IntObject { value: lhs }),
-                            Object::Int(IntObject { value: rhs }),
-                        ) => *lhs == *rhs,
-                        (
-                            Object::Float(FloatObject { value: lhs }),
-                            Object::Float(FloatObject { value: rhs }),
+                            Object::Float(Float { value: lhs }),
+                            Object::Float(Float { value: rhs }),
                         ) => (*lhs - *rhs).abs() < f64::EPSILON,
-                        (
-                            Object::Bool(BoolObject { value: lhs }),
-                            Object::Bool(BoolObject { value: rhs }),
-                        ) => *lhs == *rhs,
-                        (
-                            Object::Char(CharObject { value: lhs }),
-                            Object::Char(CharObject { value: rhs }),
-                        ) => *lhs == *rhs,
-                        (
-                            Object::Str(StrObject { value: lhs }),
-                            Object::Str(StrObject { value: rhs }),
-                        ) => *lhs == *rhs,
+                        (Object::Bool(Bool { value: lhs }), Object::Bool(Bool { value: rhs })) => {
+                            *lhs == *rhs
+                        }
+                        (Object::Char(Char { value: lhs }), Object::Char(Char { value: rhs })) => {
+                            *lhs == *rhs
+                        }
+                        (Object::Str(Str { value: lhs }), Object::Str(Str { value: rhs })) => {
+                            *lhs == *rhs
+                        }
                         (Object::Null, Object::Null) => true,
-                        (Object::Array(_) | Object::Hash(_), _) => {
+                        (Object::Array(_) | Object::Dict(_), _) => {
                             return new_error(format!(
                                 "{} is not comparable. the array may contain same value",
                                 params[0].kind()
@@ -693,17 +689,17 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                     };
 
                     if contains {
-                        return Object::Bool(BoolObject { value: contains });
+                        return Object::Bool(Bool { value: contains });
                     }
                 }
 
-                Object::Bool(BoolObject { value: false })
+                Object::Bool(Bool { value: false })
             } else {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))
             }
         }),
         ("push", |caller, params| {
-            let Object::Array(ArrayObject { elements }) = caller else {
+            let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
             if params.len() == 1 {
@@ -715,7 +711,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
 
                 new_elements.push(params[0].clone());
 
-                Object::Array(ArrayObject {
+                Object::Array(Array {
                     elements: new_elements,
                 })
             } else {
@@ -723,7 +719,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("first", |caller, params| {
-            let Object::Array(ArrayObject { elements }) = caller else {
+            let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
             if params.len() != 1 {
@@ -731,11 +727,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             } else if let Some(first) = elements.first() {
                 first.clone()
             } else {
-                NULL
+                NULL_OBJ
             }
         }),
         ("last", |caller, params| {
-            let Object::Array(ArrayObject { elements }) = caller else {
+            let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
             if params.len() != 1 {
@@ -743,35 +739,35 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             } else if let Some(last) = elements.last() {
                 last.clone()
             } else {
-                NULL
+                NULL_OBJ
             }
         }),
         ("rest", |caller, params| {
-            let Object::Array(ArrayObject { elements }) = caller else {
+            let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
             if params.len() != 1 {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))
             } else if let Some((_, rest)) = elements.split_first() {
-                Object::Array(ArrayObject {
+                Object::Array(Array {
                     elements: rest.to_vec(),
                 })
             } else {
-                NULL
+                NULL_OBJ
             }
         }),
         ("join", |caller, params| {
-            let Object::Array(ArrayObject { elements }) = caller else {
+            let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
             if params.len() == 1 {
                 match &params[0] {
-                    Object::Char(CharObject { value }) => {
+                    Object::Char(Char { value }) => {
                         if elements.iter().all(|elem| matches!(elem, Object::Char(_))) {
-                            Object::Str(StrObject {
+                            Object::Str(Str {
                                 value: intersperse(
                                     elements.iter().map(|elem| match elem {
-                                        Object::Char(CharObject { value }) => *value,
+                                        Object::Char(Char { value }) => *value,
                                         _ => unreachable!(),
                                     }),
                                     *value,
@@ -783,13 +779,13 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                             new_error("to join, the elements must be CHAR".to_string())
                         }
                     }
-                    Object::Str(StrObject { value }) => {
+                    Object::Str(Str { value }) => {
                         if elements.iter().all(|elem| matches!(elem, Object::Str(_))) {
-                            Object::Str(StrObject {
+                            Object::Str(Str {
                                 value: elements
                                     .iter()
                                     .map(|elem| match elem {
-                                        Object::Str(StrObject { value }) => value.as_str(),
+                                        Object::Str(Str { value }) => value.as_str(),
                                         _ => unreachable!(),
                                     })
                                     .collect::<Vec<_>>()
@@ -813,11 +809,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
     ],
     &[
         ("len", |caller, params| {
-            let Object::Hash(HashObject { pairs }) = caller else {
+            let Object::Dict(Dict { pairs }) = caller else {
                 return new_error(format!("expected HASH, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Int(IntObject {
+                Object::Int(Int {
                     value: pairs.len().into(),
                 })
             } else {
@@ -825,11 +821,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("keys", |caller, params| {
-            let Object::Hash(HashObject { pairs }) = caller else {
+            let Object::Dict(Dict { pairs }) = caller else {
                 return new_error(format!("expected HASH, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Array(ArrayObject {
+                Object::Array(Array {
                     elements: pairs.values().map(|pair| pair.key.to_object()).collect(),
                 })
             } else {
@@ -837,11 +833,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("values", |caller, params| {
-            let Object::Hash(HashObject { pairs }) = caller else {
+            let Object::Dict(Dict { pairs }) = caller else {
                 return new_error(format!("expected HASH, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Array(ArrayObject {
+                Object::Array(Array {
                     elements: pairs.values().map(|pair| pair.value.clone()).collect(),
                 })
             } else {
@@ -849,7 +845,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
         ("insert", |caller, params| {
-            let Object::Hash(HashObject { pairs }) = caller else {
+            let Object::Dict(Dict { pairs }) = caller else {
                 return new_error(format!("expected HASH, got {}", caller.kind()));
             };
             if params.len() == 2 {
@@ -864,13 +860,13 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                         value: params[1].clone(),
                     },
                 );
-                Object::Hash(HashObject { pairs })
+                Object::Dict(Dict { pairs })
             } else {
                 new_error(format!("expected 2 parameters. got: {}", params.len()))
             }
         }),
         ("contains", |caller, params| {
-            let Object::Hash(HashObject { pairs }) = caller else {
+            let Object::Dict(Dict { pairs }) = caller else {
                 return new_error(format!("expected HASH, got {}", caller.kind()));
             };
             if params.len() == 1 {
@@ -878,7 +874,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                     return new_error(format!("unusable as hash key: {}", params[0].kind()));
                 };
 
-                Object::Bool(BoolObject {
+                Object::Bool(Bool {
                     value: pairs.contains_key(&hashable.hash_key()),
                 })
             } else {

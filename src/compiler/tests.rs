@@ -1,6 +1,6 @@
 use crate::{
     lexer::Lexer,
-    object::{BoolObject, CharObject, CompiledFunctionObject, FloatObject, IntObject, StrObject},
+    object::{Bool, Char, CompiledFunction, Float, Int, Str},
     parser::Parser,
 };
 use pretty_assertions::assert_eq;
@@ -328,7 +328,7 @@ fn test_while_loop() {
 #[test]
 fn test_global_declaration_expressions() {
     let test_cases = [CompilerTestCase {
-        input: "let one = 1; one = 2;".to_string(),
+        input: "var one = 1; one = 2;".to_string(),
         expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
         expected_instructions: Vec::from([
             make(Opcode::Constant, &[0]),
@@ -828,7 +828,7 @@ fn test_function_calls() {
 fn test_declaration_statement_scopes() {
     let test_cases = [
         CompilerTestCase {
-            input: "let num = 55; fn() { num }".to_string(),
+            input: "var num = 55; fn() { num }".to_string(),
             expected_constants: Vec::from([
                 Box::new(55) as Box<dyn Any>,
                 Box::new(Vec::from([
@@ -980,13 +980,13 @@ fn test_closures() {
         },
         CompilerTestCase {
             input: "
-let global = 55;
+var global = 55;
 fn() {
-    let a = 66;
+    var a = 66;
     fn() {
-        let b = 77;
+        var b = 77;
         fn() {
-            let c = 88;
+            var c = 88;
             global + a + b + c
         }
     }
@@ -1042,7 +1042,7 @@ fn() {
 fn test_recursive_functions() {
     let test_cases = [
         CompilerTestCase {
-            input: "let countDown = fn(x) { countDown(x - 1) };
+            input: "var countDown = fn(x) { countDown(x - 1) };
             countDown(1);"
                 .to_string(),
             expected_constants: Vec::from([
@@ -1068,8 +1068,8 @@ fn test_recursive_functions() {
         },
         CompilerTestCase {
             input: "
-let wrapper = fn() {
-    let countDown = fn(x) { countDown(x - 1); };
+var wrapper = fn() {
+    var countDown = fn(x) { countDown(x - 1); };
     countDown(1);
 };
 wrapper();
@@ -1189,7 +1189,7 @@ fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) -> Result<(), 
 
 fn test_integer_object(expected: isize, actual: &Object) {
     assert_eq!(
-        &Object::Int(IntObject {
+        &Object::Int(Int {
             value: expected.into()
         }),
         actual
@@ -1197,20 +1197,20 @@ fn test_integer_object(expected: isize, actual: &Object) {
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {
-    assert_eq!(&Object::Bool(BoolObject { value: expected }), actual);
+    assert_eq!(&Object::Bool(Bool { value: expected }), actual);
 }
 
 fn test_float_object(expected: f64, actual: &Object) {
-    assert_eq!(&Object::Float(FloatObject { value: expected }), actual)
+    assert_eq!(&Object::Float(Float { value: expected }), actual)
 }
 
 fn test_char_object(expected: char, actual: &Object) {
-    assert_eq!(&Object::Char(CharObject { value: expected }), actual)
+    assert_eq!(&Object::Char(Char { value: expected }), actual)
 }
 
 fn test_string_object(expected: &str, actual: &Object) {
     assert_eq!(
-        &Object::Str(StrObject {
+        &Object::Str(Str {
             value: expected.to_string()
         }),
         actual
@@ -1218,7 +1218,7 @@ fn test_string_object(expected: &str, actual: &Object) {
 }
 
 fn test_function_object(expected: &[Instructions], actual: &Object) {
-    let Object::CompiledFunction(CompiledFunctionObject { instructions, .. }) = actual else {
+    let Object::CompiledFunction(CompiledFunction { instructions, .. }) = actual else {
         panic!("not a function")
     };
 

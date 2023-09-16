@@ -68,6 +68,7 @@ pub enum Opcode {
 
     Scope,
     Constructor,
+    ClassMember,
     Delete,
 
     // Iterator
@@ -125,10 +126,11 @@ impl TryFrom<u8> for Opcode {
             41 => Self::Method,
             42 => Self::Scope,
             43 => Self::Constructor,
-            44 => Self::Delete,
-            45 => Self::Next,
-            46 => Self::Start,
-            47 => Self::JumpEnd,
+            44 => Self::ClassMember,
+            45 => Self::Delete,
+            46 => Self::Next,
+            47 => Self::Start,
+            48 => Self::JumpEnd,
             _ => return Err(format!("{value} is not a valid Opcode.")),
         };
 
@@ -319,6 +321,10 @@ const DEFINITIONS: &[Definition] = &[
     Definition {
         name: "Constructor",
         operand_widths: &[1],
+    },
+    Definition {
+        name: "ClassMember",
+        operand_widths: &[1, 1, 1],
     },
     Definition {
         name: "Delete",

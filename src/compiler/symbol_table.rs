@@ -1,6 +1,6 @@
 use hashbrown::HashMap;
 
-use crate::{ast::ClassDeclAst, object::CompiledModuleObject};
+use crate::{ast::ClassDecl, object::CompiledModuleObject};
 
 #[derive(strum::Display, Clone, Copy, PartialEq, Eq, Debug)]
 #[strum(serialize_all = "UPPERCASE")]
@@ -40,7 +40,7 @@ pub struct SymbolTable {
 
     pub free_symbols: Vec<Symbol>,
 
-    types: Vec<(String, ClassDeclAst)>,
+    types: Vec<(String, ClassDecl)>,
     imports: Vec<(String, CompiledModuleObject)>,
 }
 
@@ -141,7 +141,7 @@ impl SymbolTable {
         }
     }
 
-    pub fn define_type(&mut self, name: String, decl: ClassDeclAst) -> usize {
+    pub fn define_type(&mut self, name: String, decl: ClassDecl) -> usize {
         let pos = self.types.len();
         self.types.push((name, decl));
 
@@ -155,10 +155,10 @@ impl SymbolTable {
         pos
     }
 
-    pub fn resolve_type(&self, name: &str) -> Option<(ClassDeclAst, usize)> {
-        for (pos, (class_name, node)) in self.types.iter().enumerate() {
+    pub fn resolve_type(&self, name: &str) -> Option<ClassDecl> {
+        for (class_name, node) in &self.types {
             if class_name == name {
-                return Some((node.clone(), pos));
+                return Some(node.clone());
             }
         }
 

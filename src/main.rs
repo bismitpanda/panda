@@ -120,7 +120,7 @@ fn main() {
             if let Some(path) = debug_args.out_file {
                 std::fs::write(path, debug_out).expect("Couldn't write output to file.");
             } else {
-                println!("{debug_out}")
+                println!("{debug_out}");
             }
         }
     }

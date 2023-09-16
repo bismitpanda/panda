@@ -7,8 +7,8 @@ use super::*;
 #[test]
 fn test_declaration_statement() {
     let input = "
-let x = 5;
-let foobar = 838383;
+var x = 5;
+var foobar = 838383;
 const y = 10;
 const barbaz = 121212;
 ";
@@ -31,7 +31,7 @@ const barbaz = 121212;
         assert_eq!(statements.len(), 4);
         for (i, &(name, mutable, value, end_pos)) in test_cases.iter().enumerate() {
             assert_eq!(
-                Statement::Declaration(DeclarationAst {
+                Statement::Declaration(Declaration {
                     span: Span {
                         start: Position::new(i + 1, 1),
                         end: Position::new(i + 1, end_pos + value.to_string().len())
@@ -78,7 +78,7 @@ return 838383;
 
         for (i, &(test_case, end)) in test_cases.iter().enumerate() {
             assert_eq!(
-                Statement::Return(ReturnAst {
+                Statement::Return(Return {
                     span: Span {
                         start: Position::new(i + 1, 1),
                         end: Position::new(i + 1, 8 + test_case.to_string().len())
@@ -115,14 +115,14 @@ fn test_function_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::Function(FunctionAst {
+            Statement::Function(Function {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 18)
                 },
                 ident: "add".to_string(),
                 parameters: Vec::new(),
-                body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 12),
                         end: Position::new(0, 17)
@@ -133,7 +133,7 @@ fn test_function_statement() {
                             start: Position::new(0, 12),
                             end: Position::new(0, 17)
                         },
-                        left: Box::new(Expression::Identifier(IdentifierAst {
+                        left: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 12),
                                 end: Position::new(0, 13)
@@ -141,7 +141,7 @@ fn test_function_statement() {
                             value: "x".to_string(),
                         })),
                         operator: Operator::Add,
-                        right: Box::new(Expression::Identifier(IdentifierAst {
+                        right: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 16),
                                 end: Position::new(0, 17)
@@ -172,7 +172,7 @@ fn test_while_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::While(WhileAst {
+            Statement::While(While {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 27)
@@ -182,7 +182,7 @@ fn test_while_statement() {
                         start: Position::new(0, 8),
                         end: Position::new(0, 13)
                     },
-                    left: Box::new(Expression::Identifier(IdentifierAst {
+                    left: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 8),
                             end: Position::new(0, 9)
@@ -190,7 +190,7 @@ fn test_while_statement() {
                         value: "i".to_string(),
                     })),
                     operator: Operator::Lt,
-                    right: Box::new(Expression::Identifier(IdentifierAst {
+                    right: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 12),
                             end: Position::new(0, 13)
@@ -198,7 +198,7 @@ fn test_while_statement() {
                         value: "n".to_string(),
                     })),
                 }),
-                body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 17),
                         end: Position::new(0, 26)
@@ -209,7 +209,7 @@ fn test_while_statement() {
                             start: Position::new(0, 17),
                             end: Position::new(0, 26)
                         },
-                        to: Assignable::Identifier(IdentifierAst {
+                        to: Assignable::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 17),
                                 end: Position::new(0, 18)
@@ -221,7 +221,7 @@ fn test_while_statement() {
                                 start: Position::new(0, 21),
                                 end: Position::new(0, 26)
                             },
-                            left: Box::new(Expression::Identifier(IdentifierAst {
+                            left: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 21),
                                     end: Position::new(0, 22)
@@ -261,7 +261,7 @@ fn test_while_with_break_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::While(WhileAst {
+            Statement::While(While {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 39)
@@ -271,7 +271,7 @@ fn test_while_with_break_statement() {
                         start: Position::new(0, 8),
                         end: Position::new(0, 13)
                     },
-                    left: Box::new(Expression::Identifier(IdentifierAst {
+                    left: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 8),
                             end: Position::new(0, 9)
@@ -279,7 +279,7 @@ fn test_while_with_break_statement() {
                         value: "i".to_string(),
                     })),
                     operator: Operator::Lt,
-                    right: Box::new(Expression::Identifier(IdentifierAst {
+                    right: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 12),
                             end: Position::new(0, 13)
@@ -287,7 +287,7 @@ fn test_while_with_break_statement() {
                         value: "n".to_string(),
                     })),
                 }),
-                body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 17),
                         end: Position::new(0, 38)
@@ -303,7 +303,7 @@ fn test_while_with_break_statement() {
                                 start: Position::new(0, 21),
                                 end: Position::new(0, 27)
                             },
-                            left: Box::new(Expression::Identifier(IdentifierAst {
+                            left: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 21),
                                     end: Position::new(0, 22)
@@ -348,7 +348,7 @@ fn test_while_with_continue_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::While(WhileAst {
+            Statement::While(While {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 42)
@@ -358,7 +358,7 @@ fn test_while_with_continue_statement() {
                         start: Position::new(0, 8),
                         end: Position::new(0, 13)
                     },
-                    left: Box::new(Expression::Identifier(IdentifierAst {
+                    left: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 8),
                             end: Position::new(0, 9)
@@ -366,7 +366,7 @@ fn test_while_with_continue_statement() {
                         value: "i".to_string(),
                     })),
                     operator: Operator::Lt,
-                    right: Box::new(Expression::Identifier(IdentifierAst {
+                    right: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 12),
                             end: Position::new(0, 13)
@@ -374,7 +374,7 @@ fn test_while_with_continue_statement() {
                         value: "n".to_string(),
                     })),
                 }),
-                body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 17),
                         end: Position::new(0, 41)
@@ -390,7 +390,7 @@ fn test_while_with_continue_statement() {
                                 start: Position::new(0, 21),
                                 end: Position::new(0, 27)
                             },
-                            left: Box::new(Expression::Identifier(IdentifierAst {
+                            left: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 21),
                                     end: Position::new(0, 22)
@@ -435,20 +435,20 @@ fn test_for_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::For(ForAst {
+            Statement::For(For {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 28)
                 },
                 ident: "i".to_string(),
-                iterator: Expression::Identifier(IdentifierAst {
+                iterator: Expression::Identifier(Identifier {
                     span: Span {
                         start: Position::new(0, 11),
                         end: Position::new(0, 14)
                     },
                     value: "arr".to_string(),
                 }),
-                body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 18),
                         end: Position::new(0, 27)
@@ -459,7 +459,7 @@ fn test_for_statement() {
                             start: Position::new(0, 18),
                             end: Position::new(0, 27)
                         },
-                        to: Assignable::Identifier(IdentifierAst {
+                        to: Assignable::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 18),
                                 end: Position::new(0, 19)
@@ -471,7 +471,7 @@ fn test_for_statement() {
                                 start: Position::new(0, 22),
                                 end: Position::new(0, 27)
                             },
-                            left: Box::new(Expression::Identifier(IdentifierAst {
+                            left: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 22),
                                     end: Position::new(0, 23)
@@ -511,20 +511,20 @@ fn test_for_with_break_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::For(ForAst {
+            Statement::For(For {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 41)
                 },
                 ident: "i".to_string(),
-                iterator: Expression::Identifier(IdentifierAst {
+                iterator: Expression::Identifier(Identifier {
                     span: Span {
                         start: Position::new(0, 11),
                         end: Position::new(0, 14)
                     },
                     value: "arr".to_string(),
                 }),
-                body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 18),
                         end: Position::new(0, 39)
@@ -540,7 +540,7 @@ fn test_for_with_break_statement() {
                                 start: Position::new(0, 22),
                                 end: Position::new(0, 28)
                             },
-                            left: Box::new(Expression::Identifier(IdentifierAst {
+                            left: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 22),
                                     end: Position::new(0, 23)
@@ -585,20 +585,20 @@ fn test_for_with_continue_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::For(ForAst {
+            Statement::For(For {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 44)
                 },
                 ident: "i".to_string(),
-                iterator: Expression::Identifier(IdentifierAst {
+                iterator: Expression::Identifier(Identifier {
                     span: Span {
                         start: Position::new(0, 11),
                         end: Position::new(0, 14)
                     },
                     value: "arr".to_string(),
                 }),
-                body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 18),
                         end: Position::new(0, 42)
@@ -614,7 +614,7 @@ fn test_for_with_continue_statement() {
                                 start: Position::new(0, 22),
                                 end: Position::new(0, 28)
                             },
-                            left: Box::new(Expression::Identifier(IdentifierAst {
+                            left: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 22),
                                     end: Position::new(0, 23)
@@ -647,7 +647,7 @@ fn test_for_with_continue_statement() {
 
 #[test]
 fn test_class_statement() {
-    let input = "class MyClass(i1, i2) { let a = 32; }";
+    let input = "class MyClass(i1, i2) { var a = 32; }";
 
     let mut l = Lexer::new(input.into());
     let mut p = Parser::new(&mut l);
@@ -659,14 +659,14 @@ fn test_class_statement() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ClassDecl(ClassDeclAst {
+            Statement::ClassDecl(ClassDecl {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 37)
                 },
                 ident: "MyClass".to_string(),
                 initializers: Vec::from(["i1".to_string(), "i2".to_string()]),
-                body: Vec::from([ClassStatement::Declaration(DeclarationAst {
+                body: Vec::from([ClassStatement::Declaration(Declaration {
                     span: Span {
                         start: Position::new(0, 25),
                         end: Position::new(0, 35)
@@ -699,7 +699,7 @@ fn test_import_statement() {
     let test_cases = [
         ImportStatementTestCase {
             input: r#"import "fs""#.to_string(),
-            expected: Statement::Import(ImportAst {
+            expected: Statement::Import(Import {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 10),
@@ -710,7 +710,7 @@ fn test_import_statement() {
         },
         ImportStatementTestCase {
             input: r#"import "std/datetime/duration""#.to_string(),
-            expected: Statement::Import(ImportAst {
+            expected: Statement::Import(Import {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 29),
@@ -721,7 +721,7 @@ fn test_import_statement() {
         },
         ImportStatementTestCase {
             input: r#"import "std/datetime/duration" as duration"#.to_string(),
-            expected: Statement::Import(ImportAst {
+            expected: Statement::Import(Import {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 43),
@@ -763,13 +763,13 @@ fn test_identifier_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 11)
                 },
                 returns: true,
-                expression: Expression::Identifier(IdentifierAst {
+                expression: Expression::Identifier(Identifier {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 11)
@@ -798,7 +798,7 @@ fn test_boolean_literal() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 5)
@@ -833,7 +833,7 @@ fn test_integer_literal() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 2)
@@ -868,7 +868,7 @@ fn test_float_literal() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 6)
@@ -899,7 +899,7 @@ fn test_parsing_prefix_expressions() {
     let test_cases = [
         PrefixExpressionsTestCase {
             input: "!5".to_string(),
-            expected: Statement::ExpressionStmt(ExpressionStmtAst {
+            expected: Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 3),
@@ -923,7 +923,7 @@ fn test_parsing_prefix_expressions() {
         },
         PrefixExpressionsTestCase {
             input: "-15".to_string(),
-            expected: Statement::ExpressionStmt(ExpressionStmtAst {
+            expected: Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 4),
@@ -1036,7 +1036,7 @@ fn test_parsing_infix_expressions() {
             let end_pos = test_case.operator.to_string().len() + 4;
             assert_eq!(statements.len(), 1);
             assert_eq!(
-                Statement::ExpressionStmt(ExpressionStmtAst {
+                Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, end_pos + 1)
@@ -1090,7 +1090,7 @@ fn test_if_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 16)
@@ -1105,7 +1105,7 @@ fn test_if_expression() {
                             start: Position::new(0, 5),
                             end: Position::new(0, 10)
                         },
-                        left: Box::new(Expression::Identifier(IdentifierAst {
+                        left: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 5),
                                 end: Position::new(0, 6)
@@ -1113,7 +1113,7 @@ fn test_if_expression() {
                             value: "x".to_string(),
                         })),
                         operator: Operator::Lt,
-                        right: Box::new(Expression::Identifier(IdentifierAst {
+                        right: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 9),
                                 end: Position::new(0, 10)
@@ -1121,12 +1121,12 @@ fn test_if_expression() {
                             value: "y".to_string(),
                         })),
                     })),
-                    consequence: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                    consequence: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                         span: Span {
                             start: Position::new(0, 14),
                             end: Position::new(0, 15)
                         },
-                        expression: Expression::Identifier(IdentifierAst {
+                        expression: Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 14),
                                 end: Position::new(0, 15)
@@ -1160,7 +1160,7 @@ fn test_if_else_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 27)
@@ -1175,7 +1175,7 @@ fn test_if_else_expression() {
                             start: Position::new(0, 5),
                             end: Position::new(0, 10)
                         },
-                        left: Box::new(Expression::Identifier(IdentifierAst {
+                        left: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 5),
                                 end: Position::new(0, 6)
@@ -1183,7 +1183,7 @@ fn test_if_else_expression() {
                             value: "x".to_string(),
                         })),
                         operator: Operator::Lt,
-                        right: Box::new(Expression::Identifier(IdentifierAst {
+                        right: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 9),
                                 end: Position::new(0, 10)
@@ -1191,12 +1191,12 @@ fn test_if_else_expression() {
                             value: "y".to_string(),
                         })),
                     })),
-                    consequence: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                    consequence: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                         span: Span {
                             start: Position::new(0, 14),
                             end: Position::new(0, 15)
                         },
-                        expression: Expression::Identifier(IdentifierAst {
+                        expression: Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 14),
                                 end: Position::new(0, 15)
@@ -1205,12 +1205,12 @@ fn test_if_else_expression() {
                         }),
                         returns: true,
                     })]),
-                    alternative: Some(Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                    alternative: Some(Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                         span: Span {
                             start: Position::new(0, 25),
                             end: Position::new(0, 26)
                         },
-                        expression: Expression::Identifier(IdentifierAst {
+                        expression: Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 25),
                                 end: Position::new(0, 26)
@@ -1243,7 +1243,7 @@ fn test_lambda_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 20)
@@ -1255,7 +1255,7 @@ fn test_lambda_expression() {
                         end: Position::new(0, 20)
                     },
                     parameters: Vec::from(["x".to_string(), "y".to_string()]),
-                    body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+                    body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                         span: Span {
                             start: Position::new(0, 13),
                             end: Position::new(0, 18)
@@ -1266,7 +1266,7 @@ fn test_lambda_expression() {
                                 start: Position::new(0, 13),
                                 end: Position::new(0, 18)
                             },
-                            left: Box::new(Expression::Identifier(IdentifierAst {
+                            left: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 13),
                                     end: Position::new(0, 14)
@@ -1274,7 +1274,7 @@ fn test_lambda_expression() {
                                 value: "x".to_string(),
                             })),
                             operator: Operator::Add,
-                            right: Box::new(Expression::Identifier(IdentifierAst {
+                            right: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 17),
                                     end: Position::new(0, 18)
@@ -1330,7 +1330,7 @@ fn test_lambda_parameter_parsing() {
         if let Some(Node::Program { statements, .. }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(
-                Statement::ExpressionStmt(ExpressionStmtAst {
+                Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, test_case.end_pos)
@@ -1368,7 +1368,7 @@ fn test_call_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 20)
@@ -1379,7 +1379,7 @@ fn test_call_expression() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 20)
                     },
-                    function: Box::new(Expression::Identifier(IdentifierAst {
+                    function: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 4)
@@ -1460,13 +1460,13 @@ fn test_method_call_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 15)
                 },
                 returns: false,
-                expression: Expression::Method(MethodAst {
+                expression: Expression::Method(Method {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 15)
@@ -1523,13 +1523,13 @@ fn test_method_ident_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 17)
                 },
                 returns: true,
-                expression: Expression::Method(MethodAst {
+                expression: Expression::Method(Method {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 17)
@@ -1556,7 +1556,7 @@ fn test_method_ident_expression() {
 
 #[test]
 fn test_constructor_expression() {
-    let input = "let myClass = new MyClass(a, b, c);";
+    let input = "var myClass = new MyClass(a, b, c);";
 
     let mut l = Lexer::new(input.into());
     let mut p = Parser::new(&mut l);
@@ -1568,14 +1568,14 @@ fn test_constructor_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::Declaration(DeclarationAst {
+            Statement::Declaration(Declaration {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 34)
                 },
                 name: "myClass".to_string(),
                 mutable: true,
-                value: Some(Expression::Constructor(ConstructorAst {
+                value: Some(Expression::Constructor(Constructor {
                     span: Span {
                         start: Position::new(0, 15),
                         end: Position::new(0, 34)
@@ -1585,7 +1585,7 @@ fn test_constructor_expression() {
                             start: Position::new(0, 19),
                             end: Position::new(0, 34)
                         },
-                        function: Box::new(Expression::Identifier(IdentifierAst {
+                        function: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 19),
                                 end: Position::new(0, 26)
@@ -1593,21 +1593,21 @@ fn test_constructor_expression() {
                             value: "MyClass".to_string()
                         })),
                         arguments: Vec::from([
-                            Expression::Identifier(IdentifierAst {
+                            Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 27),
                                     end: Position::new(0, 28)
                                 },
                                 value: "a".to_string()
                             }),
-                            Expression::Identifier(IdentifierAst {
+                            Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 30),
                                     end: Position::new(0, 31)
                                 },
                                 value: "b".to_string()
                             }),
-                            Expression::Identifier(IdentifierAst {
+                            Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 33),
                                     end: Position::new(0, 34)
@@ -1627,7 +1627,7 @@ fn test_constructor_expression() {
 
 #[test]
 fn test_constructor_expression_empty_initializer() {
-    let input = "let myClass = new MyClass;";
+    let input = "var myClass = new MyClass;";
 
     let mut l = Lexer::new(input.into());
     let mut p = Parser::new(&mut l);
@@ -1639,19 +1639,19 @@ fn test_constructor_expression_empty_initializer() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::Declaration(DeclarationAst {
+            Statement::Declaration(Declaration {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 26)
                 },
                 name: "myClass".to_string(),
                 mutable: true,
-                value: Some(Expression::Constructor(ConstructorAst {
+                value: Some(Expression::Constructor(Constructor {
                     span: Span {
                         start: Position::new(0, 15),
                         end: Position::new(0, 26)
                     },
-                    constructable: Constructable::Identifier(IdentifierAst {
+                    constructable: Constructable::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 19),
                             end: Position::new(0, 26)
@@ -1669,7 +1669,7 @@ fn test_constructor_expression_empty_initializer() {
 
 #[test]
 fn test_scope_constructor_expression() {
-    let input = "let myClass = new module::MyClass(a, b, c);";
+    let input = "var myClass = new module::MyClass(a, b, c);";
 
     let mut l = Lexer::new(input.into());
     let mut p = Parser::new(&mut l);
@@ -1681,14 +1681,14 @@ fn test_scope_constructor_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::Declaration(DeclarationAst {
+            Statement::Declaration(Declaration {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 42)
                 },
                 name: "myClass".to_string(),
                 mutable: true,
-                value: Some(Expression::Constructor(ConstructorAst {
+                value: Some(Expression::Constructor(Constructor {
                     span: Span {
                         start: Position::new(0, 15),
                         end: Position::new(0, 42)
@@ -1704,7 +1704,7 @@ fn test_scope_constructor_expression() {
                                 start: Position::new(0, 27),
                                 end: Position::new(0, 42)
                             },
-                            function: Box::new(Expression::Identifier(IdentifierAst {
+                            function: Box::new(Expression::Identifier(Identifier {
                                 span: Span {
                                     start: Position::new(0, 27),
                                     end: Position::new(0, 34)
@@ -1712,21 +1712,21 @@ fn test_scope_constructor_expression() {
                                 value: "MyClass".to_string()
                             })),
                             arguments: Vec::from([
-                                Expression::Identifier(IdentifierAst {
+                                Expression::Identifier(Identifier {
                                     span: Span {
                                         start: Position::new(0, 35),
                                         end: Position::new(0, 36)
                                     },
                                     value: "a".to_string()
                                 }),
-                                Expression::Identifier(IdentifierAst {
+                                Expression::Identifier(Identifier {
                                     span: Span {
                                         start: Position::new(0, 38),
                                         end: Position::new(0, 39)
                                     },
                                     value: "b".to_string()
                                 }),
-                                Expression::Identifier(IdentifierAst {
+                                Expression::Identifier(Identifier {
                                     span: Span {
                                         start: Position::new(0, 41),
                                         end: Position::new(0, 42)
@@ -1747,7 +1747,7 @@ fn test_scope_constructor_expression() {
 
 #[test]
 fn test_scope_constructor_expression_empty_initializer() {
-    let input = "let myClass = new module::MyClass;";
+    let input = "var myClass = new module::MyClass;";
 
     let mut l = Lexer::new(input.into());
     let mut p = Parser::new(&mut l);
@@ -1759,14 +1759,14 @@ fn test_scope_constructor_expression_empty_initializer() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::Declaration(DeclarationAst {
+            Statement::Declaration(Declaration {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 34)
                 },
                 name: "myClass".to_string(),
                 mutable: true,
-                value: Some(Expression::Constructor(ConstructorAst {
+                value: Some(Expression::Constructor(Constructor {
                     span: Span {
                         start: Position::new(0, 15),
                         end: Position::new(0, 34)
@@ -1777,7 +1777,7 @@ fn test_scope_constructor_expression_empty_initializer() {
                             end: Position::new(0, 34)
                         },
                         module: "module".to_string(),
-                        member: Box::new(Expression::Identifier(IdentifierAst {
+                        member: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 27),
                                 end: Position::new(0, 34)
@@ -1808,7 +1808,7 @@ fn test_string_literal_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 12)
@@ -1845,7 +1845,7 @@ fn test_char_literal_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 2)
@@ -1880,7 +1880,7 @@ fn test_parsing_array_literals() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 17)
@@ -1967,7 +1967,7 @@ fn test_parsing_index_expressions() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 14)
@@ -1978,7 +1978,7 @@ fn test_parsing_index_expressions() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 14)
                     },
-                    left: Box::new(Expression::Identifier(IdentifierAst {
+                    left: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 8)
@@ -2029,7 +2029,7 @@ fn test_parsing_hash_literal_string_keys() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 32)
@@ -2121,7 +2121,7 @@ fn test_parsing_empty_hash_literal() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 2)
@@ -2156,7 +2156,7 @@ fn test_parsing_hash_literal_with_expressions() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 46)
@@ -2302,13 +2302,13 @@ fn test_range_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 4)
                 },
                 returns: true,
-                expression: Expression::Range(RangeAst {
+                expression: Expression::Range(Range {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 4)
@@ -2357,13 +2357,13 @@ fn test_range_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 9)
                 },
                 returns: true,
-                expression: Expression::Range(RangeAst {
+                expression: Expression::Range(Range {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 9)
@@ -2420,7 +2420,7 @@ fn test_scope_var_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 18)
@@ -2431,7 +2431,7 @@ fn test_scope_var_expression() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 18)
                     },
-                    member: Box::new(Expression::Identifier(IdentifierAst {
+                    member: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 5),
                             end: Position::new(0, 18)
@@ -2462,7 +2462,7 @@ fn test_scope_fn_expression() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmtAst {
+            Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 19)
@@ -2478,14 +2478,14 @@ fn test_scope_fn_expression() {
                             start: Position::new(0, 5),
                             end: Position::new(0, 19)
                         },
-                        function: Box::new(Expression::Identifier(IdentifierAst {
+                        function: Box::new(Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 5),
                                 end: Position::new(0, 13)
                             },
                             value: "readFile".to_string(),
                         })),
-                        arguments: Vec::from([Expression::Identifier(IdentifierAst {
+                        arguments: Vec::from([Expression::Identifier(Identifier {
                             span: Span {
                                 start: Position::new(0, 14),
                                 end: Position::new(0, 19)
@@ -2519,7 +2519,7 @@ fn test_assign_expression() {
                     start: Position::new(0, 1),
                     end: Position::new(0, 7),
                 },
-                to: Assignable::Identifier(IdentifierAst {
+                to: Assignable::Identifier(Identifier {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 2),
@@ -2543,12 +2543,12 @@ fn test_assign_expression() {
                     start: Position::new(0, 1),
                     end: Position::new(0, 9),
                 },
-                to: Assignable::Method(MethodAst {
+                to: Assignable::Method(Method {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 3),
                     },
-                    left: Box::new(Expression::Identifier(IdentifierAst {
+                    left: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 2),
@@ -2580,14 +2580,14 @@ fn test_assign_expression() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 4),
                     },
-                    left: Box::new(Expression::Identifier(IdentifierAst {
+                    left: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 2),
                         },
                         value: "a".to_string(),
                     })),
-                    index: Box::new(Expression::Identifier(IdentifierAst {
+                    index: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 3),
                             end: Position::new(0, 4),
@@ -2618,7 +2618,7 @@ fn test_assign_expression() {
         if let Some(Node::Program { statements, .. }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(
-                Statement::ExpressionStmt(ExpressionStmtAst {
+                Statement::ExpressionStmt(ExpressionStmt {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, test_case.expr_stmt_end)
@@ -2636,7 +2636,7 @@ fn test_assign_expression() {
 
 #[test]
 fn test_function_literal_with_name() {
-    let input = "let myFunction = fn() { };";
+    let input = "var myFunction = fn() { };";
 
     let mut l = Lexer::new(input.into());
     let mut p = Parser::new(&mut l);
@@ -2648,7 +2648,7 @@ fn test_function_literal_with_name() {
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
-            Statement::Declaration(DeclarationAst {
+            Statement::Declaration(Declaration {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 25)
@@ -2687,7 +2687,7 @@ fn test_delete_statement() {
         assert_eq!(statements.len(), 1);
 
         assert_eq!(
-            Statement::Delete(DeleteAst {
+            Statement::Delete(Delete {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 11)

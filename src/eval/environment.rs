@@ -1,6 +1,6 @@
 use hashbrown::HashMap;
 
-use crate::ast::ClassDeclAst;
+use crate::ast::ClassDecl;
 
 use super::{EvaluatedModuleObject, Object};
 
@@ -8,7 +8,7 @@ use super::{EvaluatedModuleObject, Object};
 pub struct Environment {
     pub store: HashMap<String, (Object, bool)>,
     pub outer: Option<Box<Environment>>,
-    pub types: HashMap<String, ClassDeclAst>,
+    pub types: HashMap<String, ClassDecl>,
     pub imports: HashMap<String, EvaluatedModuleObject>,
 }
 
@@ -55,7 +55,7 @@ impl Environment {
         }
     }
 
-    pub fn get_type(&self, name: &str) -> Option<ClassDeclAst> {
+    pub fn get_type(&self, name: &str) -> Option<ClassDecl> {
         if let Some(obj) = self.types.get(name).cloned() {
             Some(obj)
         } else if let Some(ref outer) = self.outer {
@@ -65,7 +65,7 @@ impl Environment {
         }
     }
 
-    pub fn set_type(&mut self, name: String, class: ClassDeclAst) {
+    pub fn set_type(&mut self, name: String, class: ClassDecl) {
         self.types.insert(name, class);
     }
 

@@ -15,9 +15,9 @@ use crate::{ast::BlockStatement, code::Instructions, compiler::symbol_table::Sym
 
 pub type BuiltinFunction = fn(&Object, &[Object]) -> Object;
 
-pub const TRUE: Object = Object::Bool(BoolObject { value: true });
-pub const FALSE: Object = Object::Bool(BoolObject { value: false });
-pub const NULL: Object = Object::Null {};
+pub const TRUE: Object = Object::Bool(Bool { value: true });
+pub const FALSE: Object = Object::Bool(Bool { value: false });
+pub const NULL_OBJ: Object = Object::Null {};
 
 pub const DIR_ENV_VAR_NAME: &str = "STARTING_POINT_DIR";
 
@@ -28,61 +28,61 @@ pub struct HashPair {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct IntObject {
+pub struct Int {
     pub value: BigInt,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct FloatObject {
+pub struct Float {
     pub value: f64,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct CharObject {
+pub struct Char {
     pub value: char,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct BoolObject {
+pub struct Bool {
     pub value: bool,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct StrObject {
+pub struct Str {
     pub value: String,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct ErrorObject {
+pub struct Error {
     pub message: String,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ReturnValueObject {
+pub struct ReturnValue {
     pub value: Box<Object>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct EvaluatedFunctionObject {
+pub struct EvaluatedFunction {
     pub parameters: Vec<String>,
     pub body: BlockStatement,
     pub env: Environment,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct BuiltinObject {
+pub struct Builtin {
     pub name: String,
     pub func: BuiltinFunction,
     pub caller: Option<Box<Object>>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ArrayObject {
+pub struct Array {
     pub elements: Vec<Object>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct HashObject {
+pub struct Dict {
     pub pairs: HashMap<u64, HashPair>,
 }
 
@@ -100,24 +100,24 @@ impl ClassMember {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ClassObject {
+pub struct Class {
     pub name: String,
     pub members: HashMap<u8, ClassMember>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct TypeObject {
+pub struct Type {
     pub id: usize,
     pub lit: String,
 }
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct RangeObject {
+pub struct Range {
     pub start: isize,
     pub stop: isize,
     pub step: isize,
 }
 
-impl RangeObject {
+impl Range {
     pub fn len(&self) -> usize {
         ((self.stop - self.start) / self.step) as usize
             + usize::from((self.stop - self.start) % self.step != 0)
@@ -142,27 +142,27 @@ pub struct CompiledModuleObject {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct CompiledFunctionObject {
+pub struct CompiledFunction {
     pub instructions: Instructions,
     pub num_locals: usize,
     pub num_parameters: usize,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ClosureObject {
-    pub func: CompiledFunctionObject,
+pub struct Closure {
+    pub func: CompiledFunction,
     pub free: Vec<Object>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, strum::Display)]
 #[strum(serialize_all = "lowercase")]
-pub enum ControlFlowObject {
+pub enum ControlFlow {
     Break,
     Continue,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct IterObject {
+pub struct Iter {
     pub iter: Iterable,
     pub current: usize,
     pub size: usize,
@@ -170,31 +170,31 @@ pub struct IterObject {
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Object {
-    Int(IntObject),
-    Float(FloatObject),
-    Bool(BoolObject),
-    Str(StrObject),
-    Char(CharObject),
+    Int(Int),
+    Float(Float),
+    Bool(Bool),
+    Str(Str),
+    Char(Char),
     Null,
-    ReturnValue(ReturnValueObject),
-    Error(ErrorObject),
-    EvaluatedFunction(EvaluatedFunctionObject),
-    Builtin(BuiltinObject),
-    Array(ArrayObject),
-    Hash(HashObject),
-    Class(ClassObject),
-    Type(TypeObject),
-    Range(RangeObject),
-    CompiledFunction(CompiledFunctionObject),
-    Closure(ClosureObject),
-    ControlFlow(ControlFlowObject),
-    Iter(IterObject),
+    ReturnValue(ReturnValue),
+    Error(Error),
+    EvaluatedFunction(EvaluatedFunction),
+    Builtin(Builtin),
+    Array(Array),
+    Dict(Dict),
+    Class(Class),
+    Type(Type),
+    Range(Range),
+    CompiledFunction(CompiledFunction),
+    Closure(Closure),
+    ControlFlow(ControlFlow),
+    Iter(Iter),
 }
 
 impl Display for Object {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Array(ArrayObject { elements }) => write!(
+            Self::Array(Array { elements }) => write!(
                 f,
                 "[{}]",
                 elements
@@ -204,23 +204,23 @@ impl Display for Object {
                     .join(", ")
             ),
 
-            Self::Bool(BoolObject { value }) => write!(f, "{value}"),
+            Self::Bool(Bool { value }) => write!(f, "{value}"),
 
-            Self::Builtin(BuiltinObject { name, .. }) => write!(f, "built-in function '{name}'"),
+            Self::Builtin(Builtin { name, .. }) => write!(f, "built-in function \"{name}\""),
 
-            Self::Char(CharObject { value }) => write!(f, "{value}"),
+            Self::Char(Char { value }) => write!(f, "{value}"),
 
-            Self::Class(ClassObject { name, .. }) => write!(f, "<class '{name}'>"),
+            Self::Class(Class { name, .. }) => write!(f, "<class \"{name}\">"),
 
-            Self::Error(ErrorObject { message }) => write!(f, "{message}"),
+            Self::Error(Error { message }) => write!(f, "{message}"),
 
-            Self::Float(FloatObject { value }) => write!(f, "{value}"),
+            Self::Float(Float { value }) => write!(f, "{value}"),
 
-            Self::EvaluatedFunction(EvaluatedFunctionObject { parameters, .. }) => {
+            Self::EvaluatedFunction(EvaluatedFunction { parameters, .. }) => {
                 write!(f, "function ({} parameters)", parameters.len())
             }
 
-            Self::Hash(HashObject { pairs }) => write!(
+            Self::Dict(Dict { pairs }) => write!(
                 f,
                 "{{{}}}",
                 pairs
@@ -230,19 +230,19 @@ impl Display for Object {
                     .join(", ")
             ),
 
-            Self::Int(IntObject { value }) => write!(f, "{value}"),
+            Self::Int(Int { value }) => write!(f, "{value}"),
 
             Self::Null => write!(f, "null"),
 
-            Self::Range(RangeObject { start, stop, step }) => {
+            Self::Range(Range { start, stop, step }) => {
                 write!(f, "{start}..{stop}..{step}")
             }
 
-            Self::ReturnValue(ReturnValueObject { value }) => write!(f, "{value}"),
+            Self::ReturnValue(ReturnValue { value }) => write!(f, "{value}"),
 
-            Self::Str(StrObject { value }) => write!(f, "{value}"),
+            Self::Str(Str { value }) => write!(f, "{value}"),
 
-            Self::Type(TypeObject { id, lit }) => write!(f, "<type '{lit}'(0x{id:x})"),
+            Self::Type(Type { id, lit }) => write!(f, "<type \"{lit}\"(0x{id:x})"),
 
             Self::CompiledFunction(_) => write!(f, "<compiled-fn>"),
 
@@ -250,7 +250,7 @@ impl Display for Object {
 
             Self::ControlFlow(t) => write!(f, "{t}"),
 
-            Self::Iter(IterObject {
+            Self::Iter(Iter {
                 iter,
                 current,
                 size,
@@ -279,13 +279,13 @@ impl Object {
             | Self::ControlFlow(_)
             | Self::Iter(_) => self.to_string(),
 
-            Self::Char(CharObject { value }) => format!("'{value}'"),
+            Self::Char(Char { value }) => format!("'{value}'"),
 
-            Self::Str(StrObject { value }) => format!("\"{value}\""),
+            Self::Str(Str { value }) => format!("\"{value}\""),
 
-            Self::Error(ErrorObject { message }) => format!("ERROR: {message}"),
+            Self::Error(Error { message }) => format!("ERROR: {message}"),
 
-            Self::Array(ArrayObject { elements }) => format!(
+            Self::Array(Array { elements }) => format!(
                 "({} elements)[{}]",
                 elements.len(),
                 elements
@@ -295,7 +295,7 @@ impl Object {
                     .join(", ")
             ),
 
-            Self::Hash(HashObject { pairs }) => format!(
+            Self::Dict(Dict { pairs }) => format!(
                 "({} pairs){{{}}}",
                 pairs.len(),
                 pairs
@@ -323,7 +323,7 @@ impl Object {
             Self::Str(_) => "STR",
             Self::Error(_) => "ERROR",
             Self::Array(_) => "ARRAY",
-            Self::Hash(_) => "HASH",
+            Self::Dict(_) => "HASH",
             Self::CompiledFunction(_) => "COMPILED_FUNCTION",
             Self::Closure(_) => "CLOSURE",
             Self::ControlFlow(_) => "CONTROL_FLOW",
@@ -340,19 +340,19 @@ impl Object {
             Self::Str(_) => 2,
             Self::Char(_) => 3,
             Self::Array(_) => 4,
-            Self::Hash(_) => 5,
+            Self::Dict(_) => 5,
             _ => usize::MAX,
         }
     }
 
     pub fn call_method(&self, method: u8, params: Option<Vec<Self>>) -> Self {
         match self {
-            Self::Class(ClassObject { name, members }) => {
+            Self::Class(Class { name, members }) => {
                 if let Some(class_member) = members.get(&method) {
                     class_member.obj.clone()
                 } else {
                     new_error(format!(
-                        "no method named '{method}' found for class '{name}'",
+                        "no method named \"{method}\" found for class \"{name}\"",
                     ))
                 }
             }
@@ -362,7 +362,7 @@ impl Object {
             | Self::Str(_)
             | Self::Char(_)
             | Self::Array(_)
-            | Self::Hash(_) => {
+            | Self::Dict(_) => {
                 let (_, func) = builtins::BUILTIN_METHODS[self.get_id()]
                     .iter()
                     .find(|(name, _)| hash_method_name(name) == method)
@@ -370,7 +370,7 @@ impl Object {
 
                 params.map_or_else(
                     || {
-                        Self::Builtin(BuiltinObject {
+                        Self::Builtin(Builtin {
                             name: format!("{}.{}", self.kind(), method),
                             func: *func,
                             caller: Some(Box::new(self.clone())),
@@ -398,7 +398,7 @@ fn intersperse<T: Copy, U: Iterator<Item = T>>(iter: U, sep: T) -> Vec<T> {
 }
 
 fn new_error(message: String) -> Object {
-    Object::Error(ErrorObject { message })
+    Object::Error(Error { message })
 }
 
 pub fn allowed_in_array(obj: &Object) -> bool {
@@ -411,35 +411,35 @@ pub fn allowed_in_array(obj: &Object) -> bool {
             | Object::Str(_)
             | Object::Char(_)
             | Object::Array(_)
-            | Object::Hash(_)
+            | Object::Dict(_)
     )
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Hashable {
-    Char(CharObject),
-    Int(IntObject),
-    Bool(BoolObject),
-    Str(StrObject),
+    Char(Char),
+    Int(Int),
+    Bool(Bool),
+    Str(Str),
 }
 
 impl Hashable {
     pub fn hash_key(&self) -> u64 {
         let mut hasher = AHasher::default();
         match self {
-            Self::Char(CharObject { value }) => {
+            Self::Char(Char { value }) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
-            Self::Int(IntObject { value }) => {
+            Self::Int(Int { value }) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
-            Self::Bool(BoolObject { value }) => {
+            Self::Bool(Bool { value }) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
-            Self::Str(StrObject { value }) => {
+            Self::Str(Str { value }) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
@@ -469,20 +469,20 @@ impl Hashable {
 impl Display for Hashable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Bool(BoolObject { value }) => write!(f, "{value}"),
-            Self::Char(CharObject { value }) => write!(f, "{value}"),
-            Self::Int(IntObject { value }) => write!(f, "{value}"),
-            Self::Str(StrObject { value }) => write!(f, "{value}"),
+            Self::Bool(Bool { value }) => write!(f, "{value}"),
+            Self::Char(Char { value }) => write!(f, "{value}"),
+            Self::Int(Int { value }) => write!(f, "{value}"),
+            Self::Str(Str { value }) => write!(f, "{value}"),
         }
     }
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Iterable {
-    Range(RangeObject),
-    Array(ArrayObject),
-    Hash(HashObject),
-    Str(StrObject),
+    Range(Range),
+    Array(Array),
+    Hash(Dict),
+    Str(Str),
 }
 
 impl Iterable {
@@ -490,7 +490,7 @@ impl Iterable {
         match obj {
             Object::Range(ast_node) => Some(Self::Range(ast_node)),
             Object::Array(ast_node) => Some(Self::Array(ast_node)),
-            Object::Hash(ast_node) => Some(Self::Hash(ast_node)),
+            Object::Dict(ast_node) => Some(Self::Hash(ast_node)),
             Object::Str(ast_node) => Some(Self::Str(ast_node)),
             _ => None,
         }
@@ -500,7 +500,7 @@ impl Iterable {
         match self.clone() {
             Self::Range(ast_node) => Object::Range(ast_node),
             Self::Array(ast_node) => Object::Array(ast_node),
-            Self::Hash(ast_node) => Object::Hash(ast_node),
+            Self::Hash(ast_node) => Object::Dict(ast_node),
             Self::Str(ast_node) => Object::Str(ast_node),
         }
     }
@@ -516,7 +516,7 @@ impl Iterable {
 
     pub fn get(&self, idx: usize) -> Object {
         match self {
-            Self::Range(ast_node) => Object::Int(IntObject {
+            Self::Range(ast_node) => Object::Int(Int {
                 value: ast_node.nth(idx).into(),
             }),
             Self::Array(ast_node) => ast_node.elements[idx].clone(),
@@ -531,20 +531,20 @@ impl Iterable {
                 .value
                 .chars()
                 .nth(idx)
-                .map(|value| Object::Char(CharObject { value }))
+                .map(|value| Object::Char(Char { value }))
                 .unwrap(),
         }
     }
 }
 
-fn hash_method_name(name: &str) -> u8 {
+pub fn hash_method_name(name: &str) -> u8 {
     let mut hasher = AHasher::default();
     name.hash(&mut hasher);
     let hash = hasher.finish();
 
     let mut out = 0u8;
     for i in 0..8 {
-        out ^= (hash >> (i * 8)) as u8
+        out ^= (hash >> (i * 8)) as u8;
     }
 
     out
@@ -556,17 +556,17 @@ mod tests {
 
     #[test]
     fn test_string_hash_key() {
-        let hello1 = Hashable::Str(StrObject {
+        let hello1 = Hashable::Str(Str {
             value: "Hello World!".to_string(),
         });
-        let hello2 = Hashable::Str(StrObject {
+        let hello2 = Hashable::Str(Str {
             value: "Hello World!".to_string(),
         });
 
-        let diff1 = Hashable::Str(StrObject {
+        let diff1 = Hashable::Str(Str {
             value: "My name is johnny.".to_string(),
         });
-        let diff2 = Hashable::Str(StrObject {
+        let diff2 = Hashable::Str(Str {
             value: "My name is johnny.".to_string(),
         });
 

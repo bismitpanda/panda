@@ -20,7 +20,7 @@ impl Display for Span {
 }
 
 pub type BlockStatement = Vec<Statement>;
-pub type Identifier = String;
+pub type Ident = String;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Node {
@@ -51,74 +51,74 @@ impl Display for Node {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct DeclarationAst {
+pub struct Declaration {
     pub span: Span,
-    pub name: Identifier,
+    pub name: Ident,
     pub mutable: bool,
     pub value: Option<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ReturnAst {
+pub struct Return {
     pub span: Span,
     pub return_value: Expression,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct DeleteAst {
+pub struct Delete {
     pub span: Span,
-    pub delete_ident: Identifier,
+    pub delete_ident: Ident,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ExpressionStmtAst {
+pub struct ExpressionStmt {
     pub span: Span,
     pub returns: bool,
     pub expression: Expression,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct FunctionAst {
+pub struct Function {
     pub span: Span,
-    pub ident: Identifier,
-    pub parameters: Vec<Identifier>,
+    pub ident: Ident,
+    pub parameters: Vec<Ident>,
     pub body: BlockStatement,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct WhileAst {
+pub struct While {
     pub span: Span,
     pub condition: Expression,
     pub body: BlockStatement,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ForAst {
+pub struct For {
     pub span: Span,
-    pub ident: Identifier,
+    pub ident: Ident,
     pub iterator: Expression,
     pub body: BlockStatement,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ClassDeclAst {
+pub struct ClassDecl {
     pub span: Span,
-    pub ident: Identifier,
-    pub initializers: Vec<Identifier>,
+    pub ident: Ident,
+    pub initializers: Vec<Ident>,
     pub body: Vec<ClassStatement>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct ImportAst {
+pub struct Import {
     pub span: Span,
-    pub path: Identifier,
-    pub alias: Option<Identifier>,
+    pub path: Ident,
+    pub alias: Option<Ident>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum ClassStatement {
-    Declaration(DeclarationAst),
-    Function(FunctionAst),
+    Declaration(Declaration),
+    Function(Function),
 }
 
 impl ClassStatement {
@@ -132,15 +132,15 @@ impl ClassStatement {
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Statement {
-    Declaration(DeclarationAst),
-    Return(ReturnAst),
-    Delete(DeleteAst),
-    ExpressionStmt(ExpressionStmtAst),
-    Function(FunctionAst),
-    While(WhileAst),
-    For(ForAst),
-    ClassDecl(ClassDeclAst),
-    Import(ImportAst),
+    Declaration(Declaration),
+    Return(Return),
+    Delete(Delete),
+    ExpressionStmt(ExpressionStmt),
+    Function(Function),
+    While(While),
+    For(For),
+    ClassDecl(ClassDecl),
+    Import(Import),
     Break(Span),
     Continue(Span),
 }
@@ -148,7 +148,7 @@ pub enum Statement {
 impl Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Declaration(DeclarationAst {
+            Self::Declaration(Declaration {
                 name,
                 mutable,
                 value,
@@ -156,14 +156,14 @@ impl Display for Statement {
             }) => write!(
                 f,
                 "{} {}{};",
-                if *mutable { "let" } else { "const" },
+                if *mutable { "var" } else { "const" },
                 name,
                 value
                     .clone()
                     .map_or_else(String::new, |value| format!("= {value}"))
             ),
 
-            Self::ClassDecl(ClassDeclAst {
+            Self::ClassDecl(ClassDecl {
                 ident,
                 initializers,
                 body,
@@ -178,13 +178,13 @@ impl Display for Statement {
                     .collect::<String>()
             ),
 
-            Self::ExpressionStmt(ExpressionStmtAst {
+            Self::ExpressionStmt(ExpressionStmt {
                 returns,
                 expression,
                 ..
             }) => write!(f, "{}{}", expression, if *returns { "" } else { ";" }),
 
-            Self::For(ForAst {
+            Self::For(For {
                 ident,
                 iterator,
                 body,
@@ -197,7 +197,7 @@ impl Display for Statement {
                 body.iter().map(ToString::to_string).collect::<String>()
             ),
 
-            Self::Function(FunctionAst {
+            Self::Function(Function {
                 ident,
                 parameters,
                 body,
@@ -210,7 +210,7 @@ impl Display for Statement {
                 body.iter().map(ToString::to_string).collect::<String>()
             ),
 
-            Self::Import(ImportAst { path, alias, .. }) => write!(
+            Self::Import(Import { path, alias, .. }) => write!(
                 f,
                 "import \"{}\"{}",
                 path,
@@ -219,7 +219,7 @@ impl Display for Statement {
                     .map_or_else(String::new, |alias| format!(" as {alias}"))
             ),
 
-            Self::Return(ReturnAst { return_value, .. }) => write!(
+            Self::Return(Return { return_value, .. }) => write!(
                 f,
                 "return {};",
                 if matches!(
@@ -235,7 +235,7 @@ impl Display for Statement {
                 }
             ),
 
-            Self::While(WhileAst {
+            Self::While(While {
                 condition, body, ..
             }) => write!(
                 f,
@@ -248,27 +248,27 @@ impl Display for Statement {
 
             Self::Continue(_) => write!(f, "continue"),
 
-            Self::Delete(DeleteAst { delete_ident, .. }) => write!(f, "delete {delete_ident};"),
+            Self::Delete(Delete { delete_ident, .. }) => write!(f, "delete {delete_ident};"),
         }
     }
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct MethodAst {
+pub struct Method {
     pub span: Span,
     pub left: Box<Expression>,
-    pub method: Identifier,
+    pub method: Ident,
     pub arguments: Option<Vec<Expression>>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ConstructorAst {
+pub struct Constructor {
     pub span: Span,
     pub constructable: Constructable,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct RangeAst {
+pub struct Range {
     pub span: Span,
     pub start: Box<Expression>,
     pub stop: Box<Expression>,
@@ -276,9 +276,9 @@ pub struct RangeAst {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct IdentifierAst {
+pub struct Identifier {
     pub span: Span,
-    pub value: Identifier,
+    pub value: Ident,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -314,9 +314,9 @@ pub struct IfAst {
 #[derive(Clone, PartialEq, Debug)]
 pub struct LambdaAst {
     pub span: Span,
-    pub parameters: Vec<Identifier>,
+    pub parameters: Vec<Ident>,
     pub body: BlockStatement,
-    pub name: Identifier,
+    pub name: Ident,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -342,16 +342,16 @@ pub struct LiteralAst {
 #[derive(Clone, PartialEq, Debug)]
 pub struct ScopeAst {
     pub span: Span,
-    pub module: Identifier,
+    pub module: Ident,
     pub member: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Expression {
-    Method(MethodAst),
-    Constructor(ConstructorAst),
-    Range(RangeAst),
-    Identifier(IdentifierAst),
+    Method(Method),
+    Constructor(Constructor),
+    Range(Range),
+    Identifier(Identifier),
     Assign(AssignAst),
     Prefix(PrefixAst),
     Infix(InfixAst),
@@ -402,7 +402,7 @@ impl Display for Expression {
                     .collect::<String>()
             ),
 
-            Self::Constructor(ConstructorAst { constructable, .. }) => {
+            Self::Constructor(Constructor { constructable, .. }) => {
                 write!(f, "new {constructable};")
             }
 
@@ -423,7 +423,7 @@ impl Display for Expression {
                 body.iter().map(ToString::to_string).collect::<String>()
             ),
 
-            Self::Identifier(IdentifierAst { value, .. }) => write!(f, "{value}"),
+            Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
 
             Self::If(IfAst {
                 condition,
@@ -455,7 +455,7 @@ impl Display for Expression {
 
             Self::Literal(LiteralAst { lit, .. }) => write!(f, "{lit}"),
 
-            Self::Method(MethodAst {
+            Self::Method(Method {
                 left,
                 method,
                 arguments,
@@ -483,7 +483,7 @@ impl Display for Expression {
                 write!(f, "({operator}{right})")
             }
 
-            Self::Range(RangeAst {
+            Self::Range(Range {
                 start, stop, step, ..
             }) => write!(
                 f,
@@ -648,7 +648,7 @@ impl Display for Operator {
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Constructable {
-    Identifier(IdentifierAst),
+    Identifier(Identifier),
     Call(CallAst),
     Scope(ScopeAst),
 }
@@ -672,22 +672,22 @@ impl Display for Constructable {
 
             Self::Scope(ScopeAst { module, member, .. }) => write!(f, "{module}::{member}"),
 
-            Self::Identifier(IdentifierAst { value, .. }) => write!(f, "{value}"),
+            Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
         }
     }
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Assignable {
-    Identifier(IdentifierAst),
-    Method(MethodAst),
+    Identifier(Identifier),
+    Method(Method),
     Index(IndexAst),
 }
 
 impl Display for Assignable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Method(MethodAst {
+            Self::Method(Method {
                 left,
                 method,
                 arguments,
@@ -711,7 +711,7 @@ impl Display for Assignable {
 
             Self::Index(IndexAst { left, index, .. }) => write!(f, "{left}[{index}]"),
 
-            Self::Identifier(IdentifierAst { value, .. }) => write!(f, "{value}"),
+            Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
         }
     }
 }

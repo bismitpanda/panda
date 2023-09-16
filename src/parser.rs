@@ -3,10 +3,10 @@ mod precedence;
 mod tests;
 
 use crate::ast::{
-    AssignAst, Assignable, BlockStatement, CallAst, ClassDeclAst, ClassStatement, Constructable,
-    ConstructorAst, DeclarationAst, DeleteAst, Expression, ExpressionStmtAst, ForAst, FunctionAst,
-    IdentifierAst, IfAst, ImportAst, IndexAst, InfixAst, LambdaAst, Literal, LiteralAst, MethodAst,
-    Node, PrefixAst, RangeAst, ReturnAst, ScopeAst, Span, Statement, WhileAst,
+    AssignAst, Assignable, BlockStatement, CallAst, ClassDecl, ClassStatement, Constructable,
+    Constructor, Declaration, Delete, Expression, ExpressionStmt, For, Function, Identifier, IfAst,
+    Import, IndexAst, InfixAst, LambdaAst, Literal, LiteralAst, Method, Node, PrefixAst, Range,
+    Return, ScopeAst, Span, Statement, While,
 };
 use crate::lexer::Lexer;
 use crate::token::{Position, Token, TokenType};
@@ -143,7 +143,7 @@ impl<'a> Parser<'a> {
 
         let span = Span { start, end };
 
-        Some(Statement::Declaration(DeclarationAst {
+        Some(Statement::Declaration(Declaration {
             span,
             name,
             mutable,
@@ -160,7 +160,7 @@ impl<'a> Parser<'a> {
         let end = return_value.get_span().end;
         let span = Span { start, end };
 
-        Some(Statement::Return(ReturnAst { span, return_value }))
+        Some(Statement::Return(Return { span, return_value }))
     }
 
     fn parse_delete_statement(&mut self) -> Option<Statement> {
@@ -174,7 +174,7 @@ impl<'a> Parser<'a> {
         let end = self.cur_tok.position + Position::new(0, delete_ident.len());
         let span = Span { start, end };
 
-        Some(Statement::Delete(DeleteAst { span, delete_ident }))
+        Some(Statement::Delete(Delete { span, delete_ident }))
     }
 
     fn parse_function_statement(&mut self) -> Option<Statement> {
@@ -203,7 +203,7 @@ impl<'a> Parser<'a> {
         let end = self.cur_tok.position;
         let span = Span { start, end };
 
-        Some(Statement::Function(FunctionAst {
+        Some(Statement::Function(Function {
             span,
             ident,
             parameters,
@@ -234,7 +234,7 @@ impl<'a> Parser<'a> {
         let end = self.cur_tok.position;
         let span = Span { start, end };
 
-        Some(Statement::While(WhileAst {
+        Some(Statement::While(While {
             span,
             condition,
             body,
@@ -277,7 +277,7 @@ impl<'a> Parser<'a> {
         let end = self.cur_tok.position;
         let span = Span { start, end };
 
-        Some(Statement::For(ForAst {
+        Some(Statement::For(For {
             span,
             ident,
             iterator,
@@ -296,7 +296,7 @@ impl<'a> Parser<'a> {
             end: expression.get_span().end,
         };
 
-        Some(Statement::ExpressionStmt(ExpressionStmtAst {
+        Some(Statement::ExpressionStmt(ExpressionStmt {
             span,
             returns,
             expression,
@@ -328,7 +328,7 @@ impl<'a> Parser<'a> {
         let end = self.cur_tok.position;
         let span = Span { start, end };
 
-        Some(Statement::ClassDecl(ClassDeclAst {
+        Some(Statement::ClassDecl(ClassDecl {
             span,
             ident,
             initializers,
@@ -339,7 +339,7 @@ impl<'a> Parser<'a> {
     fn parse_expression(&mut self, prec: Precedence) -> Option<Expression> {
         let start = self.cur_tok.position;
         let mut left_exp = match self.cur_tok.tok_type {
-            TokenType::Ident => self.parse_identifier(),
+            TokenType::Ident => Some(self.parse_identifier()),
             TokenType::IntLiteral => self.parse_integer_literal(),
             TokenType::FloatLiteral => self.parse_float_literal(),
             TokenType::False | TokenType::True => Some(Expression::Literal(LiteralAst {
@@ -362,7 +362,7 @@ impl<'a> Parser<'a> {
             TokenType::LParen => self.parse_grouped_expression(),
             TokenType::If => self.parse_if_expression(),
             TokenType::Function => self.parse_function_literal(),
-            TokenType::StrLiteral => self.parse_string_literal(),
+            TokenType::StrLiteral => Some(self.parse_string_literal()),
             TokenType::CharLiteral => self.parse_char_literal(),
             TokenType::LBracket => self.parse_array_literal(),
             TokenType::LBrace => self.parse_hash_literal(),
@@ -507,12 +507,12 @@ impl<'a> Parser<'a> {
                 ),
         };
 
-        Some(Statement::Import(ImportAst { span, path, alias }))
+        Some(Statement::Import(Import { span, path, alias }))
     }
 }
 
 impl Parser<'_> {
-    fn parse_identifier(&mut self) -> Option<Expression> {
+    fn parse_identifier(&mut self) -> Expression {
         let token = self.cur_tok.clone();
 
         let span = Span {
@@ -520,10 +520,10 @@ impl Parser<'_> {
             end: token.position + Position::new(0, token.tok_lit.len()),
         };
 
-        Some(Expression::Identifier(IdentifierAst {
+        Expression::Identifier(Identifier {
             span,
             value: token.tok_lit,
-        }))
+        })
     }
 
     fn parse_integer_literal(&mut self) -> Option<Expression> {
@@ -760,10 +760,10 @@ impl Parser<'_> {
         Some(list)
     }
 
-    fn parse_string_literal(&mut self) -> Option<Expression> {
+    fn parse_string_literal(&mut self) -> Expression {
         let token = self.cur_tok.clone();
 
-        Some(Expression::Literal(LiteralAst {
+        Expression::Literal(LiteralAst {
             span: Span {
                 start: token.position,
                 end: token.position + Position::new(0, token.tok_lit.len()),
@@ -771,7 +771,7 @@ impl Parser<'_> {
             lit: Literal::Str {
                 value: token.tok_lit,
             },
-        }))
+        })
     }
 
     fn parse_char_literal(&mut self) -> Option<Expression> {
@@ -923,7 +923,7 @@ impl Parser<'_> {
             },
         };
 
-        Some(Expression::Method(MethodAst {
+        Some(Expression::Method(Method {
             span,
             left: Box::new(left),
             method,
@@ -934,7 +934,7 @@ impl Parser<'_> {
     fn parse_scope_expression(&mut self, left: Expression) -> Option<Expression> {
         let start = left.get_span().start;
 
-        let Expression::Identifier(IdentifierAst { value: module, .. }) = left else {
+        let Expression::Identifier(Identifier { value: module, .. }) = left else {
             self.errors.push("expected IDENT".to_string());
             return None;
         };
@@ -973,7 +973,7 @@ impl Parser<'_> {
 
         let span = Span { start, end };
 
-        Some(Expression::Constructor(ConstructorAst {
+        Some(Expression::Constructor(Constructor {
             span,
             constructable,
         }))
@@ -986,7 +986,7 @@ impl Parser<'_> {
         let mut stop = self.parse_expression(Precedence::Lowest)?;
         let mut step = None;
 
-        if let Expression::Range(RangeAst {
+        if let Expression::Range(Range {
             start: end_start,
             stop: end_stop,
             step: end_step,
@@ -1009,7 +1009,7 @@ impl Parser<'_> {
             end: self.cur_tok.position,
         };
 
-        Some(Expression::Range(RangeAst {
+        Some(Expression::Range(Range {
             span,
             start: Box::new(left),
             stop: Box::new(stop),

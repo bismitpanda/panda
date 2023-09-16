@@ -1,5 +1,5 @@
 use crate::{
-    ast::{ExpressionStmtAst, IdentifierAst, InfixAst, LiteralAst, Span},
+    ast::{ExpressionStmt, InfixAst, LiteralAst, Span},
     lexer::Lexer,
     parser::Parser,
     token::Position,
@@ -345,7 +345,7 @@ fn test_error_handling() {
         let evaluated = test_eval(&test_case.input);
         assert_eq!(
             evaluated,
-            Object::Error(ErrorObject {
+            Object::Error(Error {
                 message: test_case.expected_message.clone()
             })
         );
@@ -356,19 +356,19 @@ fn test_error_handling() {
 fn test_declaration_statement() {
     let test_cases = [
         EvalIntegerTestCase {
-            input: "let a = 5; a".to_string(),
+            input: "var a = 5; a".to_string(),
             expected: 5,
         },
         EvalIntegerTestCase {
-            input: "let a = 5 * 5; a".to_string(),
+            input: "var a = 5 * 5; a".to_string(),
             expected: 25,
         },
         EvalIntegerTestCase {
-            input: "let a = 5; let b = a; b".to_string(),
+            input: "var a = 5; var b = a; b".to_string(),
             expected: 5,
         },
         EvalIntegerTestCase {
-            input: "let a = 5; let b = a; let c = a + b + 5; c".to_string(),
+            input: "var a = 5; var b = a; var c = a + b + 5; c".to_string(),
             expected: 15,
         },
         EvalIntegerTestCase {
@@ -384,7 +384,7 @@ fn test_declaration_statement() {
             expected: 5,
         },
         EvalIntegerTestCase {
-            input: "const a = 5; let b = a; const c = a + b + 5; c".to_string(),
+            input: "const a = 5; var b = a; const c = a + b + 5; c".to_string(),
             expected: 15,
         },
     ];
@@ -401,9 +401,9 @@ fn test_lambda_object() {
 
     let evaluated = test_eval(input);
     assert_eq!(
-        Object::EvaluatedFunction(EvaluatedFunctionObject {
+        Object::EvaluatedFunction(EvaluatedFunction {
             parameters: Vec::from(["x".to_string()]),
-            body: Vec::from([Statement::ExpressionStmt(ExpressionStmtAst {
+            body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 9),
                     end: Position::new(0, 14)
@@ -414,7 +414,7 @@ fn test_lambda_object() {
                         start: Position::new(0, 9),
                         end: Position::new(0, 14)
                     },
-                    left: Box::new(Expression::Identifier(IdentifierAst {
+                    left: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 9),
                             end: Position::new(0, 10)
@@ -446,23 +446,23 @@ fn test_lambda_object() {
 fn test_function_application() {
     let test_cases = [
         EvalIntegerTestCase {
-            input: "let identity = fn(x) { x }; identity(5)".to_string(),
+            input: "var identity = fn(x) { x }; identity(5)".to_string(),
             expected: 5,
         },
         EvalIntegerTestCase {
-            input: "let identity = fn(x) { return x; }; identity(5)".to_string(),
+            input: "var identity = fn(x) { return x; }; identity(5)".to_string(),
             expected: 5,
         },
         EvalIntegerTestCase {
-            input: "let double = fn(x) { x * 2 }; double(5)".to_string(),
+            input: "var double = fn(x) { x * 2 }; double(5)".to_string(),
             expected: 10,
         },
         EvalIntegerTestCase {
-            input: "let add = fn(x, y) { x + y }; add(5, 5)".to_string(),
+            input: "var add = fn(x, y) { x + y }; add(5, 5)".to_string(),
             expected: 10,
         },
         EvalIntegerTestCase {
-            input: "let add = fn(x, y) { x + y }; add(5 + 5, add(5, 5))".to_string(),
+            input: "var add = fn(x, y) { x + y }; add(5 + 5, add(5, 5))".to_string(),
             expected: 20,
         },
         EvalIntegerTestCase {
@@ -480,13 +480,13 @@ fn test_function_application() {
 #[test]
 fn test_closures() {
     let input = "
-let newAdder = fn(x) {
+var newAdder = fn(x) {
     fn(y) {
         x + y
     }
 };
 
-let addTwo = newAdder(2);
+var addTwo = newAdder(2);
 addTwo(2)";
 
     let evaluated = test_eval(input);
@@ -499,7 +499,7 @@ fn test_string_literal() {
     let evaluated = test_eval(input);
     assert_eq!(
         evaluated,
-        Object::Str(StrObject {
+        Object::Str(Str {
             value: "Hello World!".to_string()
         })
     )
@@ -509,7 +509,7 @@ fn test_string_literal() {
 fn test_char_literal() {
     let input = "'a'";
     let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Char(CharObject { value: 'a' }))
+    assert_eq!(evaluated, Object::Char(Char { value: 'a' }))
 }
 
 #[test]
@@ -519,7 +519,7 @@ fn test_string_concatenation() {
     let evaluated = test_eval(input);
     assert_eq!(
         evaluated,
-        Object::Str(StrObject {
+        Object::Str(Str {
             value: "Hello World!".to_string()
         })
     )
@@ -531,11 +531,11 @@ fn test_array_literals() {
     let evaluated = test_eval(input);
     assert_eq!(
         evaluated,
-        Object::Array(ArrayObject {
+        Object::Array(Array {
             elements: Vec::from([
-                Object::Int(IntObject { value: 1.into() }),
-                Object::Int(IntObject { value: 4.into() }),
-                Object::Int(IntObject { value: 6.into() })
+                Object::Int(Int { value: 1.into() }),
+                Object::Int(Int { value: 4.into() }),
+                Object::Int(Int { value: 6.into() })
             ])
         })
     )
@@ -562,7 +562,7 @@ fn test_array_index_expressions() {
             expected: Some(3),
         },
         IndexExpressionTestCase {
-            input: "let i = 0; [1][i]".to_string(),
+            input: "var i = 0; [1][i]".to_string(),
             expected: Some(1),
         },
         IndexExpressionTestCase {
@@ -570,15 +570,15 @@ fn test_array_index_expressions() {
             expected: Some(3),
         },
         IndexExpressionTestCase {
-            input: "let myArray = [1, 2, 3]; myArray[2]".to_string(),
+            input: "var myArray = [1, 2, 3]; myArray[2]".to_string(),
             expected: Some(3),
         },
         IndexExpressionTestCase {
-            input: "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]".to_string(),
+            input: "var myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2]".to_string(),
             expected: Some(6),
         },
         IndexExpressionTestCase {
-            input: "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]".to_string(),
+            input: "var myArray = [1, 2, 3]; var i = myArray[0]; myArray[i]".to_string(),
             expected: Some(2),
         },
         IndexExpressionTestCase {
@@ -603,7 +603,7 @@ fn test_array_index_expressions() {
 
 #[test]
 fn test_hash_literals() {
-    let input = r#"let two = "two";
+    let input = r#"var two = "two";
 {
     "one": 10 - 9,
     two: 1 + 1,
@@ -613,62 +613,62 @@ fn test_hash_literals() {
     false: 6
 }"#;
     let evaluated = test_eval(input);
-    let key1 = Hashable::Str(StrObject {
+    let key1 = Hashable::Str(Str {
         value: "one".to_string(),
     });
-    let key2 = Hashable::Str(StrObject {
+    let key2 = Hashable::Str(Str {
         value: "two".to_string(),
     });
-    let key3 = Hashable::Str(StrObject {
+    let key3 = Hashable::Str(Str {
         value: "three".to_string(),
     });
-    let key4 = Hashable::Int(IntObject { value: 4.into() });
+    let key4 = Hashable::Int(Int { value: 4.into() });
     let key5 = Hashable::from_object(&TRUE).unwrap();
     let key6 = Hashable::from_object(&FALSE).unwrap();
     assert_eq!(
         evaluated,
-        Object::Hash(HashObject {
+        Object::Dict(Dict {
             pairs: HashMap::from([
                 (
                     key1.hash_key(),
                     HashPair {
                         key: key1,
-                        value: Object::Int(IntObject { value: 1.into() })
+                        value: Object::Int(Int { value: 1.into() })
                     }
                 ),
                 (
                     key2.hash_key(),
                     HashPair {
                         key: key2,
-                        value: Object::Int(IntObject { value: 2.into() })
+                        value: Object::Int(Int { value: 2.into() })
                     }
                 ),
                 (
                     key3.hash_key(),
                     HashPair {
                         key: key3,
-                        value: Object::Int(IntObject { value: 3.into() })
+                        value: Object::Int(Int { value: 3.into() })
                     }
                 ),
                 (
                     key4.hash_key(),
                     HashPair {
                         key: key4,
-                        value: Object::Int(IntObject { value: 4.into() })
+                        value: Object::Int(Int { value: 4.into() })
                     }
                 ),
                 (
                     key5.hash_key(),
                     HashPair {
                         key: key5,
-                        value: Object::Int(IntObject { value: 5.into() })
+                        value: Object::Int(Int { value: 5.into() })
                     }
                 ),
                 (
                     key6.hash_key(),
                     HashPair {
                         key: key6,
-                        value: Object::Int(IntObject { value: 6.into() })
+                        value: Object::Int(Int { value: 6.into() })
                     }
                 ),
             ])
@@ -688,7 +688,7 @@ fn test_hash_index_expressions() {
             expected: None,
         },
         IndexExpressionTestCase {
-            input: r#"let key = "foo"; {"foo": 5}[key]"#.to_string(),
+            input: r#"var key = "foo"; {"foo": 5}[key]"#.to_string(),
             expected: Some(5),
         },
         IndexExpressionTestCase {
@@ -741,15 +741,15 @@ fn test_builtin_methods() {
             expected: Box::new(3),
         },
         BuiltinTestCase {
-            input: "let isDigit = 'a'.isDigit; isDigit(16)".to_string(),
+            input: "var isDigit = 'a'.isDigit; isDigit(16)".to_string(),
             expected: Box::new(true),
         },
         BuiltinTestCase {
-            input: "let isDigit = 'g'.isDigit; isDigit(16)".to_string(),
+            input: "var isDigit = 'g'.isDigit; isDigit(16)".to_string(),
             expected: Box::new(false),
         },
         BuiltinTestCase {
-            input: "let c = 'g'; c.isDigit(16)".to_string(),
+            input: "var c = 'g'; c.isDigit(16)".to_string(),
             expected: Box::new(false),
         },
     ];
@@ -770,21 +770,21 @@ fn test_builtin_methods() {
 #[test]
 fn test_class_method() {
     let input = "class a { fn b() { 10 } };
-let c = new a();
+var c = new a();
 c.b()";
 
     let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Int(IntObject { value: 10.into() }));
+    assert_eq!(evaluated, Object::Int(Int { value: 10.into() }));
 }
 
 #[test]
 fn test_delete_statement() {
     let input = "
-let i = 10;
+var i = 10;
 delete i";
 
     let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Int(IntObject { value: 10.into() }));
+    assert_eq!(evaluated, Object::Int(Int { value: 10.into() }));
 }
 
 fn test_eval(input: &str) -> Object {
@@ -801,14 +801,14 @@ fn test_eval(input: &str) -> Object {
 fn test_integer_object(obj: Object, expected: isize) {
     assert_eq!(
         obj,
-        Object::Int(IntObject {
+        Object::Int(Int {
             value: expected.into()
         })
     );
 }
 
 fn test_boolean_object(obj: Object, expected: bool) {
-    assert_eq!(obj, Object::Bool(BoolObject { value: expected }));
+    assert_eq!(obj, Object::Bool(Bool { value: expected }));
 }
 
 fn test_null_object(obj: Object) {

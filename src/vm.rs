@@ -6,11 +6,10 @@ use num_traits::{ToPrimitive, Zero};
 use crate::{
     code::{self, Opcode},
     compiler::Bytecode,
-    object::{builtins::BUILTINS, ClosureObject, IterObject, Iterable},
+    object::{builtins::BUILTINS, Closure, Iter, Iterable},
     object::{
-        ArrayObject, BoolObject, BuiltinFunction, BuiltinObject, CharObject,
-        CompiledFunctionObject, ErrorObject, FloatObject, HashObject, HashPair, Hashable,
-        IntObject, Object, RangeObject, StrObject,
+        Array, Bool, Builtin, BuiltinFunction, Char, CompiledFunction, Dict, Error, Float,
+        HashPair, Hashable, Int, Object, Range, Str,
     },
 };
 
@@ -24,8 +23,8 @@ const STACK_SIZE: usize = 2048;
 pub const GLOBAL_SIZE: usize = 65536;
 const MAX_FRAMES: usize = 1024;
 
-const TRUE: Object = Object::Bool(BoolObject { value: true });
-const FALSE: Object = Object::Bool(BoolObject { value: false });
+const TRUE: Object = Object::Bool(Bool { value: true });
+const FALSE: Object = Object::Bool(Bool { value: false });
 const NULL: Object = Object::Null;
 
 #[derive(Debug)]
@@ -44,13 +43,13 @@ pub struct VirtualMachine {
 
 impl VirtualMachine {
     pub fn new(bytecode: &Bytecode) -> Self {
-        let main_fn = CompiledFunctionObject {
+        let main_fn = CompiledFunction {
             instructions: bytecode.instructions.clone(),
             num_locals: 0,
             num_parameters: 0,
         };
 
-        let main_closure = ClosureObject {
+        let main_closure = Closure {
             func: main_fn,
             free: Vec::new(),
         };
@@ -74,13 +73,13 @@ impl VirtualMachine {
     }
 
     pub fn new_with_global_store(bytecode: &Bytecode, s: &[Object]) -> Self {
-        let main_fn = CompiledFunctionObject {
+        let main_fn = CompiledFunction {
             instructions: bytecode.instructions.clone(),
             num_locals: 0,
             num_parameters: 0,
         };
 
-        let main_closure = ClosureObject {
+        let main_closure = Closure {
             func: main_fn,
             free: Vec::new(),
         };
@@ -231,7 +230,7 @@ impl VirtualMachine {
                     }
 
                     elements.reverse();
-                    self.push(Object::Array(ArrayObject { elements }))?;
+                    self.push(Object::Array(Array { elements }))?;
                 }
 
                 Opcode::Hash => {
@@ -301,7 +300,7 @@ impl VirtualMachine {
 
                     let (name, func) = BUILTINS[builtin_idx];
 
-                    self.push(Object::Builtin(BuiltinObject {
+                    self.push(Object::Builtin(Builtin {
                         name: name.to_owned(),
                         func,
                         caller: None,
@@ -351,7 +350,7 @@ impl VirtualMachine {
                     let iter = Iterable::from_object(iter_obj.clone())
                         .ok_or(format!("{} is not iterable", iter_obj.kind()))?;
 
-                    self.push(Object::Iter(IterObject {
+                    self.push(Object::Iter(Iter {
                         size: iter.count(),
                         iter,
                         current: 0,
@@ -363,7 +362,7 @@ impl VirtualMachine {
                         return Err("Object is not an iterator".to_string())?;
                     };
 
-                    self.push(Object::Iter(IterObject {
+                    self.push(Object::Iter(Iter {
                         current: iter.current + 1,
                         ..iter.clone()
                     }))?;
@@ -419,7 +418,7 @@ impl VirtualMachine {
                 },
             );
         }
-        self.push(Object::Hash(HashObject { pairs }))?;
+        self.push(Object::Dict(Dict { pairs }))?;
         Ok(())
     }
 
@@ -444,13 +443,13 @@ impl VirtualMachine {
     fn exec_range(&mut self, has_step: bool) -> Result<(), String> {
         let stop = self.pop();
         let start = self.pop();
-        let Object::Int(IntObject { value: start }) = start else {
+        let Object::Int(Int { value: start }) = start else {
             return Err(format!(
                 "cannot use {} as step in range. expected: INT",
                 start.kind()
             ));
         };
-        let Object::Int(IntObject { value: stop }) = stop else {
+        let Object::Int(Int { value: stop }) = stop else {
             return Err(format!(
                 "cannot use {} as step in range. expected: INT",
                 stop.kind()
@@ -465,7 +464,7 @@ impl VirtualMachine {
         } else {
             let step = self.pop();
 
-            let Object::Int(IntObject { value: step }) = step else {
+            let Object::Int(Int { value: step }) = step else {
                 return Err(format!(
                     "cannot use {} as step in range. expected: INT",
                     step.kind()
@@ -474,7 +473,7 @@ impl VirtualMachine {
 
             step.to_isize().unwrap()
         };
-        self.push(Object::Range(RangeObject {
+        self.push(Object::Range(Range {
             start: start.to_isize().unwrap(),
             stop: stop.to_isize().unwrap(),
             step,
@@ -538,7 +537,7 @@ impl VirtualMachine {
 
             self.sp -= num_free;
 
-            self.push(Object::Closure(ClosureObject { func, free }))
+            self.push(Object::Closure(Closure { func, free }))
         } else {
             Err(format!("not a function: {constant:#?}"))
         }
@@ -551,25 +550,22 @@ impl VirtualMachine {
         let left = self.pop();
 
         match (&left, &right) {
+            (Object::Int(Int { value: left_value }), Object::Int(Int { value: right_value })) => {
+                self.execute_binary_int_operation(op, left_value.clone(), right_value.clone())
+            }
             (
-                Object::Int(IntObject { value: left_value }),
-                Object::Int(IntObject { value: right_value }),
-            ) => self.execute_binary_int_operation(op, left_value.clone(), right_value.clone()),
-            (
-                Object::Float(FloatObject { value: left_value }),
-                Object::Float(FloatObject { value: right_value }),
+                Object::Float(Float { value: left_value }),
+                Object::Float(Float { value: right_value }),
             ) => self.execute_binary_float_operation(op, *left_value, *right_value),
+            (Object::Str(Str { value: left_value }), Object::Str(Str { value: right_value })) => {
+                self.execute_binary_string_operation(op, left_value, right_value)
+            }
+            (Object::Str(Str { value: left_value }), Object::Char(Char { value: right_value })) => {
+                self.execute_binary_char_operation(op, left_value, *right_value)
+            }
             (
-                Object::Str(StrObject { value: left_value }),
-                Object::Str(StrObject { value: right_value }),
-            ) => self.execute_binary_string_operation(op, left_value, right_value),
-            (
-                Object::Str(StrObject { value: left_value }),
-                Object::Char(CharObject { value: right_value }),
-            ) => self.execute_binary_char_operation(op, left_value, *right_value),
-            (
-                Object::Char(CharObject { value: left_value }),
-                Object::Char(CharObject { value: right_value }),
+                Object::Char(Char { value: left_value }),
+                Object::Char(Char { value: right_value }),
             ) => self.execute_binary_char_operation(op, &left_value.to_string(), *right_value),
             _ => {
                 return Err(format!(
@@ -602,7 +598,7 @@ impl VirtualMachine {
             _ => return Err(format!("unknown integer operation: {op}")),
         };
 
-        self.push(Object::Int(IntObject { value }))
+        self.push(Object::Int(Int { value }))
     }
 
     fn execute_binary_float_operation(
@@ -619,7 +615,7 @@ impl VirtualMachine {
             _ => return Err(format!("unknown float operation: {op}")),
         };
 
-        self.push(Object::Float(FloatObject { value }))
+        self.push(Object::Float(Float { value }))
     }
 
     fn execute_binary_string_operation(
@@ -632,7 +628,7 @@ impl VirtualMachine {
             return Err(format!("unknown string operation: {op}"));
         }
 
-        self.push(Object::Str(StrObject {
+        self.push(Object::Str(Str {
             value: [left, right].concat(),
         }))
     }
@@ -647,7 +643,7 @@ impl VirtualMachine {
             return Err(format!("unknown string operation: {op}"));
         }
 
-        self.push(Object::Str(StrObject {
+        self.push(Object::Str(Str {
             value: [left, &right.to_string()].concat(),
         }))
     }
@@ -657,17 +653,16 @@ impl VirtualMachine {
         let left = self.pop();
 
         match (&left, &right) {
+            (Object::Int(Int { value: left_value }), Object::Int(Int { value: right_value })) => {
+                self.execute_int_comparison(op, left_value.clone(), right_value.clone())
+            }
             (
-                Object::Int(IntObject { value: left_value }),
-                Object::Int(IntObject { value: right_value }),
-            ) => self.execute_int_comparison(op, left_value.clone(), right_value.clone()),
-            (
-                Object::Float(FloatObject { value: left_value }),
-                Object::Float(FloatObject { value: right_value }),
+                Object::Float(Float { value: left_value }),
+                Object::Float(Float { value: right_value }),
             ) => self.execute_float_comparison(op, *left_value, *right_value),
             (
-                Object::Char(CharObject { value: left_value }),
-                Object::Char(CharObject { value: right_value }),
+                Object::Char(Char { value: left_value }),
+                Object::Char(Char { value: right_value }),
             ) => self.execute_char_comparison(op, *left_value, *right_value),
             _ => match op {
                 Opcode::Equal => self.push(if left == right { TRUE } else { FALSE }),
@@ -750,10 +745,10 @@ impl VirtualMachine {
     fn execute_minus_operator(&mut self) -> Result<(), String> {
         let operand = self.pop();
 
-        if let Object::Int(IntObject { value }) = operand {
-            self.push(Object::Int(IntObject { value: -value }))
-        } else if let Object::Float(FloatObject { value }) = operand {
-            self.push(Object::Float(FloatObject { value: -value }))
+        if let Object::Int(Int { value }) = operand {
+            self.push(Object::Int(Int { value: -value }))
+        } else if let Object::Float(Float { value }) = operand {
+            self.push(Object::Float(Float { value: -value }))
         } else {
             Err(format!("unsupported type for negation: {}", operand.kind()))
         }
@@ -786,25 +781,19 @@ impl VirtualMachine {
 
     fn execute_index_expression(&mut self, left: &Object, index: &Object) -> Result<(), String> {
         match (left, index) {
-            (Object::Array(ArrayObject { elements }), Object::Int(IntObject { value })) => {
+            (Object::Array(Array { elements }), Object::Int(Int { value })) => {
                 self.exec_array_index_expression(elements, value.to_isize().unwrap())?;
             }
-            (Object::Str(StrObject { value: left }), Object::Int(IntObject { value })) => {
+            (Object::Str(Str { value: left }), Object::Int(Int { value })) => {
                 self.exec_string_index_expression(left, value.to_usize().unwrap())?;
             }
-            (
-                Object::Array(ArrayObject { elements }),
-                Object::Range(RangeObject { start, stop, step }),
-            ) => {
+            (Object::Array(Array { elements }), Object::Range(Range { start, stop, step })) => {
                 self.exec_array_slice_expression(elements, *start, *stop, *step)?;
             }
-            (
-                Object::Str(StrObject { value }),
-                Object::Range(RangeObject { start, stop, step }),
-            ) => {
+            (Object::Str(Str { value }), Object::Range(Range { start, stop, step })) => {
                 self.exec_string_slice_expression(value, *start, *stop, *step)?;
             }
-            (Object::Hash(HashObject { pairs }), _) => {
+            (Object::Dict(Dict { pairs }), _) => {
                 self.exec_hash_index_expression(pairs, index)?;
             }
             _ => {
@@ -836,7 +825,7 @@ impl VirtualMachine {
             return Err(format!("index out of bounds. got: {idx}, max: {max}"));
         }
 
-        self.push(Object::Char(CharObject {
+        self.push(Object::Char(Char {
             value: string.chars().nth(idx).unwrap(),
         }))
     }
@@ -862,7 +851,7 @@ impl VirtualMachine {
             i += step;
         }
 
-        self.push(Object::Array(ArrayObject { elements }))
+        self.push(Object::Array(Array { elements }))
     }
 
     fn exec_string_slice_expression(
@@ -875,7 +864,7 @@ impl VirtualMachine {
         let max = (string.len() as isize) - 1;
 
         if start > max || stop > max || start < 0 || stop < 0 || start > stop {
-            return Err("cannot slice STR using this range".to_string());
+            return Err(format!("cannot slice STR using {start}..{stop}..{step}"));
         }
 
         let mut value = String::new();
@@ -886,7 +875,7 @@ impl VirtualMachine {
             i += step;
         }
 
-        self.push(Object::Str(StrObject { value }))
+        self.push(Object::Str(Str { value }))
     }
 
     fn exec_hash_index_expression(
@@ -899,7 +888,7 @@ impl VirtualMachine {
         };
 
         pairs.get(&hashable.hash_key()).map_or_else(
-            || Err(format!("key error: no entry found for key '{index}'")),
+            || Err(format!("key error: no entry found for key \"{index}\"")),
             |pair| self.push(pair.value.clone()),
         )
     }
@@ -909,7 +898,7 @@ impl VirtualMachine {
         match callee {
             Object::Closure(callee) => self.call_closure(&callee, num_args),
 
-            Object::Builtin(BuiltinObject { func, caller, .. }) => {
+            Object::Builtin(Builtin { func, caller, .. }) => {
                 self.call_builtin(func, &(caller.unwrap_or_else(|| Box::new(NULL))), num_args)
             }
 
@@ -920,7 +909,7 @@ impl VirtualMachine {
         }
     }
 
-    fn call_closure(&mut self, cl: &ClosureObject, num_args: usize) -> Result<(), String> {
+    fn call_closure(&mut self, cl: &Closure, num_args: usize) -> Result<(), String> {
         if num_args != cl.func.num_parameters {
             return Err(format!(
                 "wrong number of arguments. got: {num_args}, want: {}",
@@ -955,14 +944,14 @@ impl VirtualMachine {
 fn is_truthy(obj: &Object) -> bool {
     match obj {
         Object::Null => false,
-        Object::Bool(BoolObject { value }) => *value,
-        Object::Int(IntObject { value }) => *value != Zero::zero(),
-        Object::Str(StrObject { value }) => !value.is_empty(),
-        Object::Char(CharObject { value }) => *value != '\0',
-        Object::Array(ArrayObject { elements }) => !elements.is_empty(),
-        Object::Hash(HashObject { pairs }) => !pairs.is_empty(),
-        Object::Float(FloatObject { value }) => !(value.is_nan() || *value == 0f64),
-        Object::Error(ErrorObject { message }) => !message.is_empty(),
+        Object::Bool(Bool { value }) => *value,
+        Object::Int(Int { value }) => *value != Zero::zero(),
+        Object::Str(Str { value }) => !value.is_empty(),
+        Object::Char(Char { value }) => *value != '\0',
+        Object::Array(Array { elements }) => !elements.is_empty(),
+        Object::Dict(Dict { pairs }) => !pairs.is_empty(),
+        Object::Float(Float { value }) => !(value.is_nan() || *value == 0f64),
+        Object::Error(Error { message }) => !message.is_empty(),
         _ => true,
     }
 }

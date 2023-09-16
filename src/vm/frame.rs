@@ -1,14 +1,14 @@
-use crate::{code::Instructions, object::ClosureObject};
+use crate::{code::Instructions, object::Closure};
 
 #[derive(Clone, Debug)]
 pub struct Frame {
-    pub cl: ClosureObject,
+    pub cl: Closure,
     pub ip: isize,
     pub bp: usize,
 }
 
 impl Frame {
-    pub fn new(cl: ClosureObject, bp: usize) -> Self {
+    pub fn new(cl: Closure, bp: usize) -> Self {
         Self { cl, ip: -1, bp }
     }
 

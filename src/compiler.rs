@@ -5,26 +5,21 @@ mod tests;
 
 pub mod symbol_table;
 
-use std::{
-    hash::{Hash, Hasher},
-    path::PathBuf,
-};
-
-use ahash::AHasher;
+use std::path::PathBuf;
 pub use symbol_table::*;
 
 use crate::{
     ast::{
-        AssignAst, Assignable, BlockStatement, CallAst, ConstructorAst, DeclarationAst, DeleteAst,
-        Expression, ExpressionStmtAst, ForAst, FunctionAst, IdentifierAst, IfAst, ImportAst,
-        IndexAst, InfixAst, LambdaAst, Literal, LiteralAst, MethodAst, Node, Operator, PrefixAst,
-        RangeAst, ReturnAst, ScopeAst, Statement, WhileAst,
+        AssignAst, Assignable, BlockStatement, CallAst, ClassStatement, Constructable, Constructor,
+        Declaration, Delete, Expression, ExpressionStmt, For, Function, Identifier, IfAst, Import,
+        IndexAst, InfixAst, LambdaAst, Literal, LiteralAst, Method, Node, Operator, PrefixAst,
+        Range, Return, ScopeAst, Statement, While,
     },
     code::{make, Instructions, Opcode},
     lexer::Lexer,
     object::{
-        builtins::BUILTINS, CharObject, CompiledFunctionObject, CompiledModuleObject, FloatObject,
-        IntObject, Object, StrObject, DIR_ENV_VAR_NAME,
+        builtins::BUILTINS, hash_method_name, Char, CompiledFunction, CompiledModuleObject, Float,
+        Int, Object, Str, DIR_ENV_VAR_NAME,
     },
     parser::Parser,
 };
@@ -112,20 +107,20 @@ impl Compiler {
             }
 
             Node::Stmt(stmt) => match stmt {
-                Statement::ExpressionStmt(ExpressionStmtAst {
+                Statement::ExpressionStmt(ExpressionStmt {
                     expression,
                     returns,
                     ..
                 }) => {
                     self.compile(Node::Expr(expression))?;
                     if returns {
-                        self.emit(Opcode::Pop, &[]);
+                        self.emit_op(Opcode::Pop);
                     } else {
-                        self.emit(Opcode::PopNoRet, &[]);
+                        self.emit_op(Opcode::PopNoRet);
                     }
                 }
 
-                Statement::Declaration(DeclarationAst {
+                Statement::Declaration(Declaration {
                     name,
                     mutable,
                     value,
@@ -136,7 +131,7 @@ impl Compiler {
                     if let Some(value) = value {
                         self.compile(Node::Expr(value))?;
                     } else {
-                        self.emit(Opcode::Null, &[]);
+                        self.emit_op(Opcode::Null);
                     }
 
                     if symbol.scope == SymbolScope::Global {
@@ -146,12 +141,12 @@ impl Compiler {
                     }
                 }
 
-                Statement::Return(ReturnAst { return_value, .. }) => {
+                Statement::Return(Return { return_value, .. }) => {
                     self.compile(Node::Expr(return_value))?;
-                    self.emit(Opcode::ReturnValue, &[]);
+                    self.emit_op(Opcode::ReturnValue);
                 }
 
-                Statement::Delete(DeleteAst { delete_ident, .. }) => {
+                Statement::Delete(Delete { delete_ident, .. }) => {
                     let Some(symbol) = self.symbol_table.delete(&delete_ident) else {
                         return Err(format!("undefined variable `{delete_ident}`"));
                     };
@@ -159,7 +154,7 @@ impl Compiler {
                     self.emit(Opcode::Delete, &[symbol.index]);
                 }
 
-                Statement::Function(FunctionAst {
+                Statement::Function(Function {
                     ident,
                     parameters,
                     body,
@@ -190,7 +185,7 @@ impl Compiler {
                     if !self.last_instruction_is(Opcode::ReturnValue)
                         && !self.last_instruction_is(Opcode::Return)
                     {
-                        self.emit(Opcode::Return, &[]);
+                        self.emit_op(Opcode::Return);
                     }
 
                     let free_symbols = self.symbol_table.free_symbols.clone();
@@ -201,7 +196,7 @@ impl Compiler {
                         self.load_symbol(symbol.clone());
                     }
 
-                    let compiled_fn = Object::CompiledFunction(CompiledFunctionObject {
+                    let compiled_fn = Object::CompiledFunction(CompiledFunction {
                         instructions,
                         num_locals,
                         num_parameters,
@@ -217,7 +212,7 @@ impl Compiler {
                     }
                 }
 
-                Statement::While(WhileAst {
+                Statement::While(While {
                     condition, body, ..
                 }) => {
                     self.loop_state.in_loop = true;
@@ -230,7 +225,7 @@ impl Compiler {
                     self.compile_block_statements(body)?;
 
                     self.emit(Opcode::Jump, &[start_pos]);
-                    self.emit(Opcode::Pop, &[]);
+                    self.emit_op(Opcode::Pop);
 
                     let after_loop_pos = self.current_instructions().len();
                     self.change_operand(jump_not_truthy_pos, after_loop_pos);
@@ -268,7 +263,7 @@ impl Compiler {
                     self.symbol_table.define_type(decl.ident.clone(), decl);
                 }
 
-                Statement::Import(ImportAst { path, alias, .. }) => {
+                Statement::Import(Import { path, alias, .. }) => {
                     let path_buf = PathBuf::from(&path);
                     let start_dir =
                         std::env::var(DIR_ENV_VAR_NAME).map_err(|err| err.to_string())?;
@@ -317,7 +312,7 @@ impl Compiler {
                     }
                 }
 
-                Statement::For(ForAst {
+                Statement::For(For {
                     ident,
                     iterator,
                     body,
@@ -326,7 +321,7 @@ impl Compiler {
                     self.loop_state.in_loop = true;
 
                     let symbol = self.symbol_table.define(&ident, false);
-                    self.emit(Opcode::Null, &[]);
+                    self.emit_op(Opcode::Null);
 
                     if symbol.scope == SymbolScope::Global {
                         self.emit(Opcode::SetGlobal, &[symbol.index]);
@@ -335,13 +330,13 @@ impl Compiler {
                     }
 
                     self.compile(Node::Expr(iterator))?;
-                    self.emit(Opcode::Start, &[]);
+                    self.emit_op(Opcode::Start);
 
                     let start_pos = self.current_instructions().len();
 
                     let jump_iter_end_pos = self.emit(Opcode::JumpEnd, &[9999, 9999]);
 
-                    self.emit(Opcode::Next, &[]);
+                    self.emit_op(Opcode::Next);
 
                     if symbol.scope == SymbolScope::Global {
                         self.emit(Opcode::SetGlobal, &[symbol.index]);
@@ -353,7 +348,7 @@ impl Compiler {
 
                     self.emit(Opcode::Jump, &[start_pos]);
 
-                    self.emit(Opcode::Pop, &[]);
+                    self.emit_op(Opcode::Pop);
 
                     let after_loop_pos = self.current_instructions().len();
                     self.change_operands(jump_iter_end_pos, &[after_loop_pos, symbol.index]);
@@ -383,14 +378,14 @@ impl Compiler {
                         self.compile(Node::Expr(*right))?;
                         self.compile(Node::Expr(*left))?;
 
-                        self.emit(Opcode::GreaterThan, &[]);
+                        self.emit_op(Opcode::GreaterThan);
 
                         return Ok(());
                     } else if operator == Operator::LtEq {
                         self.compile(Node::Expr(*right))?;
                         self.compile(Node::Expr(*left))?;
 
-                        self.emit(Opcode::GreaterThanEqual, &[]);
+                        self.emit_op(Opcode::GreaterThanEqual);
 
                         return Ok(());
                     }
@@ -399,22 +394,22 @@ impl Compiler {
                     self.compile(Node::Expr(*right))?;
 
                     match operator {
-                        Operator::Add => self.emit(Opcode::Add, &[]),
-                        Operator::Sub => self.emit(Opcode::Sub, &[]),
-                        Operator::Mul => self.emit(Opcode::Mul, &[]),
-                        Operator::Div => self.emit(Opcode::Div, &[]),
-                        Operator::BitXor => self.emit(Opcode::BitXor, &[]),
-                        Operator::BitAnd => self.emit(Opcode::BitAnd, &[]),
-                        Operator::BitOr => self.emit(Opcode::BitOr, &[]),
-                        Operator::Shr => self.emit(Opcode::Shr, &[]),
-                        Operator::Shl => self.emit(Opcode::Shl, &[]),
-                        Operator::Gt => self.emit(Opcode::GreaterThan, &[]),
-                        Operator::GtEq => self.emit(Opcode::GreaterThanEqual, &[]),
-                        Operator::Eq => self.emit(Opcode::Equal, &[]),
-                        Operator::NotEq => self.emit(Opcode::NotEqual, &[]),
-                        Operator::And => self.emit(Opcode::And, &[]),
-                        Operator::Or => self.emit(Opcode::Or, &[]),
-                        _ => return Err(format!("unknown operator: '{operator}'")),
+                        Operator::Add => self.emit_op(Opcode::Add),
+                        Operator::Sub => self.emit_op(Opcode::Sub),
+                        Operator::Mul => self.emit_op(Opcode::Mul),
+                        Operator::Div => self.emit_op(Opcode::Div),
+                        Operator::BitXor => self.emit_op(Opcode::BitXor),
+                        Operator::BitAnd => self.emit_op(Opcode::BitAnd),
+                        Operator::BitOr => self.emit_op(Opcode::BitOr),
+                        Operator::Shr => self.emit_op(Opcode::Shr),
+                        Operator::Shl => self.emit_op(Opcode::Shl),
+                        Operator::Gt => self.emit_op(Opcode::GreaterThan),
+                        Operator::GtEq => self.emit_op(Opcode::GreaterThanEqual),
+                        Operator::Eq => self.emit_op(Opcode::Equal),
+                        Operator::NotEq => self.emit_op(Opcode::NotEqual),
+                        Operator::And => self.emit_op(Opcode::And),
+                        Operator::Or => self.emit_op(Opcode::Or),
+                        _ => return Err(format!("unknown operator: \"{operator}\"")),
                     };
                 }
 
@@ -424,47 +419,47 @@ impl Compiler {
                     self.compile(Node::Expr(*right))?;
 
                     match operator {
-                        Operator::Bang => self.emit(Opcode::Bang, &[]),
-                        Operator::Sub => self.emit(Opcode::Minus, &[]),
+                        Operator::Bang => self.emit_op(Opcode::Bang),
+                        Operator::Sub => self.emit_op(Opcode::Minus),
                         _ => return Err(format!("unknown operator: {operator}")),
                     };
                 }
 
                 Expression::Literal(LiteralAst { lit, .. }) => match lit {
                     Literal::Int { value } => {
-                        let integer = Object::Int(IntObject { value });
+                        let integer = Object::Int(Int { value });
                         let operand = self.add_constant(integer);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
                     Literal::Float { value } => {
-                        let float = Object::Float(FloatObject { value });
+                        let float = Object::Float(Float { value });
                         let operand = self.add_constant(float);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
                     Literal::Char { value } => {
-                        let ch = Object::Char(CharObject { value });
+                        let ch = Object::Char(Char { value });
                         let operand = self.add_constant(ch);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
                     Literal::Str { value } => {
-                        let str = Object::Str(StrObject { value });
+                        let str = Object::Str(Str { value });
                         let operand = self.add_constant(str);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
                     Literal::Bool { value } => {
                         if value {
-                            self.emit(Opcode::True, &[])
+                            self.emit_op(Opcode::True)
                         } else {
-                            self.emit(Opcode::False, &[])
+                            self.emit_op(Opcode::False)
                         };
                     }
 
                     Literal::Null => {
-                        self.emit(Opcode::Null, &[]);
+                        self.emit_op(Opcode::Null);
                     }
 
                     Literal::Array { elements } => {
@@ -515,14 +510,14 @@ impl Compiler {
                             self.remove_last_pop();
                         }
                     } else {
-                        self.emit(Opcode::Null, &[]);
+                        self.emit_op(Opcode::Null);
                     }
 
                     let after_alternative_pos = self.current_instructions().len();
                     self.change_operand(jump_pos, after_alternative_pos);
                 }
 
-                Expression::Identifier(IdentifierAst { value, .. }) => {
+                Expression::Identifier(Identifier { value, .. }) => {
                     let symbol = self
                         .symbol_table
                         .resolve(&value)
@@ -535,10 +530,10 @@ impl Compiler {
                     self.compile(Node::Expr(*left))?;
                     self.compile(Node::Expr(*index))?;
 
-                    self.emit(Opcode::Index, &[]);
+                    self.emit_op(Opcode::Index);
                 }
 
-                Expression::Range(RangeAst {
+                Expression::Range(Range {
                     start, stop, step, ..
                 }) => {
                     if let Some(step) = step {
@@ -583,7 +578,7 @@ impl Compiler {
                     if !self.last_instruction_is(Opcode::ReturnValue)
                         && !self.last_instruction_is(Opcode::Return)
                     {
-                        self.emit(Opcode::Return, &[]);
+                        self.emit_op(Opcode::Return);
                     }
 
                     let free_symbols = self.symbol_table.free_symbols.clone();
@@ -594,7 +589,7 @@ impl Compiler {
                         self.load_symbol(symbol.clone());
                     }
 
-                    let compiled_fn = Object::CompiledFunction(CompiledFunctionObject {
+                    let compiled_fn = Object::CompiledFunction(CompiledFunction {
                         instructions,
                         num_locals,
                         num_parameters,
@@ -621,7 +616,7 @@ impl Compiler {
                 }
 
                 Expression::Assign(AssignAst { to, value, .. }) => match to {
-                    Assignable::Identifier(IdentifierAst { value: name, .. }) => {
+                    Assignable::Identifier(Identifier { value: name, .. }) => {
                         self.compile(Node::Expr(*value))?;
 
                         let symbol = self
@@ -629,7 +624,7 @@ impl Compiler {
                             .resolve(&name)
                             .ok_or_else(|| format!("undefined variable {name}"))?;
 
-                        self.emit(Opcode::Dup, &[]);
+                        self.emit_op(Opcode::Dup);
 
                         if symbol.scope == SymbolScope::Global {
                             self.emit(Opcode::SetGlobal, &[symbol.index]);
@@ -641,7 +636,7 @@ impl Compiler {
                     _ => todo!(),
                 },
 
-                Expression::Method(MethodAst {
+                Expression::Method(Method {
                     left,
                     method,
                     arguments,
@@ -679,12 +674,105 @@ impl Compiler {
                         .ok_or_else(|| format!("no module named {module} found."))?;
 
                     self.emit(Opcode::Scope, &[pos]);
+
+                    todo!();
                 }
 
-                Expression::Constructor(ConstructorAst { .. }) => {
-                    let (_, pos) = self.symbol_table.resolve_type("").ok_or_else(String::new)?;
+                Expression::Constructor(Constructor { constructable, .. }) => {
+                    match constructable {
+                        Constructable::Identifier(Identifier { ref value, .. }) => {
+                            let class = self
+                                .symbol_table
+                                .resolve_type(value)
+                                .ok_or_else(|| format!("no class named \"{value}\" found."))?;
 
-                    self.emit(Opcode::Constructor, &[pos]);
+                            (!class.initializers.is_empty())
+                                .then_some(())
+                                .ok_or_else(|| {
+                                    format!(
+                                        "cannot initialize class with 0 variables. required: {}",
+                                        class.initializers.len()
+                                    )
+                                })?;
+
+                            for stmt in class.body {
+                                match stmt {
+                                    ClassStatement::Declaration(decl) => {
+                                        if let Some(value) = decl.value {
+                                            self.compile(Node::Expr(value))?;
+                                        } else {
+                                            self.emit_op(Opcode::Null);
+                                        }
+
+                                        self.emit(
+                                            Opcode::ClassMember,
+                                            &[
+                                                hash_method_name(&decl.name) as usize,
+                                                0,
+                                                decl.mutable as usize,
+                                            ],
+                                        );
+                                    }
+
+                                    ClassStatement::Function(func) => {
+                                        self.enter_scope();
+
+                                        self.symbol_table.define_function_name(&func.ident);
+
+                                        let num_parameters = func.parameters.len();
+
+                                        for p in func.parameters {
+                                            self.symbol_table.define(&p, false);
+                                        }
+
+                                        self.compile_block_statements(func.body)?;
+
+                                        if self.last_instruction_is(Opcode::Pop) {
+                                            self.replace_last_pop_with(Opcode::ReturnValue);
+                                        }
+
+                                        if self.last_instruction_is(Opcode::PopNoRet) {
+                                            self.replace_last_pop_with(Opcode::Return);
+                                        }
+
+                                        if !self.last_instruction_is(Opcode::ReturnValue)
+                                            && !self.last_instruction_is(Opcode::Return)
+                                        {
+                                            self.emit_op(Opcode::Return);
+                                        }
+
+                                        let free_symbols = self.symbol_table.free_symbols.clone();
+                                        let num_locals = self.symbol_table.num_definitions;
+                                        let instructions = self.leave_scope();
+
+                                        for symbol in &free_symbols {
+                                            self.load_symbol(symbol.clone());
+                                        }
+
+                                        let compiled_fn =
+                                            Object::CompiledFunction(CompiledFunction {
+                                                instructions,
+                                                num_locals,
+                                                num_parameters,
+                                            });
+
+                                        let idx = self.add_constant(compiled_fn);
+                                        self.emit(Opcode::Closure, &[idx, free_symbols.len()]);
+
+                                        self.emit(
+                                            Opcode::ClassMember,
+                                            &[hash_method_name(&func.ident) as usize, 1, 0],
+                                        );
+                                    }
+                                }
+                            }
+                        }
+
+                        Constructable::Call(_) => {}
+
+                        Constructable::Scope(_) => {}
+                    };
+
                     todo!();
                 }
             },
@@ -699,7 +787,7 @@ impl Compiler {
             SymbolScope::Local => self.emit(Opcode::GetLocal, &[symbol.index]),
             SymbolScope::Builtin => self.emit(Opcode::GetBuiltin, &[symbol.index]),
             SymbolScope::Free => self.emit(Opcode::GetFree, &[symbol.index]),
-            SymbolScope::Function => self.emit(Opcode::CurrentClosure, &[]),
+            SymbolScope::Function => self.emit_op(Opcode::CurrentClosure),
         };
     }
 
@@ -717,6 +805,15 @@ impl Compiler {
 
     fn emit(&mut self, op: Opcode, operands: &[usize]) -> usize {
         let ins = make(op, operands);
+        let pos = self.add_instruction(&ins);
+
+        self.set_last_instruction(op, pos);
+
+        pos
+    }
+
+    fn emit_op(&mut self, op: Opcode) -> usize {
+        let ins = make(op, &[]);
         let pos = self.add_instruction(&ins);
 
         self.set_last_instruction(op, pos);
@@ -835,17 +932,4 @@ impl Compiler {
 pub struct Bytecode {
     pub instructions: Instructions,
     pub constants: Vec<Object>,
-}
-
-fn hash_method_name(name: &str) -> u8 {
-    let mut hasher = AHasher::default();
-    name.hash(&mut hasher);
-    let hash = hasher.finish();
-
-    let mut out = 0u8;
-    for i in 0..8 {
-        out ^= (hash >> (i * 8)) as u8
-    }
-
-    out
 }

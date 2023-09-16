@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Expression, ImportAst, Literal, Node, Statement},
+    ast::{Expression, Import, Literal, Node, Statement},
     lexer::Lexer,
     parser::Parser,
 };
@@ -33,7 +33,7 @@ impl Formatter for Statement {
         match self {
             Self::Break(_) => format!("{}break;", "    ".repeat(level)),
             Self::Continue(_) => format!("{}continue;", "    ".repeat(level)),
-            Self::Import(ImportAst { path, alias, .. }) => {
+            Self::Import(Import { path, alias, .. }) => {
                 let mut out = format!("{}import \"{path}\"", "    ".repeat(level));
 
                 if let Some(alias) = alias {

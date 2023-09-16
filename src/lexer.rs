@@ -307,15 +307,15 @@ mod tests {
 
     #[test]
     fn test_next_token() {
-        let input = r#"let five = 5;
-let ten = 10;
+        let input = r#"var five = 5;
+var ten = 10;
 const five = 5;
 
-let add = fn(x, y) {
+var add = fn(x, y) {
     x + y;
 };
 
-let result = add(five, ten);
+var result = add(five, ten);
 !-/*5;
 5 < 10 > 5;
 
@@ -343,12 +343,12 @@ delete foo;
         .to_string();
 
         let test_cases = [
-            case!(Var, "let"),
+            case!(Var, "var"),
             case!(Ident, "five"),
             case!(Assign, "="),
             case!(IntLiteral, "5"),
             case!(Semicolon, ";"),
-            case!(Var, "let"),
+            case!(Var, "var"),
             case!(Ident, "ten"),
             case!(Assign, "="),
             case!(IntLiteral, "10"),
@@ -358,7 +358,7 @@ delete foo;
             case!(Assign, "="),
             case!(IntLiteral, "5"),
             case!(Semicolon, ";"),
-            case!(Var, "let"),
+            case!(Var, "var"),
             case!(Ident, "add"),
             case!(Assign, "="),
             case!(Function, "fn"),
@@ -374,7 +374,7 @@ delete foo;
             case!(Semicolon, ";"),
             case!(RBrace, "}"),
             case!(Semicolon, ";"),
-            case!(Var, "let"),
+            case!(Var, "var"),
             case!(Ident, "result"),
             case!(Assign, "="),
             case!(Ident, "add"),

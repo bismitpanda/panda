@@ -6,10 +6,8 @@ use crate::{
     code::instructions_to_string,
     compiler::Compiler,
     lexer::Lexer,
-    object::{
-        ArrayObject, BoolObject, CharObject, FloatObject, HashObject, Hashable, Object, StrObject,
-    },
-    object::{IntObject, NULL},
+    object::{Array, Bool, Char, Dict, Float, Hashable, Object, Str},
+    object::{Int, NULL_OBJ},
     parser::Parser,
 };
 
@@ -546,15 +544,15 @@ fn test_conditionals() {
 fn test_global_declaration_statements() {
     let test_cases = [
         VMTestCase {
-            input: "let one = 1; one".to_string(),
+            input: "var one = 1; one".to_string(),
             expected: Box::new(1),
         },
         VMTestCase {
-            input: "let one = 1; let two = 2; one + two".to_string(),
+            input: "var one = 1; var two = 2; one + two".to_string(),
             expected: Box::new(3),
         },
         VMTestCase {
-            input: "let one = 1; let two = one + one; one + two".to_string(),
+            input: "var one = 1; var two = one + one; one + two".to_string(),
             expected: Box::new(3),
         },
         VMTestCase {
@@ -625,13 +623,13 @@ fn test_hash_literals() {
             input: "{1: 2, 2: 3}".to_string(),
             expected: Box::new(HashMap::from([
                 (
-                    Hashable::from_object(&Object::Int(IntObject { value: 1.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 1.into() }))
                         .unwrap()
                         .hash_key(),
                     2,
                 ),
                 (
-                    Hashable::from_object(&Object::Int(IntObject { value: 2.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 2.into() }))
                         .unwrap()
                         .hash_key(),
                     3,
@@ -642,13 +640,13 @@ fn test_hash_literals() {
             input: "{1 + 1: 2 * 2, 3 + 3: 4 * 4}".to_string(),
             expected: Box::new(HashMap::from([
                 (
-                    Hashable::from_object(&Object::Int(IntObject { value: 2.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 2.into() }))
                         .unwrap()
                         .hash_key(),
                     4,
                 ),
                 (
-                    Hashable::from_object(&Object::Int(IntObject { value: 6.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 6.into() }))
                         .unwrap()
                         .hash_key(),
                     16,
@@ -692,18 +690,18 @@ fn test_index_expression() {
 fn test_calling_functions_without_arguments() {
     let test_cases = [
         VMTestCase {
-            input: "let fivePlusTen = fn() { 5 + 10 }; fivePlusTen()".to_string(),
+            input: "var fivePlusTen = fn() { 5 + 10 }; fivePlusTen()".to_string(),
             expected: Box::new(15),
         },
         VMTestCase {
             input: "
-let a = fn() {
+var a = fn() {
     1
 };
-let b = fn() {
+var b = fn() {
     a() + 1
 };
-let c = fn() {
+var c = fn() {
     b() + 1
 };
 c()"
@@ -711,7 +709,7 @@ c()"
             expected: Box::new(3),
         },
         VMTestCase {
-            input: "let one = fn() { 1 }; let two = fn() { 2 }; one() + two()".to_string(),
+            input: "var one = fn() { 1 }; var two = fn() { 2 }; one() + two()".to_string(),
             expected: Box::new(3),
         },
     ];
@@ -723,11 +721,11 @@ c()"
 fn test_functions_with_return_statement() {
     let test_cases = [
         VMTestCase {
-            input: "let earlyExit = fn() { return 99; 100; }; earlyExit()".to_string(),
+            input: "var earlyExit = fn() { return 99; 100; }; earlyExit()".to_string(),
             expected: Box::new(99),
         },
         VMTestCase {
-            input: "let earlyExit = fn() { return 99; return 100; }; earlyExit()".to_string(),
+            input: "var earlyExit = fn() { return 99; return 100; }; earlyExit()".to_string(),
             expected: Box::new(99),
         },
     ];
@@ -739,13 +737,13 @@ fn test_functions_with_return_statement() {
 fn test_functions_without_return_value() {
     let test_cases = [
         VMTestCase {
-            input: "let noReturn = fn() { }; noReturn();".to_string(),
+            input: "var noReturn = fn() { }; noReturn();".to_string(),
             expected: Box::new(None::<u8>),
         },
         VMTestCase {
             input: "
-let noReturn = fn() { };
-let noReturnTwo = fn() {
+var noReturn = fn() { };
+var noReturnTwo = fn() {
     noReturn();
 };
 noReturn();
@@ -762,15 +760,15 @@ noReturnTwo();"
 fn test_first_class_functions() {
     let test_cases = [
         VMTestCase {
-            input: "let returnsOne = fn() { 1 };
-            let returnsOneReturner = fn() { returnsOne };
+            input: "var returnsOne = fn() { 1 };
+            var returnsOneReturner = fn() { returnsOne };
             returnsOneReturner()()"
                 .to_string(),
             expected: Box::new(1),
         },
         VMTestCase {
-            input: "let returnsOneReturner = fn() {
-            let returnsOne = fn() { 1 };
+            input: "var returnsOneReturner = fn() {
+            var returnsOne = fn() { 1 };
             returnsOne
             };
             returnsOneReturner()()"
@@ -786,15 +784,15 @@ fn test_first_class_functions() {
 fn test_calling_functions_with_bindings() {
     let test_cases = [
         VMTestCase {
-            input: "let one = fn() { let one = 1; one };
+            input: "var one = fn() { var one = 1; one };
         one()"
                 .to_string(),
             expected: Box::new(1),
         },
         VMTestCase {
-            input: "let oneAndTwo = fn() {
-                let one = 1;
-                let two = 2;
+            input: "var oneAndTwo = fn() {
+                var one = 1;
+                var two = 2;
                 one + two
             };
             oneAndTwo()"
@@ -803,13 +801,13 @@ fn test_calling_functions_with_bindings() {
         },
         VMTestCase {
             input: "fn oneAndTwo() {
-                let one = 1;
-                let two = 2;
+                var one = 1;
+                var two = 2;
                 one + two
             };
             fn threeAndFour() {
-                let three = 3;
-                let four = 4;
+                var three = 3;
+                var four = 4;
                 three + four
             };
             oneAndTwo() + threeAndFour()"
@@ -818,12 +816,12 @@ fn test_calling_functions_with_bindings() {
         },
         VMTestCase {
             input: "
-let firstFoobar = fn() {
-    let foobar = 50;
+var firstFoobar = fn() {
+    var foobar = 50;
     foobar
 };
-let secondFoobar = fn() {
-    let foobar = 100
+var secondFoobar = fn() {
+    var foobar = 100
     foobar
 };
 firstFoobar() + secondFoobar()"
@@ -832,14 +830,14 @@ firstFoobar() + secondFoobar()"
         },
         VMTestCase {
             input: "
-let globalSeed = 50;
-let minusOne = fn() {
-    let num = 1;
+var globalSeed = 50;
+var minusOne = fn() {
+    var num = 1;
     globalSeed - num
 };
 
-let minusTwo = fn() {
-    let num = 2;
+var minusTwo = fn() {
+    var num = 2;
     globalSeed - num
 }
 minusOne() + minusTwo()
@@ -856,21 +854,21 @@ minusOne() + minusTwo()
 fn test_calling_functions_with_arguments_and_bindings() {
     let test_cases = [
         VMTestCase {
-            input: "let identity = fn(a) { a };
+            input: "var identity = fn(a) { a };
             identity(4)"
                 .to_string(),
             expected: Box::new(4),
         },
         VMTestCase {
-            input: "let sum = fn(a, b) { a + b };
+            input: "var sum = fn(a, b) { a + b };
             sum(1, 2)"
                 .to_string(),
             expected: Box::new(3),
         },
         VMTestCase {
             input: "
-let sum = fn(a, b) {
-    let c = a + b;
+var sum = fn(a, b) {
+    var c = a + b;
     c
 };
 sum(1, 2)"
@@ -879,11 +877,11 @@ sum(1, 2)"
         },
         VMTestCase {
             input: "
-let sum = fn(a, b) {
-    let c = a + b;
+var sum = fn(a, b) {
+    var c = a + b;
     c
 };
-let outer = fn() {
+var outer = fn() {
     sum(1, 2) + sum(3, 4)
 };
 outer()"
@@ -891,8 +889,8 @@ outer()"
             expected: Box::new(10),
         },
         VMTestCase {
-            input: "let sum = fn(a, b) {
-                let c = a + b;
+            input: "var sum = fn(a, b) {
+                var c = a + b;
                 c
                 };
                 sum(1, 2) + sum(3, 4)"
@@ -900,12 +898,12 @@ outer()"
             expected: Box::new(10),
         },
         VMTestCase {
-            input: "let globalNum = 10;
-            let sum = fn(a, b) {
-            let c = a + b;
+            input: "var globalNum = 10;
+            var sum = fn(a, b) {
+            var c = a + b;
             c + globalNum
             };
-            let outer = fn() {
+            var outer = fn() {
             sum(1, 2) + sum(3, 4) + globalNum
             };
             outer() + globalNum"
@@ -958,48 +956,48 @@ fn test_closures() {
     let test_cases = [
         VMTestCase {
             input: "
-let newClosure = fn(a) {
+var newClosure = fn(a) {
     fn() { a }
 };
 
-let closure = newClosure(99);
+var closure = newClosure(99);
 closure()"
                 .to_string(),
             expected: Box::new(99),
         },
         VMTestCase {
             input: "
-let newAdder = fn(a, b) {
+var newAdder = fn(a, b) {
     fn(c) { a + b + c }
 };
-let adder = newAdder(1, 2);
+var adder = newAdder(1, 2);
 adder(8)"
                 .to_string(),
             expected: Box::new(11),
         },
         VMTestCase {
             input: "
-let newAdder = fn(a, b) {
-    let c = a + b;
+var newAdder = fn(a, b) {
+    var c = a + b;
     fn(d) { c + d }
 };
-let adder = newAdder(1, 2);
+var adder = newAdder(1, 2);
 adder(8)"
                 .to_string(),
             expected: Box::new(11),
         },
         VMTestCase {
             input: "
-let newAdderOuter = fn(a, b) {
-    let c = a + b;
+var newAdderOuter = fn(a, b) {
+    var c = a + b;
     fn(d) {
-        let e = d + c;
+        var e = d + c;
         fn(f) { e + f }
     }
 };
 
-let newAdderInner = newAdderOuter(1, 2);
-let adder = newAdderInner(3);
+var newAdderInner = newAdderOuter(1, 2);
+var adder = newAdderInner(3);
 adder(8)
             "
             .to_string(),
@@ -1007,30 +1005,30 @@ adder(8)
         },
         VMTestCase {
             input: "
-            let a = 1;
-            let newAdderOuter = fn(b) {
-            fn(c) {
-            fn(d) { a + b + c + d }
-            }
-            };
-            let newAdderInner = newAdderOuter(2);
-            let adder = newAdderInner(3);
-            adder(8)
-            "
-            .to_string(),
+var a = 1;
+var newAdderOuter = fn(b) {
+    fn(c) {
+        fn(d) { a + b + c + d }
+    }
+};
+
+var newAdderInner = newAdderOuter(2);
+var adder = newAdderInner(3);
+adder(8)"
+                .to_string(),
             expected: Box::new(14),
         },
         VMTestCase {
             input: "
-            let newClosure = fn(a, b) {
-            let one = fn() { a };
-            let two = fn() { b };
-            fn() { one() + two() }
-            };
-            let closure = newClosure(9, 90);
-            closure()
-            "
-            .to_string(),
+var  newClosure = fn(a, b) {
+    var  one = fn() { a };
+    var  two = fn() { b };
+    fn() { one() + two() }
+};
+
+var  closure = newClosure(9, 90);
+closure()"
+                .to_string(),
             expected: Box::new(99),
         },
     ];
@@ -1056,8 +1054,8 @@ countDown(2)"
         },
         VMTestCase {
             input: "
-let wrapper = fn() {
-    let countDown = fn(x) {
+var wrapper = fn() {
+    var countDown = fn(x) {
         if (x == 0) {
             return 0
         } else {
@@ -1079,12 +1077,12 @@ wrapper()"
 fn test_while_statement() {
     let test_cases = [
         VMTestCase {
-            input: "let i = 10; while (i > 0) { i = i - 1 }; i".to_string(),
+            input: "var i = 10; while (i > 0) { i = i - 1 }; i".to_string(),
             expected: Box::new(0),
         },
         VMTestCase {
             input: "
-let i = 10;
+var i = 10;
 while (i > 0) {
     i = i - 1;
     if (i == 5) {
@@ -1097,8 +1095,8 @@ i"
         },
         VMTestCase {
             input: "
-let i = 10;
-let j = 0;
+var i = 10;
+var j = 0;
 while (i > 0) {
     i = i - 1;
     if (i < 5) {
@@ -1120,7 +1118,7 @@ fn test_for_statement() {
     let test_cases = [
         VMTestCase {
             input: "
-let x = 0;
+var x = 0;
 for (i in [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
     x = x + i;
 }
@@ -1131,7 +1129,7 @@ x
         },
         VMTestCase {
             input: "
-let x = 0;
+var x = 0;
 for (i in {1:0, 2:'a', 3:\"\", 4:3.4, 5:[1,2], 6:{1:1}, 7:1..2, 8:fn(){}, 9:(-23 + 345)}) {
     x = x + i;
 }
@@ -1142,7 +1140,7 @@ x
         },
         VMTestCase {
             input: "
-let x = 0;
+var x = 0;
 for (i in 0..10) {
     x = x + i;
 }
@@ -1159,7 +1157,7 @@ x
 #[test]
 fn test_assign_expressions() {
     let test_cases = [VMTestCase {
-        input: "let i = 10; i = i - 1 ; i".to_string(),
+        input: "var i = 10; i = i - 1 ; i".to_string(),
         expected: Box::new(9),
     }];
 
@@ -1182,7 +1180,7 @@ fn test_builtin_method_expressions() {
             expected: Box::new(3),
         },
         VMTestCase {
-            input: "let isDigit = 'a'.isDigit; isDigit(16)".to_string(),
+            input: "var isDigit = 'a'.isDigit; isDigit(16)".to_string(),
             expected: Box::new(true),
         },
     ];
@@ -1219,7 +1217,7 @@ fn run_vm_tests(test_cases: &[VMTestCase]) {
 
         let stack_elem = vm.last_popped_stack_elem;
 
-        test_expected_object(&test_case.expected, stack_elem.unwrap_or(NULL));
+        test_expected_object(&test_case.expected, stack_elem.unwrap_or(NULL_OBJ));
     }
 }
 
@@ -1245,7 +1243,7 @@ fn test_expected_object(expected: &Box<dyn Any>, actual: Object) {
 
 fn test_integer_object(expected: isize, actual: &Object) {
     assert_eq!(
-        &Object::Int(IntObject {
+        &Object::Int(Int {
             value: expected.into()
         }),
         actual
@@ -1253,20 +1251,20 @@ fn test_integer_object(expected: isize, actual: &Object) {
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {
-    assert_eq!(&Object::Bool(BoolObject { value: expected }), actual);
+    assert_eq!(&Object::Bool(Bool { value: expected }), actual);
 }
 
 fn test_float_object(expected: f64, actual: &Object) {
-    assert_eq!(&Object::Float(FloatObject { value: expected }), actual)
+    assert_eq!(&Object::Float(Float { value: expected }), actual)
 }
 
 fn test_char_object(expected: char, actual: &Object) {
-    assert_eq!(&Object::Char(CharObject { value: expected }), actual)
+    assert_eq!(&Object::Char(Char { value: expected }), actual)
 }
 
 fn test_string_object(expected: &str, actual: &Object) {
     assert_eq!(
-        &Object::Str(StrObject {
+        &Object::Str(Str {
             value: expected.to_string()
         }),
         actual
@@ -1275,10 +1273,10 @@ fn test_string_object(expected: &str, actual: &Object) {
 
 fn test_array_object(expected: &[i32], actual: &Object) {
     assert_eq!(
-        &Object::Array(ArrayObject {
+        &Object::Array(Array {
             elements: expected
                 .iter()
-                .map(|el| Object::Int(IntObject {
+                .map(|el| Object::Int(Int {
                     value: (*el).into()
                 }))
                 .collect()
@@ -1288,7 +1286,7 @@ fn test_array_object(expected: &[i32], actual: &Object) {
 }
 
 fn test_hash_object(expected: &HashMap<u64, i32>, actual: &Object) {
-    let Object::Hash(HashObject { pairs }) = actual else {
+    let Object::Dict(Dict { pairs }) = actual else {
         unreachable!()
     }; // TODO: remove `unreachable!()`
     assert_eq!(expected.len(), pairs.len());
@@ -1297,7 +1295,7 @@ fn test_hash_object(expected: &HashMap<u64, i32>, actual: &Object) {
         let value = &pairs[&expected_key].value;
         assert_eq!(
             value,
-            &Object::Int(IntObject {
+            &Object::Int(Int {
                 value: expected_value.into()
             })
         )
