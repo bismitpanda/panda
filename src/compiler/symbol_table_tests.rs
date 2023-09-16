@@ -131,8 +131,8 @@ fn test_define_resolve_builtins() {
         Symbol::new("f", SymbolScope::Builtin, 3, false),
     ];
 
-    for (i, v) in expected.iter().enumerate() {
-        global.define_builtin(&v.name, i);
+    for (i, symbol) in expected.iter().enumerate() {
+        global.define_builtin(&symbol.name, i);
     }
 
     let mut first_local = SymbolTable::new_enclosed(global.clone());

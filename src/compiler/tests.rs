@@ -1110,7 +1110,7 @@ wrapper();
 
 fn run_compiler_tests(test_cases: &[CompilerTestCase]) {
     for test_case in test_cases {
-        let program = parse(test_case.input.clone());
+        let program = parse(&test_case.input);
 
         let mut compiler = Compiler::new();
 
@@ -1127,7 +1127,7 @@ fn run_compiler_tests(test_cases: &[CompilerTestCase]) {
     }
 }
 
-fn parse(input: String) -> Option<Node> {
+fn parse(input: &str) -> Option<Node> {
     let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 

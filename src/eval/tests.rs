@@ -1,5 +1,5 @@
 use crate::{
-    ast::{ExpressionStmt, InfixAst, LiteralAst, Span},
+    ast::{ExpressionStmt, Infix, Lit, Span},
     lexer::Lexer,
     parser::Parser,
     token::Position,
@@ -409,7 +409,7 @@ fn test_lambda_object() {
                     end: Position::new(0, 14)
                 },
                 returns: true,
-                expression: Expression::Infix(InfixAst {
+                expression: Expression::Infix(Infix {
                     span: Span {
                         start: Position::new(0, 9),
                         end: Position::new(0, 14)
@@ -422,12 +422,12 @@ fn test_lambda_object() {
                         value: "x".to_string()
                     })),
                     operator: Operator::Add,
-                    right: Box::new(Expression::Literal(LiteralAst {
+                    right: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 13),
                             end: Position::new(0, 14)
                         },
-                        lit: Literal::Int { value: 2.into() }
+                        lit: Lit::Int { value: 2.into() }
                     }))
                 })
             })]),
@@ -788,7 +788,7 @@ delete i";
 }
 
 fn test_eval(input: &str) -> Object {
-    let mut lexer = Lexer::new(input.to_string());
+    let mut lexer = Lexer::new(input);
     let mut parser = Parser::new(&mut lexer);
 
     let program = parser.parse_program().unwrap();

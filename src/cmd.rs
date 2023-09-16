@@ -36,22 +36,27 @@ pub enum Commands {
 
 #[derive(Args)]
 pub struct RunArgs {
+    /// The input file path
     pub file_name: String,
 
+    /// The engine to use as the interpreter
     #[arg(long, short, default_value_t = Engine::VM)]
     pub engine: Engine,
 }
 
 #[derive(Args)]
 pub struct ReplArgs {
+    /// The engine to use as the interpreter
     #[arg(long, short, default_value_t = Engine::Eval)]
     pub engine: Engine,
 }
 
 #[derive(Args)]
 pub struct FormatArgs {
+    /// The input file path
     pub file_name: String,
 
+    /// The output file path
     #[arg(long, short)]
     pub out: Option<String>,
 }
@@ -68,11 +73,14 @@ pub enum DebugOut {
 
 #[derive(Args)]
 pub struct DebugArgs {
+    /// The debug data to output
     #[arg(long, short, default_value_t = DebugOut::Ast)]
     pub format: DebugOut,
 
+    /// Output file path
     #[arg(long, short)]
     pub out_file: Option<PathBuf>,
 
+    /// The input file path
     pub file: Option<String>,
 }

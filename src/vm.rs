@@ -4,7 +4,7 @@ use num_bigint::BigInt;
 use num_traits::{ToPrimitive, Zero};
 
 use crate::{
-    code::{self, Opcode},
+    code::{self, Instructions, Opcode},
     compiler::Bytecode,
     object::{builtins::BUILTINS, Closure, Iter, Iterable},
     object::{
@@ -13,11 +13,25 @@ use crate::{
     },
 };
 
-use self::frame::Frame;
-
-mod frame;
 #[cfg(test)]
 mod tests;
+
+#[derive(Clone, Debug)]
+pub struct Frame {
+    pub cl: Closure,
+    pub ip: isize,
+    pub bp: usize,
+}
+
+impl Frame {
+    pub fn new(cl: Closure, bp: usize) -> Self {
+        Self { cl, ip: -1, bp }
+    }
+
+    pub fn instructions(&self) -> Instructions {
+        self.cl.func.instructions.clone()
+    }
+}
 
 const STACK_SIZE: usize = 2048;
 pub const GLOBAL_SIZE: usize = 65536;
@@ -129,7 +143,7 @@ impl VirtualMachine {
             ip = self.current_frame().ip as usize;
             ins = self.current_frame().instructions();
 
-            op = TryInto::<Opcode>::try_into(ins[ip]).map_err(|err| err.to_string())?;
+            op = TryInto::<Opcode>::try_into(ins[ip])?;
 
             match op {
                 Opcode::Constant => {

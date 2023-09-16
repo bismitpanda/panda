@@ -1,4 +1,4 @@
-use crate::token::TokenType;
+use crate::token::Kind;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, strum::Display)]
 pub enum Precedence {
@@ -20,27 +20,22 @@ pub enum Precedence {
     Assign,
 }
 
-pub fn precedences(t: TokenType) -> Precedence {
+pub fn precedences(t: Kind) -> Precedence {
     match t {
-        TokenType::Range => Precedence::Range,
-        TokenType::Or => Precedence::Or,
-        TokenType::And => Precedence::And,
-        TokenType::Eq
-        | TokenType::NotEq
-        | TokenType::Lt
-        | TokenType::LtEq
-        | TokenType::Gt
-        | TokenType::GtEq => Precedence::Comp,
-        TokenType::BitOr => Precedence::BitOr,
-        TokenType::Caret => Precedence::BitXor,
-        TokenType::BitAnd => Precedence::BitAnd,
-        TokenType::Shr | TokenType::Shl => Precedence::Shift,
-        TokenType::Plus | TokenType::Minus => Precedence::Sum,
-        TokenType::Slash | TokenType::Asterisk => Precedence::Product,
-        TokenType::LParen => Precedence::Call,
-        TokenType::LBracket => Precedence::Index,
-        TokenType::Dot | TokenType::Scope => Precedence::Method,
-        TokenType::Assign => Precedence::Assign,
+        Kind::Range => Precedence::Range,
+        Kind::Or => Precedence::Or,
+        Kind::And => Precedence::And,
+        Kind::Eq | Kind::NotEq | Kind::Lt | Kind::LtEq | Kind::Gt | Kind::GtEq => Precedence::Comp,
+        Kind::BitOr => Precedence::BitOr,
+        Kind::Caret => Precedence::BitXor,
+        Kind::BitAnd => Precedence::BitAnd,
+        Kind::Shr | Kind::Shl => Precedence::Shift,
+        Kind::Plus | Kind::Minus => Precedence::Sum,
+        Kind::Slash | Kind::Asterisk => Precedence::Product,
+        Kind::LParen => Precedence::Call,
+        Kind::LBracket => Precedence::Index,
+        Kind::Dot | Kind::Scope => Precedence::Method,
+        Kind::Assign => Precedence::Assign,
         _ => Precedence::Lowest,
     }
 }

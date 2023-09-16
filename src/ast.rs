@@ -64,7 +64,7 @@ pub struct Return {
     pub return_value: Expression,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Delete {
     pub span: Span,
     pub delete_ident: Ident,
@@ -224,10 +224,7 @@ impl Display for Statement {
                 "return {};",
                 if matches!(
                     return_value,
-                    Expression::Literal(LiteralAst {
-                        lit: Literal::Null,
-                        ..
-                    })
+                    Expression::Literal(Literal { lit: Lit::Null, .. })
                 ) {
                     String::new()
                 } else {
@@ -282,21 +279,21 @@ pub struct Identifier {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct AssignAst {
+pub struct Assign {
     pub span: Span,
     pub to: Assignable,
     pub value: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct PrefixAst {
+pub struct Prefix {
     pub span: Span,
     pub operator: Operator,
     pub right: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct InfixAst {
+pub struct Infix {
     pub span: Span,
     pub left: Box<Expression>,
     pub operator: Operator,
@@ -304,7 +301,7 @@ pub struct InfixAst {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct IfAst {
+pub struct If {
     pub span: Span,
     pub condition: Box<Expression>,
     pub consequence: BlockStatement,
@@ -312,7 +309,7 @@ pub struct IfAst {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct LambdaAst {
+pub struct Lambda {
     pub span: Span,
     pub parameters: Vec<Ident>,
     pub body: BlockStatement,
@@ -320,27 +317,27 @@ pub struct LambdaAst {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct CallAst {
+pub struct Call {
     pub span: Span,
     pub function: Box<Expression>,
     pub arguments: Vec<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct IndexAst {
+pub struct Index {
     pub span: Span,
     pub left: Box<Expression>,
     pub index: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct LiteralAst {
+pub struct Literal {
     pub span: Span,
-    pub lit: Literal,
+    pub lit: Lit,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct ScopeAst {
+pub struct Scope {
     pub span: Span,
     pub module: Ident,
     pub member: Box<Expression>,
@@ -352,15 +349,15 @@ pub enum Expression {
     Constructor(Constructor),
     Range(Range),
     Identifier(Identifier),
-    Assign(AssignAst),
-    Prefix(PrefixAst),
-    Infix(InfixAst),
-    If(IfAst),
-    Lambda(LambdaAst),
-    Call(CallAst),
-    Index(IndexAst),
-    Literal(LiteralAst),
-    Scope(ScopeAst),
+    Assign(Assign),
+    Prefix(Prefix),
+    Infix(Infix),
+    If(If),
+    Lambda(Lambda),
+    Call(Call),
+    Index(Index),
+    Literal(Literal),
+    Scope(Scope),
 }
 
 impl Expression {
@@ -386,9 +383,9 @@ impl Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Assign(AssignAst { to, value, .. }) => write!(f, "{to} = {value};"),
+            Self::Assign(Assign { to, value, .. }) => write!(f, "{to} = {value};"),
 
-            Self::Call(CallAst {
+            Self::Call(Call {
                 function,
                 arguments,
                 ..
@@ -406,7 +403,7 @@ impl Display for Expression {
                 write!(f, "new {constructable};")
             }
 
-            Self::Lambda(LambdaAst {
+            Self::Lambda(Lambda {
                 parameters,
                 body,
                 name,
@@ -425,7 +422,7 @@ impl Display for Expression {
 
             Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
 
-            Self::If(IfAst {
+            Self::If(If {
                 condition,
                 consequence,
                 alternative,
@@ -444,16 +441,16 @@ impl Display for Expression {
                 ))
             ),
 
-            Self::Index(IndexAst { left, index, .. }) => write!(f, "({left}[{index}])"),
+            Self::Index(Index { left, index, .. }) => write!(f, "({left}[{index}])"),
 
-            Self::Infix(InfixAst {
+            Self::Infix(Infix {
                 left,
                 operator,
                 right,
                 ..
             }) => write!(f, "({left} {operator} {right})"),
 
-            Self::Literal(LiteralAst { lit, .. }) => write!(f, "{lit}"),
+            Self::Literal(Literal { lit, .. }) => write!(f, "{lit}"),
 
             Self::Method(Method {
                 left,
@@ -477,7 +474,7 @@ impl Display for Expression {
                     ))
             ),
 
-            Self::Prefix(PrefixAst {
+            Self::Prefix(Prefix {
                 operator, right, ..
             }) => {
                 write!(f, "({operator}{right})")
@@ -492,13 +489,13 @@ impl Display for Expression {
                     .map_or_else(String::new, |step| format!("..{step}"))
             ),
 
-            Self::Scope(ScopeAst { module, member, .. }) => write!(f, "{module}::{member}"),
+            Self::Scope(Scope { module, member, .. }) => write!(f, "{module}::{member}"),
         }
     }
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub enum Literal {
+pub enum Lit {
     Int {
         value: BigInt,
     },
@@ -523,7 +520,7 @@ pub enum Literal {
     },
 }
 
-impl Display for Literal {
+impl Display for Lit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Array { elements } => write!(
@@ -649,14 +646,14 @@ impl Display for Operator {
 #[derive(Clone, PartialEq, Debug)]
 pub enum Constructable {
     Identifier(Identifier),
-    Call(CallAst),
-    Scope(ScopeAst),
+    Call(Call),
+    Scope(Scope),
 }
 
 impl Display for Constructable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Call(CallAst {
+            Self::Call(Call {
                 function,
                 arguments,
                 ..
@@ -670,7 +667,7 @@ impl Display for Constructable {
                     .collect::<String>()
             ),
 
-            Self::Scope(ScopeAst { module, member, .. }) => write!(f, "{module}::{member}"),
+            Self::Scope(Scope { module, member, .. }) => write!(f, "{module}::{member}"),
 
             Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
         }
@@ -681,7 +678,7 @@ impl Display for Constructable {
 pub enum Assignable {
     Identifier(Identifier),
     Method(Method),
-    Index(IndexAst),
+    Index(Index),
 }
 
 impl Display for Assignable {
@@ -709,7 +706,7 @@ impl Display for Assignable {
                     ))
             ),
 
-            Self::Index(IndexAst { left, index, .. }) => write!(f, "{left}[{index}]"),
+            Self::Index(Index { left, index, .. }) => write!(f, "{left}[{index}]"),
 
             Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
         }

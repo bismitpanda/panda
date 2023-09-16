@@ -46,12 +46,12 @@ impl Add for Position {
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct Token {
     pub position: Position,
-    pub tok_type: TokenType,
+    pub tok_type: Kind,
     pub tok_lit: String,
 }
 
 impl Token {
-    pub fn new(tok_type: TokenType, tok_lit: String, position: Position) -> Self {
+    pub fn new(tok_type: Kind, tok_lit: String, position: Position) -> Self {
         Self {
             position,
             tok_type,
@@ -68,7 +68,7 @@ impl std::fmt::Display for Token {
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Display, Debug)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
-pub enum TokenType {
+pub enum Kind {
     // Misc
     Illegal,
     Eol,
@@ -143,31 +143,31 @@ pub enum TokenType {
     Delete,
 }
 
-fn get_keywords(ident: &str) -> Option<TokenType> {
+fn get_keywords(ident: &str) -> Option<Kind> {
     match ident {
-        "fn" => Some(TokenType::Function),
-        "var" => Some(TokenType::Var),
-        "true" => Some(TokenType::True),
-        "false" => Some(TokenType::False),
-        "if" => Some(TokenType::If),
-        "else" => Some(TokenType::Else),
-        "return" => Some(TokenType::Return),
-        "const" => Some(TokenType::Const),
-        "null" => Some(TokenType::Null),
-        "while" => Some(TokenType::While),
-        "for" => Some(TokenType::For),
-        "in" => Some(TokenType::In),
-        "class" => Some(TokenType::Class),
-        "new" => Some(TokenType::New),
-        "import" => Some(TokenType::Import),
-        "as" => Some(TokenType::As),
-        "break" => Some(TokenType::Break),
-        "continue" => Some(TokenType::Continue),
-        "delete" => Some(TokenType::Delete),
+        "fn" => Some(Kind::Function),
+        "var" => Some(Kind::Var),
+        "true" => Some(Kind::True),
+        "false" => Some(Kind::False),
+        "if" => Some(Kind::If),
+        "else" => Some(Kind::Else),
+        "return" => Some(Kind::Return),
+        "const" => Some(Kind::Const),
+        "null" => Some(Kind::Null),
+        "while" => Some(Kind::While),
+        "for" => Some(Kind::For),
+        "in" => Some(Kind::In),
+        "class" => Some(Kind::Class),
+        "new" => Some(Kind::New),
+        "import" => Some(Kind::Import),
+        "as" => Some(Kind::As),
+        "break" => Some(Kind::Break),
+        "continue" => Some(Kind::Continue),
+        "delete" => Some(Kind::Delete),
         _ => None,
     }
 }
 
-pub fn lookup_ident(ident: &str) -> TokenType {
-    get_keywords(ident).map_or(TokenType::Ident, |tok_type| tok_type)
+pub fn lookup_ident(ident: &str) -> Kind {
+    get_keywords(ident).map_or(Kind::Ident, |tok_type| tok_type)
 }

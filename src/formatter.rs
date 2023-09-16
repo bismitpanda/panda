@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Expression, Import, Literal, Node, Statement},
+    ast::{Expression, Import, Lit, Node, Statement},
     lexer::Lexer,
     parser::Parser,
 };
@@ -50,13 +50,13 @@ impl Formatter for Statement {
 impl Formatter for Expression {
     fn formatter(&self, _: usize) -> String {
         match self {
-            Expression::Literal(lit) => lit.lit.formatter(0),
+            Self::Literal(lit) => lit.lit.formatter(0),
             _ => todo!(),
         }
     }
 }
 
-impl Formatter for Literal {
+impl Formatter for Lit {
     fn formatter(&self, _: usize) -> String {
         match self {
             Self::Str { value } => format!(r#""{value}""#),
@@ -88,7 +88,7 @@ impl Formatter for Literal {
 pub fn formatter(file_name: &str) -> Result<String, String> {
     let input = std::fs::read_to_string(file_name).map_err(|err| err.to_string())?;
 
-    let mut lexer = Lexer::new(input);
+    let mut lexer = Lexer::new(&input);
     let mut parser = Parser::new(&mut lexer);
 
     let program = parser

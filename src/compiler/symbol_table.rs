@@ -1,6 +1,6 @@
 use hashbrown::HashMap;
 
-use crate::{ast::ClassDecl, object::CompiledModuleObject};
+use crate::{ast::ClassDecl, object::CompiledModule};
 
 #[derive(strum::Display, Clone, Copy, PartialEq, Eq, Debug)]
 #[strum(serialize_all = "UPPERCASE")]
@@ -41,7 +41,7 @@ pub struct SymbolTable {
     pub free_symbols: Vec<Symbol>,
 
     types: Vec<(String, ClassDecl)>,
-    imports: Vec<(String, CompiledModuleObject)>,
+    imports: Vec<(String, CompiledModule)>,
 }
 
 impl SymbolTable {
@@ -148,7 +148,7 @@ impl SymbolTable {
         pos
     }
 
-    pub fn define_import(&mut self, name: String, module: CompiledModuleObject) -> usize {
+    pub fn define_import(&mut self, name: String, module: CompiledModule) -> usize {
         let pos = self.imports.len();
         self.imports.push((name, module));
 
@@ -165,7 +165,7 @@ impl SymbolTable {
         None
     }
 
-    pub fn resolve_import(&self, name: &str) -> Option<(CompiledModuleObject, usize)> {
+    pub fn resolve_import(&self, name: &str) -> Option<(CompiledModule, usize)> {
         for (pos, (import, node)) in self.imports.iter().enumerate() {
             if import == name {
                 return Some((node.clone(), pos));

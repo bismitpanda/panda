@@ -27,7 +27,7 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
         }
 
         if let Object::Str(Str { value }) = &args[0] {
-            print!("{}", value);
+            print!("{value}");
             std::io::stdout().flush().unwrap();
 
             let mut input = String::new();
@@ -280,12 +280,12 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Str(Str {
                     value: value.chars().map(|ch| ch.to_ascii_lowercase()).collect(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("toAsciiUppercase", |caller, params| {

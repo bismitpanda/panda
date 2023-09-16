@@ -38,12 +38,12 @@ const barbaz = 121212;
                     },
                     name: name.to_string(),
                     mutable,
-                    value: Some(Expression::Literal(LiteralAst {
+                    value: Some(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(i + 1, end_pos),
                             end: Position::new(i + 1, end_pos + value.to_string().len())
                         },
-                        lit: Literal::Int {
+                        lit: Lit::Int {
                             value: value.into()
                         }
                     })),
@@ -83,12 +83,12 @@ return 838383;
                         start: Position::new(i + 1, 1),
                         end: Position::new(i + 1, 8 + test_case.to_string().len())
                     },
-                    return_value: Expression::Literal(LiteralAst {
+                    return_value: Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(i + 1, 8),
                             end: Position::new(i + 1, end)
                         },
-                        lit: Literal::Int {
+                        lit: Lit::Int {
                             value: test_case.into()
                         }
                     }),
@@ -128,7 +128,7 @@ fn test_function_statement() {
                         end: Position::new(0, 17)
                     },
                     returns: true,
-                    expression: Expression::Infix(InfixAst {
+                    expression: Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 12),
                             end: Position::new(0, 17)
@@ -177,7 +177,7 @@ fn test_while_statement() {
                     start: Position::new(0, 1),
                     end: Position::new(0, 27)
                 },
-                condition: Expression::Infix(InfixAst {
+                condition: Expression::Infix(Infix {
                     span: Span {
                         start: Position::new(0, 8),
                         end: Position::new(0, 13)
@@ -204,7 +204,7 @@ fn test_while_statement() {
                         end: Position::new(0, 26)
                     },
                     returns: true,
-                    expression: Expression::Assign(AssignAst {
+                    expression: Expression::Assign(Assign {
                         span: Span {
                             start: Position::new(0, 17),
                             end: Position::new(0, 26)
@@ -216,7 +216,7 @@ fn test_while_statement() {
                             },
                             value: "i".to_string(),
                         }),
-                        value: Box::new(Expression::Infix(InfixAst {
+                        value: Box::new(Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 21),
                                 end: Position::new(0, 26)
@@ -229,12 +229,12 @@ fn test_while_statement() {
                                 value: "i".to_string(),
                             })),
                             operator: Operator::Add,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 25),
                                     end: Position::new(0, 26)
                                 },
-                                lit: Literal::Int { value: 1.into() },
+                                lit: Lit::Int { value: 1.into() },
                             })),
                         })),
                     }),
@@ -266,7 +266,7 @@ fn test_while_with_break_statement() {
                     start: Position::new(0, 1),
                     end: Position::new(0, 39)
                 },
-                condition: Expression::Infix(InfixAst {
+                condition: Expression::Infix(Infix {
                     span: Span {
                         start: Position::new(0, 8),
                         end: Position::new(0, 13)
@@ -293,12 +293,12 @@ fn test_while_with_break_statement() {
                         end: Position::new(0, 38)
                     },
                     returns: true,
-                    expression: Expression::If(IfAst {
+                    expression: Expression::If(If {
                         span: Span {
                             start: Position::new(0, 17),
                             end: Position::new(0, 38)
                         },
-                        condition: Box::new(Expression::Infix(InfixAst {
+                        condition: Box::new(Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 21),
                                 end: Position::new(0, 27)
@@ -311,12 +311,12 @@ fn test_while_with_break_statement() {
                                 value: "i".to_string()
                             })),
                             operator: Operator::Eq,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 26),
                                     end: Position::new(0, 27)
                                 },
-                                lit: Literal::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3.into() }
                             }))
                         })),
                         consequence: Vec::from([Statement::Break(Span {
@@ -353,7 +353,7 @@ fn test_while_with_continue_statement() {
                     start: Position::new(0, 1),
                     end: Position::new(0, 42)
                 },
-                condition: Expression::Infix(InfixAst {
+                condition: Expression::Infix(Infix {
                     span: Span {
                         start: Position::new(0, 8),
                         end: Position::new(0, 13)
@@ -380,12 +380,12 @@ fn test_while_with_continue_statement() {
                         end: Position::new(0, 41)
                     },
                     returns: true,
-                    expression: Expression::If(IfAst {
+                    expression: Expression::If(If {
                         span: Span {
                             start: Position::new(0, 17),
                             end: Position::new(0, 41)
                         },
-                        condition: Box::new(Expression::Infix(InfixAst {
+                        condition: Box::new(Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 21),
                                 end: Position::new(0, 27)
@@ -398,12 +398,12 @@ fn test_while_with_continue_statement() {
                                 value: "i".to_string()
                             })),
                             operator: Operator::Eq,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 26),
                                     end: Position::new(0, 27)
                                 },
-                                lit: Literal::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3.into() }
                             }))
                         })),
                         consequence: Vec::from([Statement::Continue(Span {
@@ -454,7 +454,7 @@ fn test_for_statement() {
                         end: Position::new(0, 27)
                     },
                     returns: true,
-                    expression: Expression::Assign(AssignAst {
+                    expression: Expression::Assign(Assign {
                         span: Span {
                             start: Position::new(0, 18),
                             end: Position::new(0, 27)
@@ -466,7 +466,7 @@ fn test_for_statement() {
                             },
                             value: "i".to_string(),
                         }),
-                        value: Box::new(Expression::Infix(InfixAst {
+                        value: Box::new(Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 22),
                                 end: Position::new(0, 27)
@@ -479,12 +479,12 @@ fn test_for_statement() {
                                 value: "i".to_string(),
                             })),
                             operator: Operator::Add,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 26),
                                     end: Position::new(0, 27)
                                 },
-                                lit: Literal::Int { value: 1.into() },
+                                lit: Lit::Int { value: 1.into() },
                             })),
                         })),
                     }),
@@ -530,12 +530,12 @@ fn test_for_with_break_statement() {
                         end: Position::new(0, 39)
                     },
                     returns: true,
-                    expression: Expression::If(IfAst {
+                    expression: Expression::If(If {
                         span: Span {
                             start: Position::new(0, 18),
                             end: Position::new(0, 39)
                         },
-                        condition: Box::new(Expression::Infix(InfixAst {
+                        condition: Box::new(Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 22),
                                 end: Position::new(0, 28)
@@ -548,12 +548,12 @@ fn test_for_with_break_statement() {
                                 value: "i".to_string()
                             })),
                             operator: Operator::Eq,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 27),
                                     end: Position::new(0, 28)
                                 },
-                                lit: Literal::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3.into() }
                             }))
                         })),
                         consequence: Vec::from([Statement::Break(Span {
@@ -604,12 +604,12 @@ fn test_for_with_continue_statement() {
                         end: Position::new(0, 42)
                     },
                     returns: true,
-                    expression: Expression::If(IfAst {
+                    expression: Expression::If(If {
                         span: Span {
                             start: Position::new(0, 18),
                             end: Position::new(0, 42)
                         },
-                        condition: Box::new(Expression::Infix(InfixAst {
+                        condition: Box::new(Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 22),
                                 end: Position::new(0, 28)
@@ -622,12 +622,12 @@ fn test_for_with_continue_statement() {
                                 value: "i".to_string()
                             })),
                             operator: Operator::Eq,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 27),
                                     end: Position::new(0, 28)
                                 },
-                                lit: Literal::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3.into() }
                             }))
                         })),
                         consequence: Vec::from([Statement::Continue(Span {
@@ -673,12 +673,12 @@ fn test_class_statement() {
                     },
                     name: "a".to_string(),
                     mutable: true,
-                    value: Some(Expression::Literal(LiteralAst {
+                    value: Some(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 33),
                             end: Position::new(0, 35)
                         },
-                        lit: Literal::Int { value: 32.into() },
+                        lit: Lit::Int { value: 32.into() },
                     })),
                 })]),
             }),
@@ -690,7 +690,7 @@ fn test_class_statement() {
 }
 
 struct ImportStatementTestCase {
-    input: String,
+    input: &'static str,
     expected: Statement,
 }
 
@@ -698,7 +698,7 @@ struct ImportStatementTestCase {
 fn test_import_statement() {
     let test_cases = [
         ImportStatementTestCase {
-            input: r#"import "fs""#.to_string(),
+            input: r#"import "fs""#,
             expected: Statement::Import(Import {
                 span: Span {
                     start: Position::new(0, 1),
@@ -709,7 +709,7 @@ fn test_import_statement() {
             }),
         },
         ImportStatementTestCase {
-            input: r#"import "std/datetime/duration""#.to_string(),
+            input: r#"import "std/datetime/duration""#,
             expected: Statement::Import(Import {
                 span: Span {
                     start: Position::new(0, 1),
@@ -720,7 +720,7 @@ fn test_import_statement() {
             }),
         },
         ImportStatementTestCase {
-            input: r#"import "std/datetime/duration" as duration"#.to_string(),
+            input: r#"import "std/datetime/duration" as duration"#,
             expected: Statement::Import(Import {
                 span: Span {
                     start: Position::new(0, 1),
@@ -804,12 +804,12 @@ fn test_boolean_literal() {
                     end: Position::new(0, 5)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 5)
                     },
-                    lit: Literal::Bool { value: true }
+                    lit: Lit::Bool { value: true }
                 })
             }),
             statements[0]
@@ -823,7 +823,7 @@ fn test_boolean_literal() {
 fn test_integer_literal() {
     let input = 5;
 
-    let mut l = Lexer::new(input.to_string());
+    let mut l = Lexer::new(&input.to_string());
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -839,12 +839,12 @@ fn test_integer_literal() {
                     end: Position::new(0, 2)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 2)
                     },
-                    lit: Literal::Int { value: 5.into() }
+                    lit: Lit::Int { value: 5.into() }
                 })
             }),
             statements[0]
@@ -858,7 +858,7 @@ fn test_integer_literal() {
 fn test_float_literal() {
     let input = 5.103;
 
-    let mut l = Lexer::new(input.to_string());
+    let mut l = Lexer::new(&input.to_string());
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -874,12 +874,12 @@ fn test_float_literal() {
                     end: Position::new(0, 6)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 6)
                     },
-                    lit: Literal::Float { value: 5.103 }
+                    lit: Lit::Float { value: 5.103 }
                 })
             }),
             statements[0]
@@ -890,7 +890,7 @@ fn test_float_literal() {
 }
 
 struct PrefixExpressionsTestCase {
-    input: String,
+    input: &'static str,
     expected: Statement,
 }
 
@@ -898,49 +898,49 @@ struct PrefixExpressionsTestCase {
 fn test_parsing_prefix_expressions() {
     let test_cases = [
         PrefixExpressionsTestCase {
-            input: "!5".to_string(),
+            input: "!5",
             expected: Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 3),
                 },
                 returns: true,
-                expression: Expression::Prefix(PrefixAst {
+                expression: Expression::Prefix(Prefix {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 3),
                     },
                     operator: Operator::Bang,
-                    right: Box::new(Expression::Literal(LiteralAst {
+                    right: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 2),
                             end: Position::new(0, 3),
                         },
-                        lit: Literal::Int { value: 5.into() },
+                        lit: Lit::Int { value: 5.into() },
                     })),
                 }),
             }),
         },
         PrefixExpressionsTestCase {
-            input: "-15".to_string(),
+            input: "-15",
             expected: Statement::ExpressionStmt(ExpressionStmt {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 4),
                 },
                 returns: true,
-                expression: Expression::Prefix(PrefixAst {
+                expression: Expression::Prefix(Prefix {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 4),
                     },
                     operator: Operator::Sub,
-                    right: Box::new(Expression::Literal(LiteralAst {
+                    right: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 2),
                             end: Position::new(0, 4),
                         },
-                        lit: Literal::Int { value: 15.into() },
+                        lit: Lit::Int { value: 15.into() },
                     })),
                 }),
             }),
@@ -965,7 +965,7 @@ fn test_parsing_prefix_expressions() {
 }
 
 struct InfixExpressionsTestCase {
-    input: String,
+    input: &'static str,
     left_value: isize,
     operator: Operator,
     right_value: isize,
@@ -975,49 +975,49 @@ struct InfixExpressionsTestCase {
 fn test_parsing_infix_expressions() {
     let test_cases = [
         InfixExpressionsTestCase {
-            input: "5 + 4;".to_string(),
+            input: "5 + 4;",
             left_value: 5,
             operator: Operator::Add,
             right_value: 4,
         },
         InfixExpressionsTestCase {
-            input: "5 - 4;".to_string(),
+            input: "5 - 4;",
             left_value: 5,
             operator: Operator::Sub,
             right_value: 4,
         },
         InfixExpressionsTestCase {
-            input: "5 * 4;".to_string(),
+            input: "5 * 4;",
             left_value: 5,
             operator: Operator::Mul,
             right_value: 4,
         },
         InfixExpressionsTestCase {
-            input: "5 / 4;".to_string(),
+            input: "5 / 4;",
             left_value: 5,
             operator: Operator::Div,
             right_value: 4,
         },
         InfixExpressionsTestCase {
-            input: "5 > 4;".to_string(),
+            input: "5 > 4;",
             left_value: 5,
             operator: Operator::Gt,
             right_value: 4,
         },
         InfixExpressionsTestCase {
-            input: "5 < 4;".to_string(),
+            input: "5 < 4;",
             left_value: 5,
             operator: Operator::Lt,
             right_value: 4,
         },
         InfixExpressionsTestCase {
-            input: "5 == 4;".to_string(),
+            input: "5 == 4;",
             left_value: 5,
             operator: Operator::Eq,
             right_value: 4,
         },
         InfixExpressionsTestCase {
-            input: "5 != 4;".to_string(),
+            input: "5 != 4;",
             left_value: 5,
             operator: Operator::NotEq,
             right_value: 4,
@@ -1041,27 +1041,27 @@ fn test_parsing_infix_expressions() {
                         start: Position::new(0, 1),
                         end: Position::new(0, end_pos + 1)
                     },
-                    expression: Expression::Infix(InfixAst {
+                    expression: Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, end_pos + 1)
                         },
-                        left: Box::new(Expression::Literal(LiteralAst {
+                        left: Box::new(Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, 1),
                                 end: Position::new(0, 2)
                             },
-                            lit: Literal::Int {
+                            lit: Lit::Int {
                                 value: test_case.left_value.into()
                             }
                         })),
                         operator: test_case.operator,
-                        right: Box::new(Expression::Literal(LiteralAst {
+                        right: Box::new(Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, end_pos),
                                 end: Position::new(0, end_pos + 1)
                             },
-                            lit: Literal::Int {
+                            lit: Lit::Int {
                                 value: test_case.right_value.into()
                             }
                         }))
@@ -1095,12 +1095,12 @@ fn test_if_expression() {
                     start: Position::new(0, 1),
                     end: Position::new(0, 16)
                 },
-                expression: Expression::If(IfAst {
+                expression: Expression::If(If {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 16)
                     },
-                    condition: Box::new(Expression::Infix(InfixAst {
+                    condition: Box::new(Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 5),
                             end: Position::new(0, 10)
@@ -1165,12 +1165,12 @@ fn test_if_else_expression() {
                     start: Position::new(0, 1),
                     end: Position::new(0, 27)
                 },
-                expression: Expression::If(IfAst {
+                expression: Expression::If(If {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 27)
                     },
-                    condition: Box::new(Expression::Infix(InfixAst {
+                    condition: Box::new(Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 5),
                             end: Position::new(0, 10)
@@ -1249,7 +1249,7 @@ fn test_lambda_expression() {
                     end: Position::new(0, 20)
                 },
                 returns: true,
-                expression: Expression::Lambda(LambdaAst {
+                expression: Expression::Lambda(Lambda {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 20)
@@ -1261,7 +1261,7 @@ fn test_lambda_expression() {
                             end: Position::new(0, 18)
                         },
                         returns: false,
-                        expression: Expression::Infix(InfixAst {
+                        expression: Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 13),
                                 end: Position::new(0, 18)
@@ -1294,7 +1294,7 @@ fn test_lambda_expression() {
 }
 
 struct LambdaParameterTestCase {
-    input: String,
+    input: &'static str,
     expected_params: Vec<String>,
     end_pos: usize,
 }
@@ -1303,17 +1303,17 @@ struct LambdaParameterTestCase {
 fn test_lambda_parameter_parsing() {
     let test_cases = [
         LambdaParameterTestCase {
-            input: "fn() {};".to_string(),
+            input: "fn() {};",
             expected_params: [].into(),
             end_pos: 7,
         },
         LambdaParameterTestCase {
-            input: "fn(x) {};".to_string(),
+            input: "fn(x) {};",
             expected_params: ["x".to_string()].into(),
             end_pos: 8,
         },
         LambdaParameterTestCase {
-            input: "fn(x, y, z) {};".to_string(),
+            input: "fn(x, y, z) {};",
             expected_params: ["x".to_string(), "y".to_string(), "z".to_string()].into(),
             end_pos: 14,
         },
@@ -1336,7 +1336,7 @@ fn test_lambda_parameter_parsing() {
                         end: Position::new(0, test_case.end_pos)
                     },
                     returns: false,
-                    expression: Expression::Lambda(LambdaAst {
+                    expression: Expression::Lambda(Lambda {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, test_case.end_pos)
@@ -1374,7 +1374,7 @@ fn test_call_expression() {
                     end: Position::new(0, 20)
                 },
                 returns: false,
-                expression: Expression::Call(CallAst {
+                expression: Expression::Call(Call {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 20)
@@ -1387,53 +1387,53 @@ fn test_call_expression() {
                         value: "add".to_string()
                     })),
                     arguments: Vec::from([
-                        Expression::Literal(LiteralAst {
+                        Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, 5),
                                 end: Position::new(0, 6)
                             },
-                            lit: Literal::Int { value: 1.into() }
+                            lit: Lit::Int { value: 1.into() }
                         }),
-                        Expression::Infix(InfixAst {
+                        Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 8),
                                 end: Position::new(0, 13)
                             },
-                            left: Box::new(Expression::Literal(LiteralAst {
+                            left: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 8),
                                     end: Position::new(0, 9)
                                 },
-                                lit: Literal::Int { value: 2.into() }
+                                lit: Lit::Int { value: 2.into() }
                             })),
                             operator: Operator::Mul,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 12),
                                     end: Position::new(0, 13)
                                 },
-                                lit: Literal::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3.into() }
                             }))
                         }),
-                        Expression::Infix(InfixAst {
+                        Expression::Infix(Infix {
                             span: Span {
                                 start: Position::new(0, 15),
                                 end: Position::new(0, 20)
                             },
-                            left: Box::new(Expression::Literal(LiteralAst {
+                            left: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 15),
                                     end: Position::new(0, 16)
                                 },
-                                lit: Literal::Int { value: 4.into() }
+                                lit: Lit::Int { value: 4.into() }
                             })),
                             operator: Operator::Add,
-                            right: Box::new(Expression::Literal(LiteralAst {
+                            right: Box::new(Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 19),
                                     end: Position::new(0, 20)
                                 },
-                                lit: Literal::Int { value: 5.into() }
+                                lit: Lit::Int { value: 5.into() }
                             }))
                         })
                     ])
@@ -1471,33 +1471,33 @@ fn test_method_call_expression() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 15)
                     },
-                    left: Box::new(Expression::Literal(LiteralAst {
+                    left: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 2)
                         },
-                        lit: Literal::Int { value: 3.into() }
+                        lit: Lit::Int { value: 3.into() }
                     })),
                     method: "add".to_string(),
-                    arguments: Some(Vec::from([Expression::Infix(InfixAst {
+                    arguments: Some(Vec::from([Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 7),
                             end: Position::new(0, 12)
                         },
-                        left: Box::new(Expression::Literal(LiteralAst {
+                        left: Box::new(Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, 7),
                                 end: Position::new(0, 8)
                             },
-                            lit: Literal::Int { value: 4.into() }
+                            lit: Lit::Int { value: 4.into() }
                         })),
                         operator: Operator::Add,
-                        right: Box::new(Expression::Literal(LiteralAst {
+                        right: Box::new(Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, 11),
                                 end: Position::new(0, 12)
                             },
-                            lit: Literal::Int { value: 5.into() }
+                            lit: Lit::Int { value: 5.into() }
                         }))
                     })]))
                 })
@@ -1534,12 +1534,12 @@ fn test_method_ident_expression() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 17)
                     },
-                    left: Box::new(Expression::Literal(LiteralAst {
+                    left: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 14)
                         },
-                        lit: Literal::Str {
+                        lit: Lit::Str {
                             value: "Hello, World!".to_string()
                         }
                     })),
@@ -1580,7 +1580,7 @@ fn test_constructor_expression() {
                         start: Position::new(0, 15),
                         end: Position::new(0, 34)
                     },
-                    constructable: Constructable::Call(CallAst {
+                    constructable: Constructable::Call(Call {
                         span: Span {
                             start: Position::new(0, 19),
                             end: Position::new(0, 34)
@@ -1693,13 +1693,13 @@ fn test_scope_constructor_expression() {
                         start: Position::new(0, 15),
                         end: Position::new(0, 42)
                     },
-                    constructable: Constructable::Scope(ScopeAst {
+                    constructable: Constructable::Scope(Scope {
                         span: Span {
                             start: Position::new(0, 19),
                             end: Position::new(0, 42)
                         },
                         module: "module".to_string(),
-                        member: Box::new(Expression::Call(CallAst {
+                        member: Box::new(Expression::Call(Call {
                             span: Span {
                                 start: Position::new(0, 27),
                                 end: Position::new(0, 42)
@@ -1771,7 +1771,7 @@ fn test_scope_constructor_expression_empty_initializer() {
                         start: Position::new(0, 15),
                         end: Position::new(0, 34)
                     },
-                    constructable: Constructable::Scope(ScopeAst {
+                    constructable: Constructable::Scope(Scope {
                         span: Span {
                             start: Position::new(0, 19),
                             end: Position::new(0, 34)
@@ -1814,12 +1814,12 @@ fn test_string_literal_expression() {
                     end: Position::new(0, 12)
                 },
                 returns: false,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 12)
                     },
-                    lit: Literal::Str {
+                    lit: Lit::Str {
                         value: "hello world".to_string()
                     }
                 })
@@ -1851,12 +1851,12 @@ fn test_char_literal_expression() {
                     end: Position::new(0, 2)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 2)
                     },
-                    lit: Literal::Char { value: 'a' }
+                    lit: Lit::Char { value: 'a' }
                 })
             }),
             statements[0]
@@ -1886,60 +1886,60 @@ fn test_parsing_array_literals() {
                     end: Position::new(0, 17)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 17)
                     },
-                    lit: Literal::Array {
+                    lit: Lit::Array {
                         elements: Vec::from([
-                            Expression::Literal(LiteralAst {
+                            Expression::Literal(Literal {
                                 span: Span {
                                     start: Position::new(0, 2),
                                     end: Position::new(0, 3)
                                 },
-                                lit: Literal::Int { value: 1.into() }
+                                lit: Lit::Int { value: 1.into() }
                             }),
-                            Expression::Infix(InfixAst {
+                            Expression::Infix(Infix {
                                 span: Span {
                                     start: Position::new(0, 5),
                                     end: Position::new(0, 10)
                                 },
-                                left: Box::new(Expression::Literal(LiteralAst {
+                                left: Box::new(Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 5),
                                         end: Position::new(0, 6)
                                     },
-                                    lit: Literal::Int { value: 2.into() }
+                                    lit: Lit::Int { value: 2.into() }
                                 })),
                                 operator: Operator::Mul,
-                                right: Box::new(Expression::Literal(LiteralAst {
+                                right: Box::new(Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 9),
                                         end: Position::new(0, 10)
                                     },
-                                    lit: Literal::Int { value: 3.into() }
+                                    lit: Lit::Int { value: 3.into() }
                                 }))
                             }),
-                            Expression::Infix(InfixAst {
+                            Expression::Infix(Infix {
                                 span: Span {
                                     start: Position::new(0, 12),
                                     end: Position::new(0, 17)
                                 },
-                                left: Box::new(Expression::Literal(LiteralAst {
+                                left: Box::new(Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 12),
                                         end: Position::new(0, 13)
                                     },
-                                    lit: Literal::Int { value: 4.into() }
+                                    lit: Lit::Int { value: 4.into() }
                                 })),
                                 operator: Operator::Add,
-                                right: Box::new(Expression::Literal(LiteralAst {
+                                right: Box::new(Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 16),
                                         end: Position::new(0, 17)
                                     },
-                                    lit: Literal::Int { value: 5.into() }
+                                    lit: Lit::Int { value: 5.into() }
                                 }))
                             })
                         ])
@@ -1973,7 +1973,7 @@ fn test_parsing_index_expressions() {
                     end: Position::new(0, 14)
                 },
                 returns: true,
-                expression: Expression::Index(IndexAst {
+                expression: Expression::Index(Index {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 14)
@@ -1985,25 +1985,25 @@ fn test_parsing_index_expressions() {
                         },
                         value: "myArray".to_string()
                     })),
-                    index: Box::new(Expression::Infix(InfixAst {
+                    index: Box::new(Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 9),
                             end: Position::new(0, 14)
                         },
-                        left: Box::new(Expression::Literal(LiteralAst {
+                        left: Box::new(Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, 9),
                                 end: Position::new(0, 10)
                             },
-                            lit: Literal::Int { value: 2.into() }
+                            lit: Lit::Int { value: 2.into() }
                         })),
                         operator: Operator::Mul,
-                        right: Box::new(Expression::Literal(LiteralAst {
+                        right: Box::new(Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, 13),
                                 end: Position::new(0, 14)
                             },
-                            lit: Literal::Int { value: 3.into() }
+                            lit: Lit::Int { value: 3.into() }
                         }))
                     }))
                 })
@@ -2035,65 +2035,65 @@ fn test_parsing_hash_literal_string_keys() {
                     end: Position::new(0, 32)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 32)
                     },
-                    lit: Literal::Hash {
+                    lit: Lit::Hash {
                         pairs: Vec::from([
                             (
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 2),
                                         end: Position::new(0, 5)
                                     },
-                                    lit: Literal::Str {
+                                    lit: Lit::Str {
                                         value: "one".to_string()
                                     }
                                 }),
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 9),
                                         end: Position::new(0, 10)
                                     },
-                                    lit: Literal::Int { value: 1.into() }
+                                    lit: Lit::Int { value: 1.into() }
                                 })
                             ),
                             (
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 12),
                                         end: Position::new(0, 15)
                                     },
-                                    lit: Literal::Str {
+                                    lit: Lit::Str {
                                         value: "two".to_string()
                                     }
                                 }),
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 19),
                                         end: Position::new(0, 20)
                                     },
-                                    lit: Literal::Int { value: 2.into() }
+                                    lit: Lit::Int { value: 2.into() }
                                 })
                             ),
                             (
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 22),
                                         end: Position::new(0, 27)
                                     },
-                                    lit: Literal::Str {
+                                    lit: Lit::Str {
                                         value: "three".to_string()
                                     }
                                 }),
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 31),
                                         end: Position::new(0, 32)
                                     },
-                                    lit: Literal::Int { value: 3.into() }
+                                    lit: Lit::Int { value: 3.into() }
                                 })
                             )
                         ])
@@ -2127,12 +2127,12 @@ fn test_parsing_empty_hash_literal() {
                     end: Position::new(0, 2)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 2)
                     },
-                    lit: Literal::Hash { pairs: Vec::new() }
+                    lit: Lit::Hash { pairs: Vec::new() }
                 })
             }),
             statements[0]
@@ -2162,106 +2162,106 @@ fn test_parsing_hash_literal_with_expressions() {
                     end: Position::new(0, 46)
                 },
                 returns: true,
-                expression: Expression::Literal(LiteralAst {
+                expression: Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 46)
                     },
-                    lit: Literal::Hash {
+                    lit: Lit::Hash {
                         pairs: Vec::from([
                             (
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 2),
                                         end: Position::new(0, 5)
                                     },
-                                    lit: Literal::Str {
+                                    lit: Lit::Str {
                                         value: "one".to_string()
                                     }
                                 }),
-                                Expression::Infix(InfixAst {
+                                Expression::Infix(Infix {
                                     span: Span {
                                         start: Position::new(0, 9),
                                         end: Position::new(0, 14)
                                     },
-                                    left: Box::new(Expression::Literal(LiteralAst {
+                                    left: Box::new(Expression::Literal(Literal {
                                         span: Span {
                                             start: Position::new(0, 9),
                                             end: Position::new(0, 10)
                                         },
-                                        lit: Literal::Int { value: 0.into() }
+                                        lit: Lit::Int { value: 0.into() }
                                     })),
                                     operator: Operator::Add,
-                                    right: Box::new(Expression::Literal(LiteralAst {
+                                    right: Box::new(Expression::Literal(Literal {
                                         span: Span {
                                             start: Position::new(0, 13),
                                             end: Position::new(0, 14)
                                         },
-                                        lit: Literal::Int { value: 1.into() }
+                                        lit: Lit::Int { value: 1.into() }
                                     }))
                                 })
                             ),
                             (
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 16),
                                         end: Position::new(0, 19)
                                     },
-                                    lit: Literal::Str {
+                                    lit: Lit::Str {
                                         value: "two".to_string()
                                     }
                                 }),
-                                Expression::Infix(InfixAst {
+                                Expression::Infix(Infix {
                                     span: Span {
                                         start: Position::new(0, 23),
                                         end: Position::new(0, 29)
                                     },
-                                    left: Box::new(Expression::Literal(LiteralAst {
+                                    left: Box::new(Expression::Literal(Literal {
                                         span: Span {
                                             start: Position::new(0, 23),
                                             end: Position::new(0, 25)
                                         },
-                                        lit: Literal::Int { value: 10.into() }
+                                        lit: Lit::Int { value: 10.into() }
                                     })),
                                     operator: Operator::Sub,
-                                    right: Box::new(Expression::Literal(LiteralAst {
+                                    right: Box::new(Expression::Literal(Literal {
                                         span: Span {
                                             start: Position::new(0, 28),
                                             end: Position::new(0, 29)
                                         },
-                                        lit: Literal::Int { value: 8.into() }
+                                        lit: Lit::Int { value: 8.into() }
                                     }))
                                 })
                             ),
                             (
-                                Expression::Literal(LiteralAst {
+                                Expression::Literal(Literal {
                                     span: Span {
                                         start: Position::new(0, 31),
                                         end: Position::new(0, 36)
                                     },
-                                    lit: Literal::Str {
+                                    lit: Lit::Str {
                                         value: "three".to_string()
                                     }
                                 }),
-                                Expression::Infix(InfixAst {
+                                Expression::Infix(Infix {
                                     span: Span {
                                         start: Position::new(0, 40),
                                         end: Position::new(0, 46)
                                     },
-                                    left: Box::new(Expression::Literal(LiteralAst {
+                                    left: Box::new(Expression::Literal(Literal {
                                         span: Span {
                                             start: Position::new(0, 40),
                                             end: Position::new(0, 42)
                                         },
-                                        lit: Literal::Int { value: 15.into() }
+                                        lit: Lit::Int { value: 15.into() }
                                     })),
                                     operator: Operator::Div,
-                                    right: Box::new(Expression::Literal(LiteralAst {
+                                    right: Box::new(Expression::Literal(Literal {
                                         span: Span {
                                             start: Position::new(0, 45),
                                             end: Position::new(0, 46)
                                         },
-                                        lit: Literal::Int { value: 5.into() }
+                                        lit: Lit::Int { value: 5.into() }
                                     }))
                                 })
                             )
@@ -2277,16 +2277,17 @@ fn test_parsing_hash_literal_with_expressions() {
 }
 
 struct RangeExpressionTestCase {
-    input: String,
+    input: &'static str,
     start: isize,
     stop: isize,
     step: Option<isize>,
 }
 
+// TODO: add range test cases
 #[test]
 fn test_range_expression() {
     let test_case = RangeExpressionTestCase {
-        input: "0..100".to_string(),
+        input: "0..100",
         start: 0,
         stop: 100,
         step: None,
@@ -2313,21 +2314,21 @@ fn test_range_expression() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 4)
                     },
-                    start: Box::new(Expression::Literal(LiteralAst {
+                    start: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 2)
                         },
-                        lit: Literal::Int {
+                        lit: Lit::Int {
                             value: test_case.start.into()
                         }
                     })),
-                    stop: Box::new(Expression::Literal(LiteralAst {
+                    stop: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 4),
                             end: Position::new(0, 7)
                         },
-                        lit: Literal::Int {
+                        lit: Lit::Int {
                             value: test_case.stop.into()
                         }
                     })),
@@ -2341,7 +2342,7 @@ fn test_range_expression() {
     }
 
     let test_case = RangeExpressionTestCase {
-        input: "0..100..10".to_string(),
+        input: "0..100..10",
         start: 0,
         stop: 100,
         step: Some(10),
@@ -2368,35 +2369,35 @@ fn test_range_expression() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 9)
                     },
-                    start: Box::new(Expression::Literal(LiteralAst {
+                    start: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 1),
                             end: Position::new(0, 2)
                         },
-                        lit: Literal::Int {
+                        lit: Lit::Int {
                             value: test_case.start.into()
                         }
                     })),
-                    stop: Box::new(Expression::Literal(LiteralAst {
+                    stop: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 4),
                             end: Position::new(0, 7)
                         },
-                        lit: Literal::Int {
+                        lit: Lit::Int {
                             value: test_case.stop.into()
                         }
                     })),
-                    step: test_case.step.map(|expected| Box::new(Expression::Literal(
-                        LiteralAst {
+                    step: test_case
+                        .step
+                        .map(|expected| Box::new(Expression::Literal(Literal {
                             span: Span {
                                 start: Position::new(0, 9),
                                 end: Position::new(0, 11)
                             },
-                            lit: Literal::Int {
+                            lit: Lit::Int {
                                 value: expected.into()
                             }
-                        }
-                    )))
+                        })))
                 })
             }),
             statements[0]
@@ -2426,7 +2427,7 @@ fn test_scope_var_expression() {
                     end: Position::new(0, 18)
                 },
                 returns: true,
-                expression: Expression::Scope(ScopeAst {
+                expression: Expression::Scope(Scope {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 18)
@@ -2468,12 +2469,12 @@ fn test_scope_fn_expression() {
                     end: Position::new(0, 19)
                 },
                 returns: true,
-                expression: Expression::Scope(ScopeAst {
+                expression: Expression::Scope(Scope {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 19)
                     },
-                    member: Box::new(Expression::Call(CallAst {
+                    member: Box::new(Expression::Call(Call {
                         span: Span {
                             start: Position::new(0, 5),
                             end: Position::new(0, 19)
@@ -2504,7 +2505,7 @@ fn test_scope_fn_expression() {
 }
 
 struct AssignExpressionTestCase {
-    input: String,
+    input: &'static str,
     expected: Expression,
     expr_stmt_end: usize,
 }
@@ -2513,8 +2514,8 @@ struct AssignExpressionTestCase {
 fn test_assign_expression() {
     let test_cases = [
         AssignExpressionTestCase {
-            input: "a = 45".to_string(),
-            expected: Expression::Assign(AssignAst {
+            input: "a = 45",
+            expected: Expression::Assign(Assign {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 7),
@@ -2526,19 +2527,19 @@ fn test_assign_expression() {
                     },
                     value: "a".to_string(),
                 }),
-                value: Box::new(Expression::Literal(LiteralAst {
+                value: Box::new(Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 5),
                         end: Position::new(0, 7),
                     },
-                    lit: Literal::Int { value: 45.into() },
+                    lit: Lit::Int { value: 45.into() },
                 })),
             }),
             expr_stmt_end: 7,
         },
         AssignExpressionTestCase {
-            input: "a.b = 45".to_string(),
-            expected: Expression::Assign(AssignAst {
+            input: "a.b = 45",
+            expected: Expression::Assign(Assign {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 9),
@@ -2558,24 +2559,24 @@ fn test_assign_expression() {
                     method: "b".to_string(),
                     arguments: None,
                 }),
-                value: Box::new(Expression::Literal(LiteralAst {
+                value: Box::new(Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 7),
                         end: Position::new(0, 9),
                     },
-                    lit: Literal::Int { value: 45.into() },
+                    lit: Lit::Int { value: 45.into() },
                 })),
             }),
             expr_stmt_end: 9,
         },
         AssignExpressionTestCase {
-            input: "a[b] = 45".to_string(),
-            expected: Expression::Assign(AssignAst {
+            input: "a[b] = 45",
+            expected: Expression::Assign(Assign {
                 span: Span {
                     start: Position::new(0, 1),
                     end: Position::new(0, 10),
                 },
-                to: Assignable::Index(IndexAst {
+                to: Assignable::Index(Index {
                     span: Span {
                         start: Position::new(0, 1),
                         end: Position::new(0, 4),
@@ -2595,12 +2596,12 @@ fn test_assign_expression() {
                         value: "b".to_string(),
                     })),
                 }),
-                value: Box::new(Expression::Literal(LiteralAst {
+                value: Box::new(Expression::Literal(Literal {
                     span: Span {
                         start: Position::new(0, 8),
                         end: Position::new(0, 10),
                     },
-                    lit: Literal::Int { value: 45.into() },
+                    lit: Lit::Int { value: 45.into() },
                 })),
             }),
             expr_stmt_end: 10,
@@ -2655,7 +2656,7 @@ fn test_function_literal_with_name() {
                 },
                 name: "myFunction".to_string(),
                 mutable: true,
-                value: Some(Expression::Lambda(LambdaAst {
+                value: Some(Expression::Lambda(Lambda {
                     span: Span {
                         start: Position::new(0, 18),
                         end: Position::new(0, 25)

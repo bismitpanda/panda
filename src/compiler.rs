@@ -10,16 +10,16 @@ pub use symbol_table::*;
 
 use crate::{
     ast::{
-        AssignAst, Assignable, BlockStatement, CallAst, ClassStatement, Constructable, Constructor,
-        Declaration, Delete, Expression, ExpressionStmt, For, Function, Identifier, IfAst, Import,
-        IndexAst, InfixAst, LambdaAst, Literal, LiteralAst, Method, Node, Operator, PrefixAst,
-        Range, Return, ScopeAst, Statement, While,
+        Assign, Assignable, BlockStatement, Call, ClassStatement, Constructable, Constructor,
+        Declaration, Delete, Expression, ExpressionStmt, For, Function, Identifier, If, Import,
+        Index, Infix, Lambda, Lit, Literal, Method, Node, Operator, Prefix, Range, Return, Scope,
+        Statement, While,
     },
     code::{make, Instructions, Opcode},
     lexer::Lexer,
     object::{
-        builtins::BUILTINS, hash_method_name, Char, CompiledFunction, CompiledModuleObject, Float,
-        Int, Object, Str, DIR_ENV_VAR_NAME,
+        builtins::BUILTINS, hash_method_name, Char, CompiledFunction, CompiledModule, Float, Int,
+        Object, Str, DIR_ENV_VAR_NAME,
     },
     parser::Parser,
 };
@@ -193,7 +193,7 @@ impl Compiler {
                     let instructions = self.leave_scope();
 
                     for symbol in &free_symbols {
-                        self.load_symbol(symbol.clone());
+                        self.load_symbol(symbol);
                     }
 
                     let compiled_fn = Object::CompiledFunction(CompiledFunction {
@@ -272,11 +272,11 @@ impl Compiler {
                         if ext != "pd" {
                             return Err("cannot import non panda files".to_string());
                         }
-                        let file =
+                        let import_file =
                             std::fs::read_to_string(PathBuf::from(start_dir).join(&path_buf))
                                 .map_err(|err| err.to_string())?;
 
-                        let mut lexer = Lexer::new(file);
+                        let mut lexer = Lexer::new(&import_file);
                         let mut parser = Parser::new(&mut lexer);
 
                         let program = parser.parse_program();
@@ -289,7 +289,7 @@ impl Compiler {
                             return Err(format!("could not import \"{path}\" as it had errors."));
                         }
 
-                        let mut comp = Compiler::new();
+                        let mut comp = Self::new();
                         if let Err(err) = comp.compile(program.unwrap()) {
                             println!("compiler error:\n\t{err}");
                             return Ok(());
@@ -303,7 +303,7 @@ impl Compiler {
 
                         self.symbol_table.define_import(
                             module_name.clone(),
-                            CompiledModuleObject {
+                            CompiledModule {
                                 symbol_table: module_symbol_table,
                                 name: module_name,
                                 constants: comp.constants,
@@ -368,7 +368,7 @@ impl Compiler {
             },
 
             Node::Expr(expr) => match expr {
-                Expression::Infix(InfixAst {
+                Expression::Infix(Infix {
                     left,
                     operator,
                     right,
@@ -413,7 +413,7 @@ impl Compiler {
                     };
                 }
 
-                Expression::Prefix(PrefixAst {
+                Expression::Prefix(Prefix {
                     operator, right, ..
                 }) => {
                     self.compile(Node::Expr(*right))?;
@@ -425,32 +425,32 @@ impl Compiler {
                     };
                 }
 
-                Expression::Literal(LiteralAst { lit, .. }) => match lit {
-                    Literal::Int { value } => {
+                Expression::Literal(Literal { lit, .. }) => match lit {
+                    Lit::Int { value } => {
                         let integer = Object::Int(Int { value });
                         let operand = self.add_constant(integer);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
-                    Literal::Float { value } => {
+                    Lit::Float { value } => {
                         let float = Object::Float(Float { value });
                         let operand = self.add_constant(float);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
-                    Literal::Char { value } => {
+                    Lit::Char { value } => {
                         let ch = Object::Char(Char { value });
                         let operand = self.add_constant(ch);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
-                    Literal::Str { value } => {
+                    Lit::Str { value } => {
                         let str = Object::Str(Str { value });
                         let operand = self.add_constant(str);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
-                    Literal::Bool { value } => {
+                    Lit::Bool { value } => {
                         if value {
                             self.emit_op(Opcode::True)
                         } else {
@@ -458,11 +458,11 @@ impl Compiler {
                         };
                     }
 
-                    Literal::Null => {
+                    Lit::Null => {
                         self.emit_op(Opcode::Null);
                     }
 
-                    Literal::Array { elements } => {
+                    Lit::Array { elements } => {
                         let n = elements.len();
                         for el in elements {
                             self.compile(Node::Expr(el))?;
@@ -471,7 +471,7 @@ impl Compiler {
                         self.emit(Opcode::Array, &[n]);
                     }
 
-                    Literal::Hash { pairs } => {
+                    Lit::Hash { pairs } => {
                         let n = pairs.len();
 
                         for (k, v) in pairs {
@@ -483,7 +483,7 @@ impl Compiler {
                     }
                 },
 
-                Expression::If(IfAst {
+                Expression::If(If {
                     condition,
                     consequence,
                     alternative,
@@ -523,10 +523,10 @@ impl Compiler {
                         .resolve(&value)
                         .ok_or_else(|| format!("undefined variable {value}"))?;
 
-                    self.load_symbol(symbol);
+                    self.load_symbol(&symbol);
                 }
 
-                Expression::Index(IndexAst { left, index, .. }) => {
+                Expression::Index(Index { left, index, .. }) => {
                     self.compile(Node::Expr(*left))?;
                     self.compile(Node::Expr(*index))?;
 
@@ -547,7 +547,7 @@ impl Compiler {
                     self.emit(Opcode::Range, &[2]);
                 }
 
-                Expression::Lambda(LambdaAst {
+                Expression::Lambda(Lambda {
                     parameters,
                     body,
                     name,
@@ -586,7 +586,7 @@ impl Compiler {
                     let instructions = self.leave_scope();
 
                     for symbol in &free_symbols {
-                        self.load_symbol(symbol.clone());
+                        self.load_symbol(symbol);
                     }
 
                     let compiled_fn = Object::CompiledFunction(CompiledFunction {
@@ -599,7 +599,7 @@ impl Compiler {
                     self.emit(Opcode::Closure, &[idx, free_symbols.len()]);
                 }
 
-                Expression::Call(CallAst {
+                Expression::Call(Call {
                     function,
                     arguments,
                     ..
@@ -615,7 +615,7 @@ impl Compiler {
                     self.emit(Opcode::Call, &[n]);
                 }
 
-                Expression::Assign(AssignAst { to, value, .. }) => match to {
+                Expression::Assign(Assign { to, value, .. }) => match to {
                     Assignable::Identifier(Identifier { value: name, .. }) => {
                         self.compile(Node::Expr(*value))?;
 
@@ -667,7 +667,7 @@ impl Compiler {
                     );
                 }
 
-                Expression::Scope(ScopeAst { module, .. }) => {
+                Expression::Scope(Scope { module, .. }) => {
                     let (_, pos) = self
                         .symbol_table
                         .resolve_import(&module)
@@ -709,7 +709,7 @@ impl Compiler {
                                             &[
                                                 hash_method_name(&decl.name) as usize,
                                                 0,
-                                                decl.mutable as usize,
+                                                usize::from(decl.mutable),
                                             ],
                                         );
                                     }
@@ -746,7 +746,7 @@ impl Compiler {
                                         let instructions = self.leave_scope();
 
                                         for symbol in &free_symbols {
-                                            self.load_symbol(symbol.clone());
+                                            self.load_symbol(symbol);
                                         }
 
                                         let compiled_fn =
@@ -781,7 +781,7 @@ impl Compiler {
         Ok(())
     }
 
-    fn load_symbol(&mut self, symbol: Symbol) {
+    fn load_symbol(&mut self, symbol: &Symbol) {
         match symbol.scope {
             SymbolScope::Global => self.emit(Opcode::GetGlobal, &[symbol.index]),
             SymbolScope::Local => self.emit(Opcode::GetLocal, &[symbol.index]),

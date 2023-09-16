@@ -1,22 +1,20 @@
 use hashbrown::{hash_map::Entry, HashMap};
 use std::path::PathBuf;
 
-use crate::ast::{
-    AssignAst, Assignable, BlockStatement, CallAst, ClassStatement, Constructable, Constructor,
-    Declaration, Delete, ExpressionStmt, For, Function, Identifier, IfAst, Import, IndexAst,
-    InfixAst, LambdaAst, LiteralAst, Method, PrefixAst, Range, Return, ScopeAst, While,
-};
+use crate::ast::{Expression, Literal, Node, Operator, Statement};
 use crate::object::builtins::get_builtin_by_name;
-use crate::object::{
-    hash_method_name, ClassMember, EvaluatedModuleObject, Iterable, DIR_ENV_VAR_NAME,
-};
 use crate::{
-    ast::{Expression, Literal, Node, Operator, Statement},
+    ast::{
+        Assign, Assignable, BlockStatement, Call, ClassStatement, Constructable, Constructor,
+        Declaration, Delete, ExpressionStmt, For, Function, Identifier, If, Import, Index, Infix,
+        Lambda, Lit, Method, Prefix, Range, Return, Scope, While,
+    },
     lexer::Lexer,
     object::{
-        allowed_in_array, Array, Bool, Builtin, Char, Class, ControlFlow, Dict, Error,
-        EvaluatedFunction, Float, HashPair, Hashable, Int, Object, Range as RangeObj, ReturnValue,
-        Str, Type, FALSE, NULL_OBJ, TRUE,
+        allowed_in_array, hash_method_name, Array, Bool, Builtin, Char, Class, ClassMember,
+        ControlFlow, Dict, Error, EvaluatedFunction, EvaluatedModule, Float, HashPair, Hashable,
+        Int, Iterable, Object, Range as RangeObj, ReturnValue, Str, Type, DIR_ENV_VAR_NAME, FALSE,
+        NULL_OBJ, TRUE,
     },
     parser::Parser,
 };
@@ -152,12 +150,12 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                     if ext != "pd" {
                         return Some(new_error("cannot import non panda files".to_string()));
                     }
-                    let file =
+                    let import_file =
                         std::fs::read_to_string(PathBuf::from(start_dir).join(&path_buf)).ok()?;
 
                     let mut module_env = Environment::new();
 
-                    let mut lexer = Lexer::new(file);
+                    let mut lexer = Lexer::new(&import_file);
                     let mut parser = Parser::new(&mut lexer);
 
                     let program = parser.parse_program();
@@ -186,7 +184,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
 
                     env.set_import(
                         module_name.clone(),
-                        EvaluatedModuleObject {
+                        EvaluatedModule {
                             env: module_env,
                             name: module_name,
                         },
@@ -214,7 +212,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
         },
 
         Node::Expr(expr) => match expr {
-            Expression::Prefix(PrefixAst {
+            Expression::Prefix(Prefix {
                 right, operator, ..
             }) => {
                 let right = eval(Node::Expr(*right), env)?;
@@ -226,7 +224,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return Some(eval_prefix_expression(operator, right));
             }
 
-            Expression::Infix(InfixAst {
+            Expression::Infix(Infix {
                 left,
                 operator,
                 right,
@@ -247,7 +245,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return Some(eval_infix_expression(operator, left, right));
             }
 
-            Expression::If(IfAst {
+            Expression::If(If {
                 condition,
                 consequence,
                 alternative,
@@ -260,7 +258,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return Some(eval_identifier(value, env));
             }
 
-            Expression::Lambda(LambdaAst {
+            Expression::Lambda(Lambda {
                 parameters, body, ..
             }) => {
                 return Some(Object::EvaluatedFunction(EvaluatedFunction {
@@ -270,7 +268,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 }));
             }
 
-            Expression::Call(CallAst {
+            Expression::Call(Call {
                 function,
                 arguments,
                 ..
@@ -290,7 +288,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return Some(apply_function(&function, args));
             }
 
-            Expression::Index(IndexAst { left, index, .. }) => {
+            Expression::Index(Index { left, index, .. }) => {
                 let left = eval(Node::Expr(*left), env)?;
 
                 if is_error(&left) {
@@ -306,7 +304,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return Some(eval_index_expression(left, index));
             }
 
-            Expression::Assign(AssignAst { to, value, .. }) => {
+            Expression::Assign(Assign { to, value, .. }) => {
                 return eval_assign_expression(to, &value, env);
             }
 
@@ -326,7 +324,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
             }
 
             Expression::Constructor(Constructor { constructable, .. }) => {
-                return eval_constructor_expression(constructable, env);
+                return Some(eval_constructor_expression(constructable, env));
             }
 
             Expression::Range(Range {
@@ -399,7 +397,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 return Some(Object::Range(RangeObj { start, stop, step }));
             }
 
-            Expression::Scope(ScopeAst { module, member, .. }) => {
+            Expression::Scope(Scope { module, member, .. }) => {
                 let import = match env.get_import(&module) {
                     Some(obj) => obj,
                     None => return Some(new_error(format!("no module named \"{module}\" found"))),
@@ -418,7 +416,7 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
 
                         return Some(member);
                     }
-                    Expression::Call(CallAst {
+                    Expression::Call(Call {
                         ref function,
                         ref arguments,
                         ..
@@ -460,16 +458,16 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                 };
             }
 
-            Expression::Literal(LiteralAst { lit, .. }) => match lit {
-                Literal::Int { value } => return Some(Object::Int(Int { value })),
+            Expression::Literal(Literal { lit, .. }) => match lit {
+                Lit::Int { value } => return Some(Object::Int(Int { value })),
 
-                Literal::Float { value } => return Some(Object::Float(Float { value })),
+                Lit::Float { value } => return Some(Object::Float(Float { value })),
 
-                Literal::Bool { value } => return Some(if value { TRUE } else { FALSE }),
+                Lit::Bool { value } => return Some(if value { TRUE } else { FALSE }),
 
-                Literal::Str { value } => return Some(Object::Str(Str { value })),
+                Lit::Str { value } => return Some(Object::Str(Str { value })),
 
-                Literal::Array { elements } => {
+                Lit::Array { elements } => {
                     let elements = eval_array_expressions(&elements, env)?;
                     if elements.len() == 1 && is_error(&elements[0]) {
                         return Some(elements[0].clone());
@@ -478,13 +476,13 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
                     return Some(Object::Array(Array { elements }));
                 }
 
-                Literal::Char { value } => return Some(Object::Char(Char { value })),
+                Lit::Char { value } => return Some(Object::Char(Char { value })),
 
-                Literal::Hash { pairs } => {
+                Lit::Hash { pairs } => {
                     return eval_hash_literal(&pairs, env);
                 }
 
-                Literal::Null => return Some(NULL_OBJ),
+                Lit::Null => return Some(NULL_OBJ),
             },
         },
     };
@@ -492,21 +490,18 @@ pub fn eval(node: Node, env: &mut Environment) -> Option<Object> {
     None
 }
 
-fn eval_constructor_expression(
-    constructable: Constructable,
-    env: &mut Environment,
-) -> Option<Object> {
+fn eval_constructor_expression(constructable: Constructable, env: &mut Environment) -> Object {
     match constructable {
         Constructable::Identifier(Identifier { ref value, .. }) => {
             let Some(class) = env.get_type(value) else {
-                return Some(new_error(format!("no class named '{value}' found.")));
+                return new_error(format!("no class named '{value}' found."));
             };
 
             if !class.initializers.is_empty() {
-                return Some(new_error(format!(
+                return new_error(format!(
                     "cannot initialize class with 0 variables. required: {}",
                     class.initializers.len()
-                )));
+                ));
             }
 
             let mut members = HashMap::new();
@@ -536,34 +531,34 @@ fn eval_constructor_expression(
                 }
             }
 
-            Some(Object::Class(Class {
+            Object::Class(Class {
                 name: value.clone(),
                 members,
-            }))
+            })
         }
 
-        Constructable::Call(CallAst {
+        Constructable::Call(Call {
             function,
             arguments,
             ..
         }) => {
             let Expression::Identifier(Identifier { value: member, .. }) = *function else {
-                return Some(new_error(String::new()));
+                return new_error(String::new());
             };
 
             let class = match env.get_type(&member) {
                 Some(class) => class,
-                None => return Some(new_error(format!("no class named '{member}' found"))),
+                None => return new_error(format!("no class named '{member}' found")),
             };
 
             let received_initializers = eval_expressions(&arguments, env).unwrap();
 
             if class.initializers.len() != received_initializers.len() {
-                return Some(new_error(format!(
+                return new_error(format!(
                     "invalid length of initializers. required: {}, got: {}",
                     class.initializers.len(),
                     received_initializers.len()
-                )));
+                ));
             }
 
             let mut members = HashMap::new();
@@ -601,20 +596,20 @@ fn eval_constructor_expression(
                 );
             }
 
-            Some(Object::Class(Class {
+            Object::Class(Class {
                 name: member,
                 members,
-            }))
+            })
         }
 
-        Constructable::Scope(ScopeAst {
+        Constructable::Scope(Scope {
             ref module,
             ref member,
             ..
         }) => {
             let module = match env.get_import(module) {
                 Some(m) => m,
-                None => return Some(new_error(format!("no module named '{module}' found"))),
+                None => return new_error(format!("no module named '{module}' found")),
             };
 
             match *member.clone() {
@@ -622,18 +617,18 @@ fn eval_constructor_expression(
                     let class = match module.env.get_type(&value) {
                         Some(class) => class,
                         None => {
-                            return Some(new_error(format!(
+                            return new_error(format!(
                                 "no class named '{}' found in module '{}'",
                                 member, module.name
-                            )))
+                            ))
                         }
                     };
 
                     if !class.initializers.is_empty() {
-                        return Some(new_error(format!(
+                        return new_error(format!(
                             "cannot initialize class with 0 variables. required: {}",
                             class.initializers.len()
-                        )));
+                        ));
                     }
 
                     let mut members = HashMap::new();
@@ -663,13 +658,13 @@ fn eval_constructor_expression(
                         }
                     }
 
-                    Some(Object::Class(Class {
+                    Object::Class(Class {
                         name: value,
                         members,
-                    }))
+                    })
                 }
 
-                Expression::Call(CallAst {
+                Expression::Call(Call {
                     function,
                     arguments,
                     ..
@@ -678,27 +673,27 @@ fn eval_constructor_expression(
                     {
                         value
                     } else {
-                        return Some(new_error(String::new()));
+                        return new_error(String::new());
                     };
 
                     let class = match module.env.get_type(&member) {
                         Some(class) => class,
                         None => {
-                            return Some(new_error(format!(
+                            return new_error(format!(
                                 "no class named '{}' found in module '{}'",
                                 member, module.name
-                            )))
+                            ))
                         }
                     };
 
                     let received_initializers = eval_expressions(&arguments, env).unwrap();
 
                     if class.initializers.len() != received_initializers.len() {
-                        return Some(new_error(format!(
+                        return new_error(format!(
                             "invalid length of initializers. required: {}, got: {}",
                             class.initializers.len(),
                             received_initializers.len()
-                        )));
+                        ));
                     }
 
                     let mut members = HashMap::new();
@@ -728,13 +723,13 @@ fn eval_constructor_expression(
                         members.insert(name.clone(), (value.clone(), true));
                     }
 
-                    Some(Object::Class(Class {
+                    Object::Class(Class {
                         name: member,
                         members: HashMap::new(),
-                    }))
+                    })
                 }
 
-                _ => Some(new_error("invalid constructor".to_string())),
+                _ => new_error("invalid constructor".to_string()),
             }
         }
     }
@@ -898,17 +893,7 @@ fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Obj
                 right.kind()
             )),
         },
-        (Object::Null, _) => match operator {
-            Operator::Eq => FALSE,
-            Operator::NotEq => TRUE,
-            _ => new_error(format!(
-                "unknown operator: {} {} {}",
-                left.kind(),
-                operator,
-                right.kind()
-            )),
-        },
-        (_, Object::Null) => match operator {
+        (Object::Null, _) | (_, Object::Null) => match operator {
             Operator::Eq => FALSE,
             Operator::NotEq => TRUE,
             _ => new_error(format!(
@@ -1328,7 +1313,7 @@ fn eval_assign_expression(
                 Some(new_error(format!("identifier not found: {value}")))
             }
         }
-        Assignable::Index(IndexAst { left, index, .. }) => {
+        Assignable::Index(Index { left, index, .. }) => {
             let index = eval(Node::Expr(*index), env)?;
 
             if is_error(&index) {

@@ -129,13 +129,13 @@ impl Range {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct EvaluatedModuleObject {
+pub struct EvaluatedModule {
     pub name: String,
     pub env: Environment,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct CompiledModuleObject {
+pub struct CompiledModule {
     pub name: String,
     pub symbol_table: SymbolTable,
     pub constants: Vec<Object>,

@@ -70,7 +70,7 @@ fn main() {
                 std::io::stdin().read_line(&mut input).unwrap();
             }
 
-            let mut lexer = lexer::Lexer::new(input);
+            let mut lexer = lexer::Lexer::new(&input);
             let mut parser = parser::Parser::new(&mut lexer);
 
             let program = parser.parse_program().map_or_else(
@@ -145,7 +145,7 @@ fn start_repl(engine: Engine) -> std::io::Result<()> {
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
 
-                let mut lexer = lexer::Lexer::new(input);
+                let mut lexer = lexer::Lexer::new(&input);
                 let mut parser = parser::Parser::new(&mut lexer);
 
                 let program = parser.parse_program();
@@ -180,7 +180,7 @@ fn start_repl(engine: Engine) -> std::io::Result<()> {
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)?;
 
-                let mut lexer = lexer::Lexer::new(input);
+                let mut lexer = lexer::Lexer::new(&input);
                 let mut parser = parser::Parser::new(&mut lexer);
 
                 let program = parser.parse_program();
@@ -224,7 +224,7 @@ fn eval_file(fname: String, engine: Engine) -> std::io::Result<()> {
     let input = std::fs::read_to_string(fname)?;
     let mut env = Environment::new();
 
-    let mut lexer = lexer::Lexer::new(input);
+    let mut lexer = lexer::Lexer::new(&input);
     let mut parser = parser::Parser::new(&mut lexer);
 
     let program = parser.parse_program();

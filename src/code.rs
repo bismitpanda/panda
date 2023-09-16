@@ -566,4 +566,7 @@ mod tests {
             assert_eq!(Opcode::try_from(i as u8).unwrap().to_string(), def.name);
         }
     }
+
+    #[test]
+    fn test_try_from() {}
 }

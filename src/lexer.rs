@@ -1,4 +1,4 @@
-use crate::token::{lookup_ident, Position, Token, TokenType};
+use crate::token::{lookup_ident, Kind, Position, Token};
 
 pub struct Lexer {
     input: Vec<char>,
@@ -18,7 +18,7 @@ macro_rules! token {
 }
 
 impl Lexer {
-    pub fn new(input: String) -> Self {
+    pub fn new(input: &str) -> Self {
         let mut l = Self {
             input: input.chars().collect(),
             input_position: Position::new(0, 0),
@@ -59,116 +59,100 @@ impl Lexer {
             '=' => {
                 if self.peek_char() == Some('=') {
                     self.read_char();
-                    token!(TokenType::Eq, "==".to_string(), self.input_position)
+                    token!(Kind::Eq, "==".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::Assign, self.ch.to_string(), self.input_position)
+                    token!(Kind::Assign, self.ch.to_string(), self.input_position)
                 }
             }
-            '+' => token!(TokenType::Plus, self.ch.to_string(), self.input_position),
-            '-' => token!(TokenType::Minus, self.ch.to_string(), self.input_position),
+            '+' => token!(Kind::Plus, self.ch.to_string(), self.input_position),
+            '-' => token!(Kind::Minus, self.ch.to_string(), self.input_position),
             '!' => {
                 if self.peek_char() == Some('=') {
                     self.read_char();
-                    token!(TokenType::NotEq, "!=".to_string(), self.input_position)
+                    token!(Kind::NotEq, "!=".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::Bang, self.ch.to_string(), self.input_position)
+                    token!(Kind::Bang, self.ch.to_string(), self.input_position)
                 }
             }
-            '/' => token!(TokenType::Slash, self.ch.to_string(), self.input_position),
+            '/' => token!(Kind::Slash, self.ch.to_string(), self.input_position),
             '*' => {
-                token!(
-                    TokenType::Asterisk,
-                    self.ch.to_string(),
-                    self.input_position
-                )
+                token!(Kind::Asterisk, self.ch.to_string(), self.input_position)
             }
             '<' => {
                 if self.peek_char() == Some('<') {
                     self.read_char();
-                    token!(TokenType::Shl, "<<".to_string(), self.input_position)
+                    token!(Kind::Shl, "<<".to_string(), self.input_position)
                 } else if self.peek_char() == Some('=') {
                     self.read_char();
-                    token!(TokenType::LtEq, "<=".to_string(), self.input_position)
+                    token!(Kind::LtEq, "<=".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::Lt, self.ch.to_string(), self.input_position)
+                    token!(Kind::Lt, self.ch.to_string(), self.input_position)
                 }
             }
             '>' => {
                 if self.peek_char() == Some('>') {
                     self.read_char();
-                    token!(TokenType::Shr, ">>".to_string(), self.input_position)
+                    token!(Kind::Shr, ">>".to_string(), self.input_position)
                 } else if self.peek_char() == Some('=') {
                     self.read_char();
-                    token!(TokenType::GtEq, ">=".to_string(), self.input_position)
+                    token!(Kind::GtEq, ">=".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::Gt, self.ch.to_string(), self.input_position)
+                    token!(Kind::Gt, self.ch.to_string(), self.input_position)
                 }
             }
             ';' => {
-                token!(
-                    TokenType::Semicolon,
-                    self.ch.to_string(),
-                    self.input_position
-                )
+                token!(Kind::Semicolon, self.ch.to_string(), self.input_position)
             }
-            '(' => token!(TokenType::LParen, self.ch.to_string(), self.input_position),
-            ')' => token!(TokenType::RParen, self.ch.to_string(), self.input_position),
-            ',' => token!(TokenType::Comma, self.ch.to_string(), self.input_position),
-            '{' => token!(TokenType::LBrace, self.ch.to_string(), self.input_position),
-            '}' => token!(TokenType::RBrace, self.ch.to_string(), self.input_position),
+            '(' => token!(Kind::LParen, self.ch.to_string(), self.input_position),
+            ')' => token!(Kind::RParen, self.ch.to_string(), self.input_position),
+            ',' => token!(Kind::Comma, self.ch.to_string(), self.input_position),
+            '{' => token!(Kind::LBrace, self.ch.to_string(), self.input_position),
+            '}' => token!(Kind::RBrace, self.ch.to_string(), self.input_position),
             '"' => {
                 let pos = self.input_position;
-                token!(TokenType::StrLiteral, self.read_string(), pos)
+                token!(Kind::StrLiteral, self.read_string(), pos)
             }
             '[' => {
-                token!(
-                    TokenType::LBracket,
-                    self.ch.to_string(),
-                    self.input_position
-                )
+                token!(Kind::LBracket, self.ch.to_string(), self.input_position)
             }
             ']' => {
-                token!(
-                    TokenType::RBracket,
-                    self.ch.to_string(),
-                    self.input_position
-                )
+                token!(Kind::RBracket, self.ch.to_string(), self.input_position)
             }
             ':' => {
                 if self.peek_char() == Some(':') {
                     self.read_char();
-                    token!(TokenType::Scope, "::".to_string(), self.input_position)
+                    token!(Kind::Scope, "::".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::Colon, self.ch.to_string(), self.input_position)
+                    token!(Kind::Colon, self.ch.to_string(), self.input_position)
                 }
             }
             '\'' => {
                 let pos = self.input_position;
-                token!(TokenType::CharLiteral, self.read_chars(), pos)
+                token!(Kind::CharLiteral, self.read_chars(), pos)
             }
-            '^' => token!(TokenType::Caret, self.ch.to_string(), self.input_position),
+            '^' => token!(Kind::Caret, self.ch.to_string(), self.input_position),
             '.' => {
                 if self.peek_char() == Some('.') {
                     self.read_char();
-                    token!(TokenType::Range, "..".to_string(), self.input_position)
+                    token!(Kind::Range, "..".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::Dot, self.ch.to_string(), self.input_position)
+                    token!(Kind::Dot, self.ch.to_string(), self.input_position)
                 }
             }
             '&' => {
                 if self.peek_char() == Some('&') {
                     self.read_char();
-                    token!(TokenType::And, "&&".to_string(), self.input_position)
+                    token!(Kind::And, "&&".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::BitAnd, self.ch.to_string(), self.input_position)
+                    token!(Kind::BitAnd, self.ch.to_string(), self.input_position)
                 }
             }
             '|' => {
                 if self.peek_char() == Some('|') {
                     self.read_char();
-                    token!(TokenType::Or, "||".to_string(), self.input_position)
+                    token!(Kind::Or, "||".to_string(), self.input_position)
                 } else {
-                    token!(TokenType::BitOr, self.ch.to_string(), self.input_position)
+                    token!(Kind::BitOr, self.ch.to_string(), self.input_position)
                 }
             }
             'a'..='z' | 'A'..='Z' | '_' => {
@@ -181,9 +165,9 @@ impl Lexer {
                 let (lit, num_type) = self.read_number();
                 return token!(num_type, lit, pos);
             }
-            '\0' => token!(TokenType::Eol, String::new(), self.input_position),
+            '\0' => token!(Kind::Eol, String::new(), self.input_position),
             _ => {
-                token!(TokenType::Illegal, self.ch.to_string(), self.input_position)
+                token!(Kind::Illegal, self.ch.to_string(), self.input_position)
             }
         };
 
@@ -215,22 +199,22 @@ impl Lexer {
         String::from_iter(&self.input[pos..self.position])
     }
 
-    fn read_number(&mut self) -> (String, TokenType) {
+    fn read_number(&mut self) -> (String, Kind) {
         let pos = self.position;
 
-        let mut num_type = TokenType::IntLiteral;
+        let mut num_type = Kind::IntLiteral;
 
         loop {
             if self.ch.is_ascii_digit() {
                 self.read_char();
-            } else if self.ch == '.' && num_type == TokenType::IntLiteral {
+            } else if self.ch == '.' && num_type == Kind::IntLiteral {
                 if self
                     .peek_char()
                     .and_then(|ch| if ch.is_ascii_digit() { Some(()) } else { None })
                     .is_some()
                 {
                     self.read_char();
-                    num_type = TokenType::FloatLiteral;
+                    num_type = Kind::FloatLiteral;
                 } else {
                     break;
                 }
@@ -285,21 +269,21 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     struct TestCase {
-        expected_type: TokenType,
+        expected_type: Kind,
         expected_lit: String,
     }
 
     macro_rules! case {
         ($typ:ident, $lit:literal) => {
             TestCase {
-                expected_type: TokenType::$typ,
+                expected_type: Kind::$typ,
                 expected_lit: $lit.to_string(),
             }
         };
 
         ($typ:ident) => {
             TestCase {
-                expected_type: TokenType::$typ,
+                expected_type: Kind::$typ,
                 expected_lit: String::new(),
             }
         };
@@ -339,8 +323,7 @@ null
 && || . .. ::
 
 delete foo;
-"#
-        .to_string();
+"#;
 
         let test_cases = [
             case!(Var, "var"),

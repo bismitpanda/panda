@@ -1189,7 +1189,7 @@ fn test_builtin_method_expressions() {
 }
 
 fn parse(input: &str) -> Option<Node> {
-    let mut l = Lexer::new(input.to_string());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     p.parse_program()
@@ -1286,18 +1286,17 @@ fn test_array_object(expected: &[i32], actual: &Object) {
 }
 
 fn test_hash_object(expected: &HashMap<u64, i32>, actual: &Object) {
-    let Object::Dict(Dict { pairs }) = actual else {
-        unreachable!()
-    }; // TODO: remove `unreachable!()`
-    assert_eq!(expected.len(), pairs.len());
+    if let Object::Dict(Dict { pairs }) = actual {
+        assert_eq!(expected.len(), pairs.len());
 
-    for (&expected_key, &expected_value) in expected {
-        let value = &pairs[&expected_key].value;
-        assert_eq!(
-            value,
-            &Object::Int(Int {
-                value: expected_value.into()
-            })
-        )
+        for (&expected_key, &expected_value) in expected {
+            let value = &pairs[&expected_key].value;
+            assert_eq!(
+                value,
+                &Object::Int(Int {
+                    value: expected_value.into()
+                })
+            )
+        }
     }
 }

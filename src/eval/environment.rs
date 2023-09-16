@@ -2,14 +2,14 @@ use hashbrown::HashMap;
 
 use crate::ast::ClassDecl;
 
-use super::{EvaluatedModuleObject, Object};
+use super::{EvaluatedModule, Object};
 
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct Environment {
     pub store: HashMap<String, (Object, bool)>,
     pub outer: Option<Box<Environment>>,
     pub types: HashMap<String, ClassDecl>,
-    pub imports: HashMap<String, EvaluatedModuleObject>,
+    pub imports: HashMap<String, EvaluatedModule>,
 }
 
 impl Environment {
@@ -69,7 +69,7 @@ impl Environment {
         self.types.insert(name, class);
     }
 
-    pub fn get_import(&self, name: &str) -> Option<EvaluatedModuleObject> {
+    pub fn get_import(&self, name: &str) -> Option<EvaluatedModule> {
         if let Some(obj) = self.imports.get(name).cloned() {
             Some(obj)
         } else if let Some(ref outer) = self.outer {
@@ -79,7 +79,7 @@ impl Environment {
         }
     }
 
-    pub fn set_import(&mut self, name: String, class: EvaluatedModuleObject) {
+    pub fn set_import(&mut self, name: String, class: EvaluatedModule) {
         self.imports.insert(name, class);
     }
 }
