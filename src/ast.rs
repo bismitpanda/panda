@@ -268,7 +268,7 @@ pub struct Constructor {
 pub struct Range {
     pub span: Span,
     pub start: Box<Expression>,
-    pub stop: Box<Expression>,
+    pub end: Box<Expression>,
     pub step: Option<Box<Expression>>,
 }
 
@@ -481,10 +481,10 @@ impl Display for Expression {
             }
 
             Self::Range(Range {
-                start, stop, step, ..
+                start, end, step, ..
             }) => write!(
                 f,
-                "{start}..{stop}{}",
+                "{start}..{end}{}",
                 step.as_ref()
                     .map_or_else(String::new, |step| format!("..{step}"))
             ),

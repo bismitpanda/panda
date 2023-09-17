@@ -81,7 +81,7 @@ fn get_type(obj: &Object) -> Object {
             let mut hasher = AHasher::default();
             name.hash(&mut hasher);
             Object::Type(Type {
-                id: hasher.finish() as usize,
+                id: usize::try_from(hasher.finish()).unwrap(),
                 lit: name.to_string(),
             })
         }
@@ -211,9 +211,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if params.len() != 1 {
-                new_error(format!("expected 1 parameters. got: {}", params.len()))
-            } else {
+            if params.len() == 1 {
                 match params[0] {
                     Object::Char(Char { value: ch }) => Object::Bool(Bool {
                         value: value.contains(ch),
@@ -223,15 +221,15 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                         params[0].kind()
                     )),
                 }
+            } else {
+                new_error(format!("expected 1 parameters. got: {}", params.len()))
             }
         }),
         ("push", |caller, params| {
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if params.len() != 1 {
-                new_error(format!("expected 1 parameters. got: {}", params.len()))
-            } else {
+            if params.len() == 1 {
                 match params[0] {
                     Object::Char(Char { value: ch }) => {
                         let mut new_value = value.clone();
@@ -244,36 +242,33 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                         params[0].kind()
                     )),
                 }
+            } else {
+                new_error(format!("expected 1 parameters. got: {}", params.len()))
             }
         }),
         ("split", |caller, params| {
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if params.len() != 1 {
-                new_error(format!("expected 1 parameters. got: {}", params.len()))
-            } else {
+            if params.len() == 1 {
                 match params[0] {
-                    Object::Char(Char { value: ch }) => {
-                        let mut new_value = value.clone();
-                        new_value.push(ch);
-
-                        Object::Array(Array {
-                            elements: value
-                                .split(|c| c == ch)
-                                .map(|part| {
-                                    Object::Str(Str {
-                                        value: part.to_string(),
-                                    })
+                    Object::Char(Char { value: ch }) => Object::Array(Array {
+                        elements: value
+                            .split(|c| c == ch)
+                            .map(|part| {
+                                Object::Str(Str {
+                                    value: part.to_string(),
                                 })
-                                .collect(),
-                        })
-                    }
+                            })
+                            .collect(),
+                    }),
                     _ => new_error(format!(
                         "STR cannot be split using {}, expected: CHAR",
                         params[0].kind()
                     )),
                 }
+            } else {
+                new_error(format!("expected 1 parameters. got: {}", params.len()))
             }
         }),
         ("toAsciiLowercase", |caller, params| {
@@ -292,51 +287,51 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Str(Str {
                     value: value.chars().map(|ch| ch.to_ascii_uppercase()).collect(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("chars", |caller, params| {
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Array(Array {
                     elements: value
                         .chars()
                         .map(|value| Object::Char(Char { value }))
                         .collect(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("trimWhitespace", |caller, params| {
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Str(Str {
                     value: value.trim().to_string(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAscii", |caller, params| {
             let Object::Str(Str { value }) = caller else {
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.chars().all(|ch| ch.is_ascii()),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
     ],
@@ -345,213 +340,211 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_alphabetic(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAlphanumeric", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_alphanumeric(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAscii", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiAlphabetic", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_alphabetic(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiAlphanumeric", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_alphanumeric(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiControl", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_control(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiDigit", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_digit(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isDecDigit", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_digit(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiGraphic", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_graphic(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiLowercase", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_lowercase(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiPunctuation", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_punctuation(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiUppercase", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_uppercase(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isAsciiWhitespace", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_whitespace(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isControl", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_control(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isHexDigit", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_ascii_hexdigit(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isOctDigit", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_digit(8),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isBinDigit", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_digit(2),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isDigit", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected: CHAR, got: {}", caller.kind()));
             };
-            if params.len() != 1 {
-                new_error(format!("expected 1 parameters. got: {}", params.len()))
-            } else {
+            if params.len() == 1 {
                 match &params[0] {
                     Object::Int(Int { value: i }) => Object::Bool(Bool {
                         value: value.is_digit(i.to_u32().unwrap()),
@@ -561,42 +554,44 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                         params[0].kind()
                     )),
                 }
+            } else {
+                new_error(format!("expected 1 parameters. got: {}", params.len()))
             }
         }),
         ("isLowercase", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_lowercase(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isNumeric", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_numeric(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isUppercase", |caller, params| {
             let Object::Char(Char { value }) = caller else {
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
-            if !params.is_empty() {
-                new_error(format!("expected 0 parameters. got: {}", params.len()))
-            } else {
+            if params.is_empty() {
                 Object::Bool(Bool {
                     value: value.is_uppercase(),
                 })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
             }
         }),
         ("isWhitespace", |caller, params| {
@@ -706,6 +701,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 if !allowed_in_array(&params[0]) {
                     return new_error(format!("ARRAY cannot contain {}", params[0].kind()));
                 }
+
                 let mut new_elements = Vec::with_capacity(elements.len() + 1);
                 new_elements.clone_from(elements);
 

@@ -66,7 +66,7 @@ pub struct ReturnValue {
 pub struct EvaluatedFunction {
     pub parameters: Vec<String>,
     pub body: BlockStatement,
-    pub env: Environment,
+    pub environment: Environment,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -113,14 +113,14 @@ pub struct Type {
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Range {
     pub start: isize,
-    pub stop: isize,
+    pub end: isize,
     pub step: isize,
 }
 
 impl Range {
     pub fn len(&self) -> usize {
-        ((self.stop - self.start) / self.step) as usize
-            + usize::from((self.stop - self.start) % self.step != 0)
+        ((self.end - self.start) / self.step) as usize
+            + usize::from((self.end - self.start) % self.step != 0)
     }
 
     pub fn nth(&self, idx: usize) -> isize {
@@ -131,7 +131,7 @@ impl Range {
 #[derive(Clone, PartialEq, Debug)]
 pub struct EvaluatedModule {
     pub name: String,
-    pub env: Environment,
+    pub environment: Environment,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -234,8 +234,8 @@ impl Display for Object {
 
             Self::Null => write!(f, "null"),
 
-            Self::Range(Range { start, stop, step }) => {
-                write!(f, "{start}..{stop}..{step}")
+            Self::Range(Range { start, end, step }) => {
+                write!(f, "{start}..{end}..{step}")
             }
 
             Self::ReturnValue(ReturnValue { value }) => write!(f, "{value}"),
@@ -347,15 +347,14 @@ impl Object {
 
     pub fn call_method(&self, method: u8, params: Option<Vec<Self>>) -> Self {
         match self {
-            Self::Class(Class { name, members }) => {
-                if let Some(class_member) = members.get(&method) {
-                    class_member.obj.clone()
-                } else {
+            Self::Class(Class { name, members }) => members.get(&method).map_or_else(
+                || {
                     new_error(format!(
                         "no method named \"{method}\" found for class \"{name}\"",
                     ))
-                }
-            }
+                },
+                |class_member| class_member.obj.clone(),
+            ),
 
             Self::Int(_)
             | Self::Float(_)

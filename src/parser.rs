@@ -495,14 +495,7 @@ impl<'a> Parser<'a> {
         let span = Span {
             start,
             end: self.cur_tok.position
-                + Position::new(
-                    0,
-                    if let Some(alias) = &alias {
-                        alias.len()
-                    } else {
-                        path.len()
-                    },
-                ),
+                + Position::new(0, alias.as_ref().map_or(path.len(), |alias| alias.len())),
         };
 
         Some(Statement::Import(Import { span, path, alias }))
@@ -981,21 +974,21 @@ impl Parser<'_> {
         let start = left.get_span().start;
         self.next_token();
 
-        let mut stop = self.parse_expression(Precedence::Lowest)?;
+        let mut last = self.parse_expression(Precedence::Lowest)?;
         let mut step = None;
 
         if let Expression::Range(Range {
-            start: end_start,
-            stop: end_stop,
-            step: end_step,
+            start: last_start,
+            end: last_end,
+            step: last_step,
             ..
-        }) = stop
+        }) = last
         {
-            step = Some(end_stop);
+            step = Some(last_end);
 
-            stop = *end_start;
+            last = *last_start;
 
-            if end_step.is_some() {
+            if last_step.is_some() {
                 self.errors
                     .push("range cannot have more than 3 parts.".to_string());
                 return None;
@@ -1010,7 +1003,7 @@ impl Parser<'_> {
         Some(Expression::Range(Range {
             span,
             start: Box::new(left),
-            stop: Box::new(stop),
+            end: Box::new(last),
             step,
         }))
     }

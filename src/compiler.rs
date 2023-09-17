@@ -534,7 +534,7 @@ impl Compiler {
                 }
 
                 Expression::Range(Range {
-                    start, stop, step, ..
+                    start, end, step, ..
                 }) => {
                     if let Some(step) = step {
                         self.compile(Node::Expr(*step))?;
@@ -543,7 +543,7 @@ impl Compiler {
                     }
 
                     self.compile(Node::Expr(*start))?;
-                    self.compile(Node::Expr(*stop))?;
+                    self.compile(Node::Expr(*end))?;
                     self.emit(Opcode::Range, &[2]);
                 }
 
@@ -768,9 +768,7 @@ impl Compiler {
                             }
                         }
 
-                        Constructable::Call(_) => {}
-
-                        Constructable::Scope(_) => {}
+                        Constructable::Call(_) | Constructable::Scope(_) => {}
                     };
 
                     todo!();

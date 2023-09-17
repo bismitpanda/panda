@@ -32,13 +32,14 @@ impl Environment {
     }
 
     pub fn get(&self, name: String) -> Option<(Object, bool)> {
-        if let Some(obj) = self.store.get(&name).cloned() {
-            Some(obj)
-        } else if let Some(ref outer) = self.outer {
-            outer.get(name)
-        } else {
-            None
-        }
+        self.store.get(&name).cloned().map_or_else(
+            || {
+                self.outer
+                    .as_ref()
+                    .map_or_else(|| None, |outer| outer.get(name))
+            },
+            Some,
+        )
     }
 
     pub fn set(&mut self, name: String, val: Object, mutable: bool) {
@@ -56,13 +57,14 @@ impl Environment {
     }
 
     pub fn get_type(&self, name: &str) -> Option<ClassDecl> {
-        if let Some(obj) = self.types.get(name).cloned() {
-            Some(obj)
-        } else if let Some(ref outer) = self.outer {
-            outer.get_type(name)
-        } else {
-            None
-        }
+        self.types.get(name).cloned().map_or_else(
+            || {
+                self.outer
+                    .as_ref()
+                    .map_or_else(|| None, |outer| outer.get_type(name))
+            },
+            Some,
+        )
     }
 
     pub fn set_type(&mut self, name: String, class: ClassDecl) {
@@ -70,13 +72,14 @@ impl Environment {
     }
 
     pub fn get_import(&self, name: &str) -> Option<EvaluatedModule> {
-        if let Some(obj) = self.imports.get(name).cloned() {
-            Some(obj)
-        } else if let Some(ref outer) = self.outer {
-            outer.get_import(name)
-        } else {
-            None
-        }
+        self.imports.get(name).cloned().map_or_else(
+            || {
+                self.outer
+                    .as_ref()
+                    .map_or_else(|| None, |outer| outer.get_import(name))
+            },
+            Some,
+        )
     }
 
     pub fn set_import(&mut self, name: String, class: EvaluatedModule) {

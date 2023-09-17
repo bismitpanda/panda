@@ -1,9 +1,11 @@
 use std::fmt::Write;
 use std::vec::from_elem;
 
+use strum::{Display, EnumIter};
+
 pub type Instructions = Vec<u8>;
 
-#[derive(Clone, Copy, strum::Display, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, Display, EnumIter, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Opcode {
     Constant,
     Pop,
@@ -362,11 +364,11 @@ pub fn make(op: Opcode, operands: &[usize]) -> Instructions {
         let width = def.operand_widths[i];
         match width {
             1 => {
-                instruction[offset] = *o as u8;
+                instruction[offset] = u8::try_from(*o).unwrap();
             }
             2 => {
                 let _ = instruction
-                    .splice(offset..offset + 2, (*o as u16).to_be_bytes())
+                    .splice(offset..offset + 2, u16::try_from(*o).unwrap().to_be_bytes())
                     .collect::<Vec<_>>();
             }
             _ => {}
@@ -468,6 +470,7 @@ mod tests {
     use super::*;
 
     use pretty_assertions::assert_eq;
+    use strum::IntoEnumIterator;
 
     struct MakeTestCase {
         op: Opcode,
@@ -568,5 +571,9 @@ mod tests {
     }
 
     #[test]
-    fn test_try_from() {}
+    fn test_try_from() {
+        for (i, opcode) in Opcode::iter().enumerate() {
+            assert_eq!(opcode, Opcode::try_from(i as u8).unwrap());
+        }
+    }
 }

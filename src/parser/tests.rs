@@ -2279,7 +2279,7 @@ fn test_parsing_hash_literal_with_expressions() {
 struct RangeExpressionTestCase {
     input: &'static str,
     start: isize,
-    stop: isize,
+    end: isize,
     step: Option<isize>,
 }
 
@@ -2289,7 +2289,7 @@ fn test_range_expression() {
     let test_case = RangeExpressionTestCase {
         input: "0..100",
         start: 0,
-        stop: 100,
+        end: 100,
         step: None,
     };
 
@@ -2323,13 +2323,13 @@ fn test_range_expression() {
                             value: test_case.start.into()
                         }
                     })),
-                    stop: Box::new(Expression::Literal(Literal {
+                    end: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 4),
                             end: Position::new(0, 7)
                         },
                         lit: Lit::Int {
-                            value: test_case.stop.into()
+                            value: test_case.end.into()
                         }
                     })),
                     step: None
@@ -2344,7 +2344,7 @@ fn test_range_expression() {
     let test_case = RangeExpressionTestCase {
         input: "0..100..10",
         start: 0,
-        stop: 100,
+        end: 100,
         step: Some(10),
     };
 
@@ -2378,13 +2378,13 @@ fn test_range_expression() {
                             value: test_case.start.into()
                         }
                     })),
-                    stop: Box::new(Expression::Literal(Literal {
+                    end: Box::new(Expression::Literal(Literal {
                         span: Span {
                             start: Position::new(0, 4),
                             end: Position::new(0, 7)
                         },
                         lit: Lit::Int {
-                            value: test_case.stop.into()
+                            value: test_case.end.into()
                         }
                     })),
                     step: test_case

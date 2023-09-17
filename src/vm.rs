@@ -449,13 +449,16 @@ impl VirtualMachine {
 
         args.reverse();
         let caller = self.pop();
-        let ret = caller.call_method(method_idx as u8, has_arguments.then_some(args));
+        let ret = caller.call_method(
+            u8::try_from(method_idx).unwrap(),
+            has_arguments.then_some(args),
+        );
         self.push(ret)?;
         Ok(())
     }
 
     fn exec_range(&mut self, has_step: bool) -> Result<(), String> {
-        let stop = self.pop();
+        let end = self.pop();
         let start = self.pop();
         let Object::Int(Int { value: start }) = start else {
             return Err(format!(
@@ -463,14 +466,14 @@ impl VirtualMachine {
                 start.kind()
             ));
         };
-        let Object::Int(Int { value: stop }) = stop else {
+        let Object::Int(Int { value: end }) = end else {
             return Err(format!(
                 "cannot use {} as step in range. expected: INT",
-                stop.kind()
+                end.kind()
             ));
         };
         let step = if has_step {
-            if start > stop {
+            if start > end {
                 -1
             } else {
                 1
@@ -489,7 +492,7 @@ impl VirtualMachine {
         };
         self.push(Object::Range(Range {
             start: start.to_isize().unwrap(),
-            stop: stop.to_isize().unwrap(),
+            end: end.to_isize().unwrap(),
             step,
         }))?;
 
@@ -801,11 +804,11 @@ impl VirtualMachine {
             (Object::Str(Str { value: left }), Object::Int(Int { value })) => {
                 self.exec_string_index_expression(left, value.to_usize().unwrap())?;
             }
-            (Object::Array(Array { elements }), Object::Range(Range { start, stop, step })) => {
-                self.exec_array_slice_expression(elements, *start, *stop, *step)?;
+            (Object::Array(Array { elements }), Object::Range(Range { start, end, step })) => {
+                self.exec_array_slice_expression(elements, *start, *end, *step)?;
             }
-            (Object::Str(Str { value }), Object::Range(Range { start, stop, step })) => {
-                self.exec_string_slice_expression(value, *start, *stop, *step)?;
+            (Object::Str(Str { value }), Object::Range(Range { start, end, step })) => {
+                self.exec_string_slice_expression(value, *start, *end, *step)?;
             }
             (Object::Dict(Dict { pairs }), _) => {
                 self.exec_hash_index_expression(pairs, index)?;
@@ -848,19 +851,19 @@ impl VirtualMachine {
         &mut self,
         array: &[Object],
         start: isize,
-        stop: isize,
+        end: isize,
         step: isize,
     ) -> Result<(), String> {
         let max = (array.len() as isize) - 1;
 
-        if start > max || stop > max || start < 0 || stop < 0 || start > stop {
+        if start > max || end > max || start < 0 || end < 0 || start > end {
             return Err("cannot slice ARRAY using this range".to_string());
         }
 
         let mut elements = Vec::new();
 
         let mut i = start;
-        while i < stop {
+        while i < end {
             elements.push(array[i as usize].clone());
             i += step;
         }
@@ -872,19 +875,19 @@ impl VirtualMachine {
         &mut self,
         string: &str,
         start: isize,
-        stop: isize,
+        end: isize,
         step: isize,
     ) -> Result<(), String> {
         let max = (string.len() as isize) - 1;
 
-        if start > max || stop > max || start < 0 || stop < 0 || start > stop {
-            return Err(format!("cannot slice STR using {start}..{stop}..{step}"));
+        if start > max || end > max || start < 0 || end < 0 || start > end {
+            return Err(format!("cannot slice STR using {start}..{end}..{step}"));
         }
 
         let mut value = String::new();
 
         let mut i = start;
-        while i < stop {
+        while i < end {
             value.push(string.chars().nth(i as usize).unwrap());
             i += step;
         }

@@ -431,7 +431,7 @@ fn test_lambda_object() {
                     }))
                 })
             })]),
-            env: Environment {
+            environment: Environment {
                 store: HashMap::new(),
                 outer: None,
                 types: HashMap::new(),
