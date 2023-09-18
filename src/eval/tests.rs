@@ -209,7 +209,7 @@ fn test_bang_operator() {
 
     for test_case in test_cases {
         let evaluated = test_eval(&test_case.input);
-        test_boolean_object(evaluated, test_case.expected)
+        test_boolean_object(evaluated, test_case.expected);
     }
 }
 
@@ -254,9 +254,9 @@ fn test_if_else_expression() {
     for test_case in test_cases {
         let evaluated = test_eval(&test_case.input);
         if let Some(integer) = test_case.expected {
-            test_integer_object(evaluated, integer)
+            test_integer_object(evaluated, integer);
         } else {
-            test_null_object(evaluated)
+            test_null_object(evaluated);
         }
     }
 }
@@ -287,7 +287,7 @@ fn test_return_statements() {
 
     for test_case in test_cases {
         let evaluated = test_eval(&test_case.input);
-        test_integer_object(evaluated, test_case.expected)
+        test_integer_object(evaluated, test_case.expected);
     }
 }
 
@@ -391,7 +391,7 @@ fn test_declaration_statement() {
 
     for test_case in test_cases {
         let evaluated = test_eval(&test_case.input);
-        test_integer_object(evaluated, test_case.expected)
+        test_integer_object(evaluated, test_case.expected);
     }
 }
 
@@ -427,7 +427,7 @@ fn test_lambda_object() {
                             start: Position::new(0, 13),
                             end: Position::new(0, 14)
                         },
-                        lit: Lit::Int { value: 2.into() }
+                        lit: Lit::Int { value: 2 }
                     }))
                 })
             })]),
@@ -473,7 +473,7 @@ fn test_function_application() {
 
     for test_case in test_cases {
         let evaluated = test_eval(&test_case.input);
-        test_integer_object(evaluated, test_case.expected)
+        test_integer_object(evaluated, test_case.expected);
     }
 }
 
@@ -490,7 +490,7 @@ var addTwo = newAdder(2);
 addTwo(2)";
 
     let evaluated = test_eval(input);
-    test_integer_object(evaluated, 4)
+    test_integer_object(evaluated, 4);
 }
 
 #[test]
@@ -502,14 +502,14 @@ fn test_string_literal() {
         Object::Str(Str {
             value: "Hello World!".to_string()
         })
-    )
+    );
 }
 
 #[test]
 fn test_char_literal() {
     let input = "'a'";
     let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Char(Char { value: 'a' }))
+    assert_eq!(evaluated, Object::Char(Char { value: 'a' }));
 }
 
 #[test]
@@ -522,7 +522,7 @@ fn test_string_concatenation() {
         Object::Str(Str {
             value: "Hello World!".to_string()
         })
-    )
+    );
 }
 
 #[test]
@@ -533,12 +533,12 @@ fn test_array_literals() {
         evaluated,
         Object::Array(Array {
             elements: Vec::from([
-                Object::Int(Int { value: 1.into() }),
-                Object::Int(Int { value: 4.into() }),
-                Object::Int(Int { value: 6.into() })
+                Object::Int(Int { value: 1 }),
+                Object::Int(Int { value: 4 }),
+                Object::Int(Int { value: 6 })
             ])
         })
-    )
+    );
 }
 
 struct IndexExpressionTestCase {
@@ -622,7 +622,7 @@ fn test_hash_literals() {
     let key3 = Hashable::Str(Str {
         value: "three".to_string(),
     });
-    let key4 = Hashable::Int(Int { value: 4.into() });
+    let key4 = Hashable::Int(Int { value: 4 });
     let key5 = Hashable::from_object(&TRUE).unwrap();
     let key6 = Hashable::from_object(&FALSE).unwrap();
     assert_eq!(
@@ -633,42 +633,42 @@ fn test_hash_literals() {
                     key1.hash_key(),
                     HashPair {
                         key: key1,
-                        value: Object::Int(Int { value: 1.into() })
+                        value: Object::Int(Int { value: 1 })
                     }
                 ),
                 (
                     key2.hash_key(),
                     HashPair {
                         key: key2,
-                        value: Object::Int(Int { value: 2.into() })
+                        value: Object::Int(Int { value: 2 })
                     }
                 ),
                 (
                     key3.hash_key(),
                     HashPair {
                         key: key3,
-                        value: Object::Int(Int { value: 3.into() })
+                        value: Object::Int(Int { value: 3 })
                     }
                 ),
                 (
                     key4.hash_key(),
                     HashPair {
                         key: key4,
-                        value: Object::Int(Int { value: 4.into() })
+                        value: Object::Int(Int { value: 4 })
                     }
                 ),
                 (
                     key5.hash_key(),
                     HashPair {
                         key: key5,
-                        value: Object::Int(Int { value: 5.into() })
+                        value: Object::Int(Int { value: 5 })
                     }
                 ),
                 (
                     key6.hash_key(),
                     HashPair {
                         key: key6,
-                        value: Object::Int(Int { value: 6.into() })
+                        value: Object::Int(Int { value: 6 })
                     }
                 ),
             ])
@@ -713,9 +713,9 @@ fn test_hash_index_expressions() {
         let evaluated = test_eval(&test_case.input);
 
         if let Some(i) = test_case.expected {
-            test_integer_object(evaluated, i)
+            test_integer_object(evaluated, i);
         } else {
-            test_null_object(evaluated)
+            test_null_object(evaluated);
         }
     }
 }
@@ -760,9 +760,9 @@ fn test_builtin_methods() {
         let expected = &*test_case.expected;
 
         if let Some(expected) = expected.downcast_ref::<i32>() {
-            test_integer_object(evaluated, *expected as isize)
+            test_integer_object(evaluated, *expected as isize);
         } else if let Some(expected) = expected.downcast_ref::<bool>() {
-            test_boolean_object(evaluated, *expected)
+            test_boolean_object(evaluated, *expected);
         }
     }
 }
@@ -774,7 +774,7 @@ var c = new a();
 c.b()";
 
     let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Int(Int { value: 10.into() }));
+    assert_eq!(evaluated, Object::Int(Int { value: 10 }));
 }
 
 #[test]
@@ -784,7 +784,7 @@ var i = 10;
 delete i";
 
     let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Int(Int { value: 10.into() }));
+    assert_eq!(evaluated, Object::Int(Int { value: 10 }));
 }
 
 fn test_eval(input: &str) -> Object {
@@ -799,12 +799,7 @@ fn test_eval(input: &str) -> Object {
 }
 
 fn test_integer_object(obj: Object, expected: isize) {
-    assert_eq!(
-        obj,
-        Object::Int(Int {
-            value: expected.into()
-        })
-    );
+    assert_eq!(obj, Object::Int(Int { value: expected }));
 }
 
 fn test_boolean_object(obj: Object, expected: bool) {

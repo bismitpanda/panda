@@ -509,7 +509,7 @@ mod tests {
             assert_eq!(instruction.len(), test_case.expected.len());
 
             for (i, &b) in test_case.expected.iter().enumerate() {
-                assert_eq!(instruction[i], b)
+                assert_eq!(instruction[i], b);
             }
         }
     }
@@ -558,7 +558,7 @@ mod tests {
             assert_eq!(n, bytes_read);
 
             for (i, want) in operands.iter().enumerate() {
-                assert_eq!(operands_read[i], *want)
+                assert_eq!(operands_read[i], *want);
             }
         }
     }

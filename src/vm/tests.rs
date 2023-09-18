@@ -95,7 +95,7 @@ fn test_integer_arithmetic() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -179,7 +179,7 @@ fn test_float_arithmetic() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -455,7 +455,7 @@ fn test_boolean_expressions() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -465,7 +465,7 @@ fn test_null_expressions() {
         expected: Box::new(None::<u8>),
     }];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -497,7 +497,7 @@ fn test_boolean_operation() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -537,7 +537,7 @@ fn test_conditionals() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -569,7 +569,7 @@ fn test_global_declaration_statements() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -589,7 +589,7 @@ fn test_string_expressions() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -609,7 +609,7 @@ fn test_array_literals() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -623,13 +623,13 @@ fn test_hash_literals() {
             input: "{1: 2, 2: 3}".to_string(),
             expected: Box::new(HashMap::from([
                 (
-                    Hashable::from_object(&Object::Int(Int { value: 1.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 1 }))
                         .unwrap()
                         .hash_key(),
                     2,
                 ),
                 (
-                    Hashable::from_object(&Object::Int(Int { value: 2.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 2 }))
                         .unwrap()
                         .hash_key(),
                     3,
@@ -640,13 +640,13 @@ fn test_hash_literals() {
             input: "{1 + 1: 2 * 2, 3 + 3: 4 * 4}".to_string(),
             expected: Box::new(HashMap::from([
                 (
-                    Hashable::from_object(&Object::Int(Int { value: 2.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 2 }))
                         .unwrap()
                         .hash_key(),
                     4,
                 ),
                 (
-                    Hashable::from_object(&Object::Int(Int { value: 6.into() }))
+                    Hashable::from_object(&Object::Int(Int { value: 6 }))
                         .unwrap()
                         .hash_key(),
                     16,
@@ -655,7 +655,7 @@ fn test_hash_literals() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -683,7 +683,7 @@ fn test_index_expression() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -714,7 +714,7 @@ c()"
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -730,7 +730,7 @@ fn test_functions_with_return_statement() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -753,7 +753,7 @@ noReturnTwo();"
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -777,7 +777,7 @@ fn test_first_class_functions() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -847,7 +847,7 @@ minusOne() + minusTwo()
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -912,7 +912,7 @@ outer()"
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -944,7 +944,7 @@ fn test_calling_functions_with_wrong_arguments() {
         let mut vm = VirtualMachine::new(&comp.byte_code());
 
         if let Err(err) = vm.run() {
-            assert_eq!(err, *test_case.expected.downcast_ref::<&str>().unwrap())
+            assert_eq!(err, *test_case.expected.downcast_ref::<&str>().unwrap());
         } else {
             panic!("expected error but resulted in Ok(())")
         }
@@ -1033,7 +1033,7 @@ closure()"
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -1070,7 +1070,7 @@ wrapper()"
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -1110,7 +1110,7 @@ j"
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -1151,7 +1151,7 @@ x
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -1161,7 +1161,7 @@ fn test_assign_expressions() {
         expected: Box::new(9),
     }];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 #[test]
@@ -1185,7 +1185,7 @@ fn test_builtin_method_expressions() {
         },
     ];
 
-    run_vm_tests(&test_cases)
+    run_vm_tests(&test_cases);
 }
 
 fn parse(input: &str) -> Option<Node> {
@@ -1217,37 +1217,32 @@ fn run_vm_tests(test_cases: &[VMTestCase]) {
 
         let stack_elem = vm.last_popped_stack_elem;
 
-        test_expected_object(&test_case.expected, stack_elem.unwrap_or(NULL_OBJ));
+        test_expected_object(&test_case.expected, &stack_elem.unwrap_or(NULL_OBJ));
     }
 }
 
-fn test_expected_object(expected: &Box<dyn Any>, actual: Object) {
+fn test_expected_object(expected: &Box<dyn Any>, actual: &Object) {
     if let Some(expected) = (*expected).downcast_ref::<i32>() {
-        test_integer_object(*expected as isize, &actual);
+        test_integer_object(*expected as isize, actual);
     } else if let Some(expected) = (*expected).downcast_ref::<bool>() {
-        test_boolean_object(*expected, &actual);
+        test_boolean_object(*expected, actual);
     } else if let Some(expected) = (*expected).downcast_ref::<f64>() {
-        test_float_object(*expected, &actual)
+        test_float_object(*expected, actual);
     } else if let Some(expected) = (*expected).downcast_ref::<char>() {
-        test_char_object(*expected, &actual)
+        test_char_object(*expected, actual);
     } else if let Some(expected) = (*expected).downcast_ref::<String>() {
-        test_string_object(expected, &actual)
+        test_string_object(expected, actual);
     } else if let Some(expected) = (*expected).downcast_ref::<Vec<i32>>() {
-        test_array_object(expected, &actual)
+        test_array_object(expected, actual);
     } else if let Some(expected) = (*expected).downcast_ref::<HashMap<u64, i32>>() {
-        test_hash_object(expected, &actual)
+        test_hash_object(expected, actual);
     } else {
-        assert_eq!(&Object::Null, &actual)
+        assert_eq!(&Object::Null, actual);
     }
 }
 
 fn test_integer_object(expected: isize, actual: &Object) {
-    assert_eq!(
-        &Object::Int(Int {
-            value: expected.into()
-        }),
-        actual
-    );
+    assert_eq!(&Object::Int(Int { value: expected }), actual);
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {
@@ -1255,11 +1250,11 @@ fn test_boolean_object(expected: bool, actual: &Object) {
 }
 
 fn test_float_object(expected: f64, actual: &Object) {
-    assert_eq!(&Object::Float(Float { value: expected }), actual)
+    assert_eq!(&Object::Float(Float { value: expected }), actual);
 }
 
 fn test_char_object(expected: char, actual: &Object) {
-    assert_eq!(&Object::Char(Char { value: expected }), actual)
+    assert_eq!(&Object::Char(Char { value: expected }), actual);
 }
 
 fn test_string_object(expected: &str, actual: &Object) {
@@ -1268,7 +1263,7 @@ fn test_string_object(expected: &str, actual: &Object) {
             value: expected.to_string()
         }),
         actual
-    )
+    );
 }
 
 fn test_array_object(expected: &[i32], actual: &Object) {
@@ -1277,12 +1272,12 @@ fn test_array_object(expected: &[i32], actual: &Object) {
             elements: expected
                 .iter()
                 .map(|el| Object::Int(Int {
-                    value: (*el).into()
+                    value: (*el).try_into().unwrap()
                 }))
                 .collect()
         }),
         actual
-    )
+    );
 }
 
 fn test_hash_object(expected: &HashMap<u64, i32>, actual: &Object) {
@@ -1294,9 +1289,9 @@ fn test_hash_object(expected: &HashMap<u64, i32>, actual: &Object) {
             assert_eq!(
                 value,
                 &Object::Int(Int {
-                    value: expected_value.into()
+                    value: expected_value.try_into().unwrap()
                 })
-            )
+            );
         }
     }
 }

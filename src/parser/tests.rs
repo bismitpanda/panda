@@ -13,7 +13,7 @@ const y = 10;
 const barbaz = 121212;
 ";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -43,13 +43,11 @@ const barbaz = 121212;
                             start: Position::new(i + 1, end_pos),
                             end: Position::new(i + 1, end_pos + value.to_string().len())
                         },
-                        lit: Lit::Int {
-                            value: value.into()
-                        }
+                        lit: Lit::Int { value }
                     })),
                 }),
                 statements[i]
-            )
+            );
         }
     } else {
         panic!("p.parse_program() returned None")
@@ -64,7 +62,7 @@ return 10;
 return 838383;
 ";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -88,13 +86,11 @@ return 838383;
                             start: Position::new(i + 1, 8),
                             end: Position::new(i + 1, end)
                         },
-                        lit: Lit::Int {
-                            value: test_case.into()
-                        }
+                        lit: Lit::Int { value: test_case }
                     }),
                 }),
                 statements[i]
-            )
+            );
         }
     } else {
         panic!("p.parse_program() returned None")
@@ -105,7 +101,7 @@ return 838383;
 fn test_function_statement() {
     let input = "fn add() { x + y }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -152,7 +148,7 @@ fn test_function_statement() {
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -162,7 +158,7 @@ fn test_function_statement() {
 fn test_while_statement() {
     let input = "while (i < n) { i = i + 1 }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -234,14 +230,14 @@ fn test_while_statement() {
                                     start: Position::new(0, 25),
                                     end: Position::new(0, 26)
                                 },
-                                lit: Lit::Int { value: 1.into() },
+                                lit: Lit::Int { value: 1 },
                             })),
                         })),
                     }),
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -251,7 +247,7 @@ fn test_while_statement() {
 fn test_while_with_break_statement() {
     let input = "while (i < n) { if (i == 3) { break; }}";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -316,7 +312,7 @@ fn test_while_with_break_statement() {
                                     start: Position::new(0, 26),
                                     end: Position::new(0, 27)
                                 },
-                                lit: Lit::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3 }
                             }))
                         })),
                         consequence: Vec::from([Statement::Break(Span {
@@ -328,7 +324,7 @@ fn test_while_with_break_statement() {
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -338,7 +334,7 @@ fn test_while_with_break_statement() {
 fn test_while_with_continue_statement() {
     let input = "while (i < n) { if (i == 3) { continue; }}";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -403,7 +399,7 @@ fn test_while_with_continue_statement() {
                                     start: Position::new(0, 26),
                                     end: Position::new(0, 27)
                                 },
-                                lit: Lit::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3 }
                             }))
                         })),
                         consequence: Vec::from([Statement::Continue(Span {
@@ -415,7 +411,7 @@ fn test_while_with_continue_statement() {
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -425,7 +421,7 @@ fn test_while_with_continue_statement() {
 fn test_for_statement() {
     let input = "for (i in arr) { i = i + 1 }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -484,14 +480,14 @@ fn test_for_statement() {
                                     start: Position::new(0, 26),
                                     end: Position::new(0, 27)
                                 },
-                                lit: Lit::Int { value: 1.into() },
+                                lit: Lit::Int { value: 1 },
                             })),
                         })),
                     }),
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -501,7 +497,7 @@ fn test_for_statement() {
 fn test_for_with_break_statement() {
     let input = "for (i in arr) { if (i == 3) { break; } }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -553,7 +549,7 @@ fn test_for_with_break_statement() {
                                     start: Position::new(0, 27),
                                     end: Position::new(0, 28)
                                 },
-                                lit: Lit::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3 }
                             }))
                         })),
                         consequence: Vec::from([Statement::Break(Span {
@@ -565,7 +561,7 @@ fn test_for_with_break_statement() {
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -575,7 +571,7 @@ fn test_for_with_break_statement() {
 fn test_for_with_continue_statement() {
     let input = "for (i in arr) { if (i == 3) { continue; } }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -627,7 +623,7 @@ fn test_for_with_continue_statement() {
                                     start: Position::new(0, 27),
                                     end: Position::new(0, 28)
                                 },
-                                lit: Lit::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3 }
                             }))
                         })),
                         consequence: Vec::from([Statement::Continue(Span {
@@ -639,7 +635,7 @@ fn test_for_with_continue_statement() {
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -649,7 +645,7 @@ fn test_for_with_continue_statement() {
 fn test_class_statement() {
     let input = "class MyClass(i1, i2) { var a = 32; }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -678,12 +674,12 @@ fn test_class_statement() {
                             start: Position::new(0, 33),
                             end: Position::new(0, 35)
                         },
-                        lit: Lit::Int { value: 32.into() },
+                        lit: Lit::Int { value: 32 },
                     })),
                 })]),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -753,7 +749,7 @@ fn test_import_statement() {
 fn test_identifier_expression() {
     let input = "foo_bar123";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -778,7 +774,7 @@ fn test_identifier_expression() {
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -788,7 +784,7 @@ fn test_identifier_expression() {
 fn test_boolean_literal() {
     let input = "true";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -844,11 +840,11 @@ fn test_integer_literal() {
                         start: Position::new(0, 1),
                         end: Position::new(0, 2)
                     },
-                    lit: Lit::Int { value: 5.into() }
+                    lit: Lit::Int { value: 5 }
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -883,7 +879,7 @@ fn test_float_literal() {
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -916,7 +912,7 @@ fn test_parsing_prefix_expressions() {
                             start: Position::new(0, 2),
                             end: Position::new(0, 3),
                         },
-                        lit: Lit::Int { value: 5.into() },
+                        lit: Lit::Int { value: 5 },
                     })),
                 }),
             }),
@@ -940,7 +936,7 @@ fn test_parsing_prefix_expressions() {
                             start: Position::new(0, 2),
                             end: Position::new(0, 4),
                         },
-                        lit: Lit::Int { value: 15.into() },
+                        lit: Lit::Int { value: 15 },
                     })),
                 }),
             }),
@@ -1052,7 +1048,7 @@ fn test_parsing_infix_expressions() {
                                 end: Position::new(0, 2)
                             },
                             lit: Lit::Int {
-                                value: test_case.left_value.into()
+                                value: test_case.left_value
                             }
                         })),
                         operator: test_case.operator,
@@ -1062,7 +1058,7 @@ fn test_parsing_infix_expressions() {
                                 end: Position::new(0, end_pos + 1)
                             },
                             lit: Lit::Int {
-                                value: test_case.right_value.into()
+                                value: test_case.right_value
                             }
                         }))
                     }),
@@ -1080,7 +1076,7 @@ fn test_parsing_infix_expressions() {
 fn test_if_expression() {
     let input = "if (x < y) { x }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1150,7 +1146,7 @@ fn test_if_expression() {
 fn test_if_else_expression() {
     let input = "if (x < y) { x } else { y }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1233,7 +1229,7 @@ fn test_if_else_expression() {
 fn test_lambda_expression() {
     let input = "fn (x, y) { x + y; }";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1347,7 +1343,7 @@ fn test_lambda_parameter_parsing() {
                     })
                 }),
                 statements[0]
-            )
+            );
         } else {
             panic!("p.parse_program() returned None")
         }
@@ -1358,7 +1354,7 @@ fn test_lambda_parameter_parsing() {
 fn test_call_expression() {
     let input = "add(1, 2 * 3, 4 + 5);";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1392,7 +1388,7 @@ fn test_call_expression() {
                                 start: Position::new(0, 5),
                                 end: Position::new(0, 6)
                             },
-                            lit: Lit::Int { value: 1.into() }
+                            lit: Lit::Int { value: 1 }
                         }),
                         Expression::Infix(Infix {
                             span: Span {
@@ -1404,7 +1400,7 @@ fn test_call_expression() {
                                     start: Position::new(0, 8),
                                     end: Position::new(0, 9)
                                 },
-                                lit: Lit::Int { value: 2.into() }
+                                lit: Lit::Int { value: 2 }
                             })),
                             operator: Operator::Mul,
                             right: Box::new(Expression::Literal(Literal {
@@ -1412,7 +1408,7 @@ fn test_call_expression() {
                                     start: Position::new(0, 12),
                                     end: Position::new(0, 13)
                                 },
-                                lit: Lit::Int { value: 3.into() }
+                                lit: Lit::Int { value: 3 }
                             }))
                         }),
                         Expression::Infix(Infix {
@@ -1425,7 +1421,7 @@ fn test_call_expression() {
                                     start: Position::new(0, 15),
                                     end: Position::new(0, 16)
                                 },
-                                lit: Lit::Int { value: 4.into() }
+                                lit: Lit::Int { value: 4 }
                             })),
                             operator: Operator::Add,
                             right: Box::new(Expression::Literal(Literal {
@@ -1433,7 +1429,7 @@ fn test_call_expression() {
                                     start: Position::new(0, 19),
                                     end: Position::new(0, 20)
                                 },
-                                lit: Lit::Int { value: 5.into() }
+                                lit: Lit::Int { value: 5 }
                             }))
                         })
                     ])
@@ -1450,7 +1446,7 @@ fn test_call_expression() {
 fn test_method_call_expression() {
     let input = "3.add(4 + 5);";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1476,7 +1472,7 @@ fn test_method_call_expression() {
                             start: Position::new(0, 1),
                             end: Position::new(0, 2)
                         },
-                        lit: Lit::Int { value: 3.into() }
+                        lit: Lit::Int { value: 3 }
                     })),
                     method: "add".to_string(),
                     arguments: Some(Vec::from([Expression::Infix(Infix {
@@ -1489,7 +1485,7 @@ fn test_method_call_expression() {
                                 start: Position::new(0, 7),
                                 end: Position::new(0, 8)
                             },
-                            lit: Lit::Int { value: 4.into() }
+                            lit: Lit::Int { value: 4 }
                         })),
                         operator: Operator::Add,
                         right: Box::new(Expression::Literal(Literal {
@@ -1497,7 +1493,7 @@ fn test_method_call_expression() {
                                 start: Position::new(0, 11),
                                 end: Position::new(0, 12)
                             },
-                            lit: Lit::Int { value: 5.into() }
+                            lit: Lit::Int { value: 5 }
                         }))
                     })]))
                 })
@@ -1513,7 +1509,7 @@ fn test_method_call_expression() {
 fn test_method_ident_expression() {
     let input = r#""Hello, World!".length"#;
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1558,7 +1554,7 @@ fn test_method_ident_expression() {
 fn test_constructor_expression() {
     let input = "var myClass = new MyClass(a, b, c);";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1629,7 +1625,7 @@ fn test_constructor_expression() {
 fn test_constructor_expression_empty_initializer() {
     let input = "var myClass = new MyClass;";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1671,7 +1667,7 @@ fn test_constructor_expression_empty_initializer() {
 fn test_scope_constructor_expression() {
     let input = "var myClass = new module::MyClass(a, b, c);";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1749,7 +1745,7 @@ fn test_scope_constructor_expression() {
 fn test_scope_constructor_expression_empty_initializer() {
     let input = "var myClass = new module::MyClass;";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1798,7 +1794,7 @@ fn test_scope_constructor_expression_empty_initializer() {
 fn test_string_literal_expression() {
     let input = r#""hello world";"#;
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1825,7 +1821,7 @@ fn test_string_literal_expression() {
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -1835,7 +1831,7 @@ fn test_string_literal_expression() {
 fn test_char_literal_expression() {
     let input = "'a'";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1860,7 +1856,7 @@ fn test_char_literal_expression() {
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -1870,7 +1866,7 @@ fn test_char_literal_expression() {
 fn test_parsing_array_literals() {
     let input = "[1, 2 * 3, 4 + 5]";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1898,7 +1894,7 @@ fn test_parsing_array_literals() {
                                     start: Position::new(0, 2),
                                     end: Position::new(0, 3)
                                 },
-                                lit: Lit::Int { value: 1.into() }
+                                lit: Lit::Int { value: 1 }
                             }),
                             Expression::Infix(Infix {
                                 span: Span {
@@ -1910,7 +1906,7 @@ fn test_parsing_array_literals() {
                                         start: Position::new(0, 5),
                                         end: Position::new(0, 6)
                                     },
-                                    lit: Lit::Int { value: 2.into() }
+                                    lit: Lit::Int { value: 2 }
                                 })),
                                 operator: Operator::Mul,
                                 right: Box::new(Expression::Literal(Literal {
@@ -1918,7 +1914,7 @@ fn test_parsing_array_literals() {
                                         start: Position::new(0, 9),
                                         end: Position::new(0, 10)
                                     },
-                                    lit: Lit::Int { value: 3.into() }
+                                    lit: Lit::Int { value: 3 }
                                 }))
                             }),
                             Expression::Infix(Infix {
@@ -1931,7 +1927,7 @@ fn test_parsing_array_literals() {
                                         start: Position::new(0, 12),
                                         end: Position::new(0, 13)
                                     },
-                                    lit: Lit::Int { value: 4.into() }
+                                    lit: Lit::Int { value: 4 }
                                 })),
                                 operator: Operator::Add,
                                 right: Box::new(Expression::Literal(Literal {
@@ -1939,7 +1935,7 @@ fn test_parsing_array_literals() {
                                         start: Position::new(0, 16),
                                         end: Position::new(0, 17)
                                     },
-                                    lit: Lit::Int { value: 5.into() }
+                                    lit: Lit::Int { value: 5 }
                                 }))
                             })
                         ])
@@ -1957,7 +1953,7 @@ fn test_parsing_array_literals() {
 fn test_parsing_index_expressions() {
     let input = "myArray[2 * 3]";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -1995,7 +1991,7 @@ fn test_parsing_index_expressions() {
                                 start: Position::new(0, 9),
                                 end: Position::new(0, 10)
                             },
-                            lit: Lit::Int { value: 2.into() }
+                            lit: Lit::Int { value: 2 }
                         })),
                         operator: Operator::Mul,
                         right: Box::new(Expression::Literal(Literal {
@@ -2003,13 +1999,13 @@ fn test_parsing_index_expressions() {
                                 start: Position::new(0, 13),
                                 end: Position::new(0, 14)
                             },
-                            lit: Lit::Int { value: 3.into() }
+                            lit: Lit::Int { value: 3 }
                         }))
                     }))
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2019,7 +2015,7 @@ fn test_parsing_index_expressions() {
 fn test_parsing_hash_literal_string_keys() {
     let input = r#"{"one": 1, "two": 2, "three": 3}"#;
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -2057,7 +2053,7 @@ fn test_parsing_hash_literal_string_keys() {
                                         start: Position::new(0, 9),
                                         end: Position::new(0, 10)
                                     },
-                                    lit: Lit::Int { value: 1.into() }
+                                    lit: Lit::Int { value: 1 }
                                 })
                             ),
                             (
@@ -2075,7 +2071,7 @@ fn test_parsing_hash_literal_string_keys() {
                                         start: Position::new(0, 19),
                                         end: Position::new(0, 20)
                                     },
-                                    lit: Lit::Int { value: 2.into() }
+                                    lit: Lit::Int { value: 2 }
                                 })
                             ),
                             (
@@ -2093,7 +2089,7 @@ fn test_parsing_hash_literal_string_keys() {
                                         start: Position::new(0, 31),
                                         end: Position::new(0, 32)
                                     },
-                                    lit: Lit::Int { value: 3.into() }
+                                    lit: Lit::Int { value: 3 }
                                 })
                             )
                         ])
@@ -2101,7 +2097,7 @@ fn test_parsing_hash_literal_string_keys() {
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2111,7 +2107,7 @@ fn test_parsing_hash_literal_string_keys() {
 fn test_parsing_empty_hash_literal() {
     let input = "{}";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -2136,7 +2132,7 @@ fn test_parsing_empty_hash_literal() {
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2146,7 +2142,7 @@ fn test_parsing_empty_hash_literal() {
 fn test_parsing_hash_literal_with_expressions() {
     let input = r#"{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}"#;
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -2189,7 +2185,7 @@ fn test_parsing_hash_literal_with_expressions() {
                                             start: Position::new(0, 9),
                                             end: Position::new(0, 10)
                                         },
-                                        lit: Lit::Int { value: 0.into() }
+                                        lit: Lit::Int { value: 0 }
                                     })),
                                     operator: Operator::Add,
                                     right: Box::new(Expression::Literal(Literal {
@@ -2197,7 +2193,7 @@ fn test_parsing_hash_literal_with_expressions() {
                                             start: Position::new(0, 13),
                                             end: Position::new(0, 14)
                                         },
-                                        lit: Lit::Int { value: 1.into() }
+                                        lit: Lit::Int { value: 1 }
                                     }))
                                 })
                             ),
@@ -2221,7 +2217,7 @@ fn test_parsing_hash_literal_with_expressions() {
                                             start: Position::new(0, 23),
                                             end: Position::new(0, 25)
                                         },
-                                        lit: Lit::Int { value: 10.into() }
+                                        lit: Lit::Int { value: 10 }
                                     })),
                                     operator: Operator::Sub,
                                     right: Box::new(Expression::Literal(Literal {
@@ -2229,7 +2225,7 @@ fn test_parsing_hash_literal_with_expressions() {
                                             start: Position::new(0, 28),
                                             end: Position::new(0, 29)
                                         },
-                                        lit: Lit::Int { value: 8.into() }
+                                        lit: Lit::Int { value: 8 }
                                     }))
                                 })
                             ),
@@ -2253,7 +2249,7 @@ fn test_parsing_hash_literal_with_expressions() {
                                             start: Position::new(0, 40),
                                             end: Position::new(0, 42)
                                         },
-                                        lit: Lit::Int { value: 15.into() }
+                                        lit: Lit::Int { value: 15 }
                                     })),
                                     operator: Operator::Div,
                                     right: Box::new(Expression::Literal(Literal {
@@ -2261,7 +2257,7 @@ fn test_parsing_hash_literal_with_expressions() {
                                             start: Position::new(0, 45),
                                             end: Position::new(0, 46)
                                         },
-                                        lit: Lit::Int { value: 5.into() }
+                                        lit: Lit::Int { value: 5 }
                                     }))
                                 })
                             )
@@ -2270,7 +2266,7 @@ fn test_parsing_hash_literal_with_expressions() {
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2320,7 +2316,7 @@ fn test_range_expression() {
                             end: Position::new(0, 2)
                         },
                         lit: Lit::Int {
-                            value: test_case.start.into()
+                            value: test_case.start
                         }
                     })),
                     end: Box::new(Expression::Literal(Literal {
@@ -2329,14 +2325,14 @@ fn test_range_expression() {
                             end: Position::new(0, 7)
                         },
                         lit: Lit::Int {
-                            value: test_case.end.into()
+                            value: test_case.end
                         }
                     })),
                     step: None
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2375,7 +2371,7 @@ fn test_range_expression() {
                             end: Position::new(0, 2)
                         },
                         lit: Lit::Int {
-                            value: test_case.start.into()
+                            value: test_case.start
                         }
                     })),
                     end: Box::new(Expression::Literal(Literal {
@@ -2384,7 +2380,7 @@ fn test_range_expression() {
                             end: Position::new(0, 7)
                         },
                         lit: Lit::Int {
-                            value: test_case.end.into()
+                            value: test_case.end
                         }
                     })),
                     step: test_case
@@ -2394,14 +2390,12 @@ fn test_range_expression() {
                                 start: Position::new(0, 9),
                                 end: Position::new(0, 11)
                             },
-                            lit: Lit::Int {
-                                value: expected.into()
-                            }
+                            lit: Lit::Int { value: expected }
                         })))
                 })
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2411,7 +2405,7 @@ fn test_range_expression() {
 fn test_scope_var_expression() {
     let input = r#"fs::MAX_FILE_PATH"#;
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -2443,7 +2437,7 @@ fn test_scope_var_expression() {
                 }),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2453,7 +2447,7 @@ fn test_scope_var_expression() {
 fn test_scope_fn_expression() {
     let input = r#"fs::readFile(fname)"#;
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -2498,7 +2492,7 @@ fn test_scope_fn_expression() {
                 }),
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2532,7 +2526,7 @@ fn test_assign_expression() {
                         start: Position::new(0, 5),
                         end: Position::new(0, 7),
                     },
-                    lit: Lit::Int { value: 45.into() },
+                    lit: Lit::Int { value: 45 },
                 })),
             }),
             expr_stmt_end: 7,
@@ -2564,7 +2558,7 @@ fn test_assign_expression() {
                         start: Position::new(0, 7),
                         end: Position::new(0, 9),
                     },
-                    lit: Lit::Int { value: 45.into() },
+                    lit: Lit::Int { value: 45 },
                 })),
             }),
             expr_stmt_end: 9,
@@ -2601,7 +2595,7 @@ fn test_assign_expression() {
                         start: Position::new(0, 8),
                         end: Position::new(0, 10),
                     },
-                    lit: Lit::Int { value: 45.into() },
+                    lit: Lit::Int { value: 45 },
                 })),
             }),
             expr_stmt_end: 10,
@@ -2628,7 +2622,7 @@ fn test_assign_expression() {
                     expression: test_case.expected
                 }),
                 statements[0]
-            )
+            );
         } else {
             panic!("p.parse_program() returned None")
         }
@@ -2639,7 +2633,7 @@ fn test_assign_expression() {
 fn test_function_literal_with_name() {
     let input = "var myFunction = fn() { };";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -2667,7 +2661,7 @@ fn test_function_literal_with_name() {
                 }))
             }),
             statements[0]
-        )
+        );
     } else {
         panic!("p.parse_program() returned None")
     }
@@ -2677,7 +2671,7 @@ fn test_function_literal_with_name() {
 fn test_delete_statement() {
     let input = "delete foo";
 
-    let mut l = Lexer::new(input.into());
+    let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();

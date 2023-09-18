@@ -21,8 +21,7 @@ use crate::{
 
 mod environment;
 pub use environment::*;
-use num_bigint::BigInt;
-use num_traits::{ToPrimitive, Zero};
+
 #[cfg(test)]
 mod tests;
 
@@ -288,7 +287,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                     return Some(args[0].clone());
                 }
 
-                return Some(apply_function(&function, args));
+                return Some(apply_function(&function, &args));
             }
 
             Expression::Index(Index { left, index, .. }) => {
@@ -364,31 +363,25 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                     step = Some(evaluated);
                 }
 
-                let start = match start {
-                    Object::Int(Int { value }) => value.to_isize().unwrap(),
-                    _ => {
-                        return Some(new_error(format!(
-                            "cannot use {} as start in range. expected: INT",
-                            start.kind()
-                        )))
-                    }
+                let Object::Int(Int { value: start }) = start else {
+                    return Some(new_error(format!(
+                        "cannot use {} as start in range. expected: INT",
+                        start.kind()
+                    )));
                 };
 
-                let end = match end {
-                    Object::Int(Int { value }) => value.to_isize().unwrap(),
-                    _ => {
-                        return Some(new_error(format!(
-                            "cannot use {} as end in range. expected: INT",
-                            end.kind()
-                        )))
-                    }
+                let Object::Int(Int { value: end }) = end else {
+                    return Some(new_error(format!(
+                        "cannot use {} as end in range. expected: INT",
+                        end.kind()
+                    )));
                 };
 
                 let rev = start > end;
 
                 let step = if let Some(step) = step {
                     match step {
-                        Object::Int(Int { value }) => value.to_isize().unwrap(),
+                        Object::Int(Int { value }) => value,
                         _ => {
                             return Some(new_error(format!(
                                 "cannot use {} as step in range. expected: INT",
@@ -450,7 +443,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                             return Some(args[0].clone());
                         }
 
-                        return Some(apply_function(&member, args));
+                        return Some(apply_function(&member, &args));
                     }
                     _ => {
                         return Some(new_error("invalid scope expression".to_string()));
@@ -748,10 +741,8 @@ fn eval_method_expression(
         }
     }
 
-    let evaluated = left.call_method(
-        hash_method_name(method),
-        arguments.map(|_| arg_objs.clone()),
-    );
+    let arg_objs = arg_objs.as_slice();
+    let evaluated = left.call_method(hash_method_name(method), arguments.map(|_| arg_objs));
 
     if let (Object::Class(_), func @ Object::EvaluatedFunction(_)) = (left, &evaluated) {
         apply_function(func, arg_objs)
@@ -948,7 +939,7 @@ fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Obj
     }
 }
 
-fn eval_integer_infix_expression(operator: Operator, left: BigInt, right: BigInt) -> Object {
+fn eval_integer_infix_expression(operator: Operator, left: isize, right: isize) -> Object {
     match operator {
         Operator::Add => Object::Int(Int {
             value: left + right,
@@ -972,10 +963,10 @@ fn eval_integer_infix_expression(operator: Operator, left: BigInt, right: BigInt
             value: left | right,
         }),
         Operator::Shr => Object::Int(Int {
-            value: left >> right.to_isize().unwrap(),
+            value: left >> right,
         }),
         Operator::Shl => Object::Int(Int {
-            value: left << right.to_isize().unwrap(),
+            value: left << right,
         }),
         Operator::Lt => native_bool_boolean_object(left < right),
         Operator::Gt => native_bool_boolean_object(left > right),
@@ -1116,10 +1107,10 @@ fn eval_expressions(exprs: &[Expression], environment: &mut Environment) -> Opti
     Some(result)
 }
 
-pub fn apply_function(func: &Object, args: Vec<Object>) -> Object {
+pub fn apply_function(func: &Object, args: &[Object]) -> Object {
     match func {
         Object::EvaluatedFunction(func) => {
-            let mut extended_env = extend_function_env(func.clone(), &args);
+            let mut extended_env = extend_function_env(func.clone(), args);
             let evaluated = eval_block_statement(&func.body, &mut extended_env).unwrap_or(NULL_OBJ);
 
             if is_error(&evaluated) {
@@ -1131,7 +1122,7 @@ pub fn apply_function(func: &Object, args: Vec<Object>) -> Object {
 
         Object::Builtin(Builtin { func, caller, .. }) => func(
             &(caller.clone().unwrap_or_else(|| Box::new(NULL_OBJ))),
-            &args,
+            args,
         ),
 
         _ => new_error(format!("not a function: {}", func.kind())),
@@ -1158,10 +1149,10 @@ fn unwrap_return_value(obj: Object) -> Object {
 fn eval_index_expression(left: &Object, index: &Object) -> Object {
     match (left, index) {
         (Object::Array(Array { elements }), Object::Int(Int { value })) => {
-            eval_array_index_expression(elements, value.to_isize().unwrap())
+            eval_array_index_expression(elements, *value)
         }
         (Object::Str(Str { value: left }), Object::Int(Int { value })) => {
-            eval_string_index_expression(left, value.to_isize().unwrap())
+            eval_string_index_expression(left, *value)
         }
         (Object::Array(Array { elements }), Object::Range(RangeObj { start, end, step })) => {
             eval_array_slice_expression(elements, *start, *end, *step)
@@ -1201,7 +1192,7 @@ fn eval_string_index_expression(string: &str, idx: isize) -> Object {
 }
 
 fn eval_array_slice_expression(array: &[Object], start: isize, end: isize, step: isize) -> Object {
-    let max = (array.len() - 1) as isize;
+    let max = (array.len() - 1).try_into().unwrap();
 
     if start > max || end > max || start < 0 || end < 0 || start > end {
         return new_error("cannot slice ARRAY using this range".to_string());
@@ -1211,7 +1202,7 @@ fn eval_array_slice_expression(array: &[Object], start: isize, end: isize, step:
 
     let mut i = start;
     while i < end {
-        elements.push(array[i as usize].clone());
+        elements.push(array[TryInto::<usize>::try_into(i).unwrap()].clone());
         i += step;
     }
 
@@ -1219,7 +1210,7 @@ fn eval_array_slice_expression(array: &[Object], start: isize, end: isize, step:
 }
 
 fn eval_string_slice_expression(string: &str, start: isize, end: isize, step: isize) -> Object {
-    let max = (string.len() - 1) as isize;
+    let max = (string.len() - 1).try_into().unwrap();
 
     if start > max || end > max || start < 0 || end < 0 || start > end {
         return new_error("cannot slice ARRAY using this range".to_string());
@@ -1229,7 +1220,12 @@ fn eval_string_slice_expression(string: &str, start: isize, end: isize, step: is
 
     let mut i = start;
     while i < end {
-        value.push(string.chars().nth(i as usize).unwrap());
+        value.push(
+            string
+                .chars()
+                .nth(TryInto::<usize>::try_into(i).unwrap())
+                .unwrap(),
+        );
         i += step;
     }
 
@@ -1324,9 +1320,9 @@ fn eval_assign_expression(
                                 Object::Int(Int { value: idx }),
                             ) => {
                                 let mut new_data = elements.clone();
-                                let max = BigInt::from(elements.len() - 1);
-                                if idx > Zero::zero() && idx < max {
-                                    new_data[idx.to_usize().unwrap()] = val.clone();
+                                let max = (elements.len() - 1).try_into().unwrap();
+                                if idx > 0 && idx < max {
+                                    new_data[usize::try_from(idx).unwrap()] = val.clone();
                                 }
 
                                 environment.set(
@@ -1339,7 +1335,7 @@ fn eval_assign_expression(
                             (Object::Str(Str { value }), Object::Int(Int { value: idx })) => {
                                 let mut new_data = value.chars().collect::<Vec<_>>();
                                 if let Object::Char(Char { value: ch }) = val {
-                                    new_data[idx.to_usize().unwrap()] = ch;
+                                    new_data[usize::try_from(idx).unwrap()] = ch;
                                     environment.set(
                                         index_ident,
                                         Object::Str(Str {
@@ -1441,7 +1437,7 @@ fn is_truthy(obj: &Object) -> bool {
     match obj {
         Object::Null => false,
         Object::Bool(Bool { value }) => *value,
-        Object::Int(Int { value }) => *value != Zero::zero(),
+        Object::Int(Int { value }) => *value != 0,
         Object::Str(Str { value }) => !value.is_empty(),
         Object::Char(Char { value }) => *value != '\0',
         Object::Array(Array { elements }) => !elements.is_empty(),

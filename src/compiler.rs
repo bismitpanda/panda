@@ -645,8 +645,6 @@ impl Compiler {
                     self.compile(Node::Expr(*left))?;
 
                     let method_hash = hash_method_name(&method);
-                    dbg!(method_hash);
-
                     let has_arguments = arguments.is_some();
 
                     let n = if let Some(arguments) = arguments {

@@ -45,7 +45,7 @@ fn test_resolve_global() {
     global.define("b", false);
 
     for sym in expected.values() {
-        assert_eq!(Some(sym.clone()), global.resolve(&sym.name))
+        assert_eq!(Some(sym.clone()), global.resolve(&sym.name));
     }
 }
 
@@ -69,7 +69,7 @@ fn test_resolve_local() {
     for symbol in expected {
         let result = local.resolve(&symbol.name);
 
-        assert_eq!(result, Some(symbol))
+        assert_eq!(result, Some(symbol));
     }
 }
 
@@ -115,7 +115,7 @@ fn test_resolve_nested_local() {
 
     for mut test_case in test_cases {
         for symbol in test_case.expected_symbols {
-            assert_eq!(test_case.table.resolve(&symbol.name), Some(symbol))
+            assert_eq!(test_case.table.resolve(&symbol.name), Some(symbol));
         }
     }
 }

@@ -495,7 +495,7 @@ impl<'a> Parser<'a> {
         let span = Span {
             start,
             end: self.cur_tok.position
-                + Position::new(0, alias.as_ref().map_or(path.len(), |alias| alias.len())),
+                + Position::new(0, alias.as_ref().map_or_else(|| path.len(), String::len)),
         };
 
         Some(Statement::Import(Import { span, path, alias }))

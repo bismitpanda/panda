@@ -1,3 +1,10 @@
+#![warn(clippy::pedantic, clippy::nursery, clippy::all)]
+#![allow(
+    clippy::too_many_lines,
+    clippy::missing_const_for_fn,
+    clippy::cognitive_complexity
+)]
+
 mod ast;
 mod cmd;
 mod code;
@@ -17,12 +24,10 @@ use cmd::{DebugOut, Engine};
 use eval::{eval, Environment};
 use object::{Object, DIR_ENV_VAR_NAME};
 
-use crate::{
-    code::instructions_to_string,
-    compiler::{symbol_table::SymbolTable, Compiler},
-    object::builtins::BUILTINS,
-    vm::{VirtualMachine, GLOBAL_SIZE},
-};
+use code::instructions_to_string;
+use compiler::{symbol_table::SymbolTable, Compiler};
+use object::builtins::BUILTINS;
+use vm::{VirtualMachine, GLOBAL_SIZE};
 
 fn main() {
     let cli = cmd::Cli::parse();

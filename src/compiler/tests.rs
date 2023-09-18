@@ -146,7 +146,7 @@ fn test_integer_arithmetic() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -253,7 +253,7 @@ fn test_boolean_expressions() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -264,7 +264,7 @@ fn test_null_literal() {
         expected_instructions: Vec::from([make(Opcode::Null, &[]), make(Opcode::Pop, &[])]),
     }];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -304,7 +304,7 @@ fn test_conditionals() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -322,7 +322,7 @@ fn test_while_loop() {
         ]),
     }];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -340,7 +340,7 @@ fn test_global_declaration_expressions() {
         ]),
     }];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -367,7 +367,7 @@ fn test_string_expressions() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -391,7 +391,7 @@ fn test_char_expressions() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -439,7 +439,7 @@ fn test_array_literals() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -496,7 +496,7 @@ fn test_hash_literals() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -659,7 +659,7 @@ fn test_functions_without_return_value() {
         expected_instructions: Vec::from([make(Opcode::Closure, &[0, 0]), make(Opcode::Pop, &[])]),
     }];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -821,7 +821,7 @@ fn test_function_calls() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -882,7 +882,7 @@ fn test_declaration_statement_scopes() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -917,7 +917,7 @@ fn test_builtins() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -1035,7 +1035,7 @@ fn() {
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 #[test]
@@ -1105,7 +1105,7 @@ wrapper();
         },
     ];
 
-    run_compiler_tests(&test_cases)
+    run_compiler_tests(&test_cases);
 }
 
 fn run_compiler_tests(test_cases: &[CompilerTestCase]) {
@@ -1123,7 +1123,7 @@ fn run_compiler_tests(test_cases: &[CompilerTestCase]) {
 
         test_instructions(&test_case.expected_instructions, &bytecode.instructions).unwrap();
 
-        test_constants(&test_case.expected_constants, bytecode.constants).unwrap()
+        test_constants(&test_case.expected_constants, bytecode.constants);
     }
 }
 
@@ -1161,12 +1161,12 @@ fn concat_instructions(s: &[Instructions]) -> Instructions {
     s.concat()
 }
 
-fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) -> Result<(), String> {
+fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) {
     assert_eq!(expected.len(), actual.len());
 
     for (i, constant) in expected.iter().enumerate() {
         if let Some(constant) = (*constant).downcast_ref::<i32>() {
-            test_integer_object(*constant as isize, &actual[i])
+            test_integer_object(*constant as isize, &actual[i]);
         } else if let Some(constant) = (*constant).downcast_ref::<bool>() {
             test_boolean_object(*constant, &actual[i]);
         } else if let Some(constant) = (*constant).downcast_ref::<f64>() {
@@ -1180,17 +1180,15 @@ fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) -> Result<(), 
         } else if let Some(constant) = (*constant).downcast_ref::<Vec<Vec<u8>>>() {
             test_function_object(constant, &actual[i]);
         } else {
-            assert_eq!(&Object::Null, &actual[i])
+            assert_eq!(&Object::Null, &actual[i]);
         }
     }
-
-    Ok(())
 }
 
 fn test_integer_object(expected: isize, actual: &Object) {
     assert_eq!(
         &Object::Int(Int {
-            value: expected.into()
+            value: expected
         }),
         actual
     );
@@ -1201,11 +1199,11 @@ fn test_boolean_object(expected: bool, actual: &Object) {
 }
 
 fn test_float_object(expected: f64, actual: &Object) {
-    assert_eq!(&Object::Float(Float { value: expected }), actual)
+    assert_eq!(&Object::Float(Float { value: expected }), actual);
 }
 
 fn test_char_object(expected: char, actual: &Object) {
-    assert_eq!(&Object::Char(Char { value: expected }), actual)
+    assert_eq!(&Object::Char(Char { value: expected }), actual);
 }
 
 fn test_string_object(expected: &str, actual: &Object) {
@@ -1214,7 +1212,7 @@ fn test_string_object(expected: &str, actual: &Object) {
             value: expected.to_string()
         }),
         actual
-    )
+    );
 }
 
 fn test_function_object(expected: &[Instructions], actual: &Object) {

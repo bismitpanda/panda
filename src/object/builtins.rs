@@ -2,8 +2,7 @@ use std::process::exit;
 
 use super::{
     allowed_in_array, intersperse, new_error, AHasher, Array, Bool, BuiltinFunction, Char, Class,
-    Dict, Float, HashPair, Hashable, Hasher, Int, Object, Signed, StdHash, Str, ToPrimitive, Type,
-    Write, NULL_OBJ,
+    Dict, Float, HashPair, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write, NULL_OBJ,
 };
 
 pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
@@ -201,7 +200,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
             if params.is_empty() {
                 Object::Int(Int {
-                    value: value.len().into(),
+                    value: value.len().try_into().unwrap(),
                 })
             } else {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
@@ -547,7 +546,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             if params.len() == 1 {
                 match &params[0] {
                     Object::Int(Int { value: i }) => Object::Bool(Bool {
-                        value: value.is_digit(i.to_u32().unwrap()),
+                        value: value.is_digit((*i).try_into().unwrap()),
                     }),
                     _ => new_error(format!(
                         "expected INT as argument. got: {}",
@@ -638,7 +637,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
             if params.is_empty() {
                 Object::Int(Int {
-                    value: elements.len().into(),
+                    value: elements.len().try_into().unwrap(),
                 })
             } else {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
@@ -810,7 +809,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
             if params.is_empty() {
                 Object::Int(Int {
-                    value: pairs.len().into(),
+                    value: pairs.len().try_into().unwrap(),
                 })
             } else {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))

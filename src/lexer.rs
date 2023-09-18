@@ -274,17 +274,24 @@ mod tests {
     }
 
     macro_rules! case {
-        ($typ:ident, $lit:literal) => {
+        (Eol) => {
             TestCase {
-                expected_type: Kind::$typ,
-                expected_lit: $lit.to_string(),
+                expected_type: Kind::Eol,
+                expected_lit: String::new(),
             }
         };
 
         ($typ:ident) => {
             TestCase {
                 expected_type: Kind::$typ,
-                expected_lit: String::new(),
+                expected_lit: stringify!($typ).to_lowercase(),
+            }
+        };
+
+        ($typ:ident, $lit:literal) => {
+            TestCase {
+                expected_type: Kind::$typ,
+                expected_lit: $lit.to_string(),
             }
         };
     }
@@ -326,22 +333,22 @@ delete foo;
 "#;
 
         let test_cases = [
-            case!(Var, "var"),
+            case!(Var),
             case!(Ident, "five"),
             case!(Assign, "="),
             case!(IntLiteral, "5"),
             case!(Semicolon, ";"),
-            case!(Var, "var"),
+            case!(Var),
             case!(Ident, "ten"),
             case!(Assign, "="),
             case!(IntLiteral, "10"),
             case!(Semicolon, ";"),
-            case!(Const, "const"),
+            case!(Const),
             case!(Ident, "five"),
             case!(Assign, "="),
             case!(IntLiteral, "5"),
             case!(Semicolon, ";"),
-            case!(Var, "var"),
+            case!(Var),
             case!(Ident, "add"),
             case!(Assign, "="),
             case!(Function, "fn"),
@@ -357,7 +364,7 @@ delete foo;
             case!(Semicolon, ";"),
             case!(RBrace, "}"),
             case!(Semicolon, ";"),
-            case!(Var, "var"),
+            case!(Var),
             case!(Ident, "result"),
             case!(Assign, "="),
             case!(Ident, "add"),
@@ -379,21 +386,21 @@ delete foo;
             case!(Gt, ">"),
             case!(IntLiteral, "5"),
             case!(Semicolon, ";"),
-            case!(If, "if"),
+            case!(If),
             case!(LParen, "("),
             case!(IntLiteral, "5"),
             case!(Lt, "<"),
             case!(IntLiteral, "10"),
             case!(RParen, ")"),
             case!(LBrace, "{"),
-            case!(Return, "return"),
-            case!(True, "true"),
+            case!(Return),
+            case!(True),
             case!(Semicolon, ";"),
             case!(RBrace, "}"),
-            case!(Else, "else"),
+            case!(Else),
             case!(LBrace, "{"),
-            case!(Return, "return"),
-            case!(False, "false"),
+            case!(Return),
+            case!(False),
             case!(Semicolon, ";"),
             case!(RBrace, "}"),
             case!(IntLiteral, "10"),
@@ -420,7 +427,7 @@ delete foo;
             case!(CharLiteral, "c"),
             case!(CharLiteral, "\\x7f"),
             case!(CharLiteral, "\\u2022"),
-            case!(Null, "null"),
+            case!(Null),
             case!(Caret, "^"),
             case!(BitAnd, "&"),
             case!(BitOr, "|"),
@@ -433,7 +440,7 @@ delete foo;
             case!(Dot, "."),
             case!(Range, ".."),
             case!(Scope, "::"),
-            case!(Delete, "delete"),
+            case!(Delete),
             case!(Ident, "foo"),
             case!(Semicolon, ";"),
             case!(Eol),

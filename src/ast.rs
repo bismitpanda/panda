@@ -3,20 +3,12 @@ use std::{
     str::FromStr,
 };
 
-use num_bigint::BigInt;
-
 use crate::token::Position;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Span {
     pub start: Position,
     pub end: Position,
-}
-
-impl Display for Span {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}-{})", self.start, self.end)
-    }
 }
 
 pub type BlockStatement = Vec<Statement>;
@@ -497,7 +489,7 @@ impl Display for Expression {
 #[derive(Clone, PartialEq, Debug)]
 pub enum Lit {
     Int {
-        value: BigInt,
+        value: isize,
     },
     Float {
         value: f64,

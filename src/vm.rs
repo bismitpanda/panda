@@ -1,8 +1,5 @@
 use hashbrown::HashMap;
 
-use num_bigint::BigInt;
-use num_traits::{ToPrimitive, Zero};
-
 use crate::{
     code::{self, Instructions, Opcode},
     compiler::Bytecode,
@@ -362,7 +359,7 @@ impl VirtualMachine {
                     let iter_obj = self.pop();
 
                     let iter = Iterable::from_object(iter_obj.clone())
-                        .ok_or(format!("{} is not iterable", iter_obj.kind()))?;
+                        .ok_or_else(|| format!("{} is not iterable", iter_obj.kind()))?;
 
                     self.push(Object::Iter(Iter {
                         size: iter.count(),
@@ -451,7 +448,7 @@ impl VirtualMachine {
         let caller = self.pop();
         let ret = caller.call_method(
             u8::try_from(method_idx).unwrap(),
-            has_arguments.then_some(args),
+            has_arguments.then_some(&args),
         );
         self.push(ret)?;
         Ok(())
@@ -488,13 +485,9 @@ impl VirtualMachine {
                 ));
             };
 
-            step.to_isize().unwrap()
+            step
         };
-        self.push(Object::Range(Range {
-            start: start.to_isize().unwrap(),
-            end: end.to_isize().unwrap(),
-            step,
-        }))?;
+        self.push(Object::Range(Range { start, end, step }))?;
 
         Ok(())
     }
@@ -568,7 +561,7 @@ impl VirtualMachine {
 
         match (&left, &right) {
             (Object::Int(Int { value: left_value }), Object::Int(Int { value: right_value })) => {
-                self.execute_binary_int_operation(op, left_value.clone(), right_value.clone())
+                self.execute_binary_int_operation(op, *left_value, *right_value)
             }
             (
                 Object::Float(Float { value: left_value }),
@@ -599,8 +592,8 @@ impl VirtualMachine {
     fn execute_binary_int_operation(
         &mut self,
         op: Opcode,
-        left: BigInt,
-        right: BigInt,
+        left: isize,
+        right: isize,
     ) -> Result<(), String> {
         let value = match op {
             Opcode::Add => left + right,
@@ -610,8 +603,8 @@ impl VirtualMachine {
             Opcode::BitXor => left ^ right,
             Opcode::BitAnd => left & right,
             Opcode::BitOr => left | right,
-            Opcode::Shr => left >> right.to_isize().unwrap(),
-            Opcode::Shl => left << right.to_isize().unwrap(),
+            Opcode::Shr => left >> right,
+            Opcode::Shl => left << right,
             _ => return Err(format!("unknown integer operation: {op}")),
         };
 
@@ -671,7 +664,7 @@ impl VirtualMachine {
 
         match (&left, &right) {
             (Object::Int(Int { value: left_value }), Object::Int(Int { value: right_value })) => {
-                self.execute_int_comparison(op, left_value.clone(), right_value.clone())
+                self.execute_int_comparison(op, *left_value, *right_value)
             }
             (
                 Object::Float(Float { value: left_value }),
@@ -701,8 +694,8 @@ impl VirtualMachine {
     fn execute_int_comparison(
         &mut self,
         op: Opcode,
-        left: BigInt,
-        right: BigInt,
+        left: isize,
+        right: isize,
     ) -> Result<(), String> {
         let value = match op {
             Opcode::Equal => left == right,
@@ -799,10 +792,10 @@ impl VirtualMachine {
     fn execute_index_expression(&mut self, left: &Object, index: &Object) -> Result<(), String> {
         match (left, index) {
             (Object::Array(Array { elements }), Object::Int(Int { value })) => {
-                self.exec_array_index_expression(elements, value.to_isize().unwrap())?;
+                self.exec_array_index_expression(elements, *value)?;
             }
             (Object::Str(Str { value: left }), Object::Int(Int { value })) => {
-                self.exec_string_index_expression(left, value.to_usize().unwrap())?;
+                self.exec_string_index_expression(left, *value)?;
             }
             (Object::Array(Array { elements }), Object::Range(Range { start, end, step })) => {
                 self.exec_array_slice_expression(elements, *start, *end, *step)?;
@@ -826,24 +819,24 @@ impl VirtualMachine {
     }
 
     fn exec_array_index_expression(&mut self, array: &[Object], idx: isize) -> Result<(), String> {
-        let max = (array.len() as isize) - 1;
+        let max: isize = TryInto::<isize>::try_into(array.len()).unwrap();
 
-        if idx < 0 || idx > max {
-            return Err(format!("index out of bounds. got: {idx}, max: {max}"));
+        if idx >= max || idx < -max {
+            return Err(format!("index out of bounds. got: {idx}"));
         }
 
-        self.push(array[idx as usize].clone())
+        self.push(array[normalize_index(idx, max)].clone())
     }
 
-    fn exec_string_index_expression(&mut self, string: &str, idx: usize) -> Result<(), String> {
-        let max = string.len() - 1;
+    fn exec_string_index_expression(&mut self, string: &str, idx: isize) -> Result<(), String> {
+        let max = TryInto::<isize>::try_into(string.len()).unwrap();
 
-        if idx >= string.len() {
-            return Err(format!("index out of bounds. got: {idx}, max: {max}"));
+        if idx >= max || idx < -max {
+            return Err(format!("index out of bounds. got: {idx}"));
         }
 
         self.push(Object::Char(Char {
-            value: string.chars().nth(idx).unwrap(),
+            value: string.chars().nth(normalize_index(idx, max)).unwrap(),
         }))
     }
 
@@ -854,7 +847,7 @@ impl VirtualMachine {
         end: isize,
         step: isize,
     ) -> Result<(), String> {
-        let max = (array.len() as isize) - 1;
+        let max = (array.len() - 1).try_into().unwrap();
 
         if start > max || end > max || start < 0 || end < 0 || start > end {
             return Err("cannot slice ARRAY using this range".to_string());
@@ -864,7 +857,7 @@ impl VirtualMachine {
 
         let mut i = start;
         while i < end {
-            elements.push(array[i as usize].clone());
+            elements.push(array[TryInto::<usize>::try_into(i).unwrap()].clone());
             i += step;
         }
 
@@ -878,7 +871,7 @@ impl VirtualMachine {
         end: isize,
         step: isize,
     ) -> Result<(), String> {
-        let max = (string.len() as isize) - 1;
+        let max = (string.len() - 1).try_into().unwrap();
 
         if start > max || end > max || start < 0 || end < 0 || start > end {
             return Err(format!("cannot slice STR using {start}..{end}..{step}"));
@@ -888,7 +881,7 @@ impl VirtualMachine {
 
         let mut i = start;
         while i < end {
-            value.push(string.chars().nth(i as usize).unwrap());
+            value.push(string.chars().nth(i.try_into().unwrap()).unwrap());
             i += step;
         }
 
@@ -962,7 +955,7 @@ fn is_truthy(obj: &Object) -> bool {
     match obj {
         Object::Null => false,
         Object::Bool(Bool { value }) => *value,
-        Object::Int(Int { value }) => *value != Zero::zero(),
+        Object::Int(Int { value }) => *value != 0,
         Object::Str(Str { value }) => !value.is_empty(),
         Object::Char(Char { value }) => *value != '\0',
         Object::Array(Array { elements }) => !elements.is_empty(),
@@ -971,4 +964,8 @@ fn is_truthy(obj: &Object) -> bool {
         Object::Error(Error { message }) => !message.is_empty(),
         _ => true,
     }
+}
+
+fn normalize_index(idx: isize, max: isize) -> usize {
+    usize::try_from(if idx.is_negative() { max - idx } else { idx }).unwrap()
 }

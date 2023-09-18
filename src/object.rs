@@ -7,8 +7,6 @@ use std::{
 
 use ahash::AHasher;
 use hashbrown::HashMap;
-use num_bigint::BigInt;
-use num_traits::{sign::Signed, ToPrimitive};
 
 use super::{Environment, Write};
 use crate::{ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable};
@@ -29,7 +27,7 @@ pub struct HashPair {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Int {
-    pub value: BigInt,
+    pub value: isize,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -119,12 +117,12 @@ pub struct Range {
 
 impl Range {
     pub fn len(&self) -> usize {
-        ((self.end - self.start) / self.step) as usize
+        usize::try_from((self.end - self.start) / self.step).unwrap()
             + usize::from((self.end - self.start) % self.step != 0)
     }
 
     pub fn nth(&self, idx: usize) -> isize {
-        self.start + (self.step * idx as isize)
+        self.start + (self.step * isize::try_from(idx).unwrap())
     }
 }
 
@@ -345,7 +343,7 @@ impl Object {
         }
     }
 
-    pub fn call_method(&self, method: u8, params: Option<Vec<Self>>) -> Self {
+    pub fn call_method(&self, method: u8, params: Option<&[Self]>) -> Self {
         match self {
             Self::Class(Class { name, members }) => members.get(&method).map_or_else(
                 || {
@@ -375,7 +373,7 @@ impl Object {
                             caller: Some(Box::new(self.clone())),
                         })
                     },
-                    |params| func(self, &params),
+                    |params| func(self, params),
                 )
             }
 
@@ -516,7 +514,7 @@ impl Iterable {
     pub fn get(&self, idx: usize) -> Object {
         match self {
             Self::Range(ast_node) => Object::Int(Int {
-                value: ast_node.nth(idx).into(),
+                value: ast_node.nth(idx),
             }),
             Self::Array(ast_node) => ast_node.elements[idx].clone(),
             Self::Hash(ast_node) => ast_node
@@ -583,6 +581,6 @@ mod tests {
             hello1.hash_key(),
             diff1.hash_key(),
             "strings with different content have same hash keys"
-        )
+        );
     }
 }
