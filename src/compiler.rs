@@ -526,7 +526,9 @@ impl Compiler {
                     self.load_symbol(&symbol);
                 }
 
-                Expression::Index(Index { left, index, .. }) => {
+                Expression::Index(Index {
+                    left, expr: index, ..
+                }) => {
                     self.compile(Node::Expr(*left))?;
                     self.compile(Node::Expr(*index))?;
 
@@ -638,7 +640,7 @@ impl Compiler {
 
                 Expression::Method(Method {
                     left,
-                    method,
+                    name: method,
                     arguments,
                     ..
                 }) => {

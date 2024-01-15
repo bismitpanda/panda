@@ -246,7 +246,7 @@ impl Display for Statement {
 pub struct Method {
     pub span: Span,
     pub left: Box<Expression>,
-    pub method: Ident,
+    pub name: Ident,
     pub arguments: Option<Vec<Expression>>,
 }
 
@@ -319,7 +319,7 @@ pub struct Call {
 pub struct Index {
     pub span: Span,
     pub left: Box<Expression>,
-    pub index: Box<Expression>,
+    pub expr: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -353,7 +353,7 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub fn get_span(&self) -> Span {
+    pub const fn get_span(&self) -> Span {
         match self {
             Self::Method(node) => node.span,
             Self::Constructor(node) => node.span,
@@ -433,7 +433,9 @@ impl Display for Expression {
                 ))
             ),
 
-            Self::Index(Index { left, index, .. }) => write!(f, "({left}[{index}])"),
+            Self::Index(Index {
+                left, expr: index, ..
+            }) => write!(f, "({left}[{index}])"),
 
             Self::Infix(Infix {
                 left,
@@ -446,7 +448,7 @@ impl Display for Expression {
 
             Self::Method(Method {
                 left,
-                method,
+                name: method,
                 arguments,
                 ..
             }) => write!(
@@ -679,7 +681,7 @@ impl Display for Assignable {
         match self {
             Self::Method(Method {
                 left,
-                method,
+                name: method,
                 arguments,
                 ..
             }) => write!(
@@ -699,7 +701,9 @@ impl Display for Assignable {
                     ))
             ),
 
-            Self::Index(Index { left, index, .. }) => write!(f, "{left}[{index}]"),
+            Self::Index(Index {
+                left, expr: index, ..
+            }) => write!(f, "{left}[{index}]"),
 
             Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
         }

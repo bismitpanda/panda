@@ -1473,7 +1473,7 @@ fn test_method_call_expression() {
                         },
                         lit: Lit::Int { value: 3 }
                     })),
-                    method: "add".to_string(),
+                    name: "add".to_string(),
                     arguments: Some(Vec::from([Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 7),
@@ -1538,7 +1538,7 @@ fn test_method_ident_expression() {
                             value: "Hello, World!".to_string()
                         }
                     })),
-                    method: "length".to_string(),
+                    name: "length".to_string(),
                     arguments: None
                 })
             }),
@@ -2015,7 +2015,7 @@ fn test_parsing_index_expressions() {
                         },
                         value: "myArray".to_string()
                     })),
-                    index: Box::new(Expression::Infix(Infix {
+                    expr: Box::new(Expression::Infix(Infix {
                         span: Span {
                             start: Position::new(0, 9),
                             end: Position::new(0, 14)
@@ -2584,7 +2584,7 @@ fn test_assign_expression() {
                         },
                         value: "a".to_string(),
                     })),
-                    method: "b".to_string(),
+                    name: "b".to_string(),
                     arguments: None,
                 }),
                 value: Box::new(Expression::Literal(Literal {
@@ -2616,7 +2616,7 @@ fn test_assign_expression() {
                         },
                         value: "a".to_string(),
                     })),
-                    index: Box::new(Expression::Identifier(Identifier {
+                    expr: Box::new(Expression::Identifier(Identifier {
                         span: Span {
                             start: Position::new(0, 3),
                             end: Position::new(0, 4),

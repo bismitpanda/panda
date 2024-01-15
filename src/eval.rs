@@ -290,7 +290,9 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 return Some(apply_function(&function, &args));
             }
 
-            Expression::Index(Index { left, index, .. }) => {
+            Expression::Index(Index {
+                left, expr: index, ..
+            }) => {
                 let left = eval(Node::Expr(*left), environment)?;
 
                 if is_error(&left) {
@@ -312,7 +314,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
 
             Expression::Method(Method {
                 left,
-                method,
+                name: method,
                 arguments,
                 ..
             }) => {
@@ -1301,7 +1303,9 @@ fn eval_assign_expression(
                 Some(new_error(format!("identifier not found: {value}")))
             }
         }
-        Assignable::Index(Index { left, index, .. }) => {
+        Assignable::Index(Index {
+            left, expr: index, ..
+        }) => {
             let index = eval(Node::Expr(*index), environment)?;
 
             if is_error(&index) {
@@ -1393,7 +1397,9 @@ fn eval_assign_expression(
             Some(new_error("cannot assign".to_string()))
         }
 
-        Assignable::Method(Method { left, method, .. }) => {
+        Assignable::Method(Method {
+            left, name: method, ..
+        }) => {
             if let Expression::Identifier(Identifier { value, .. }) = *left {
                 if let Some((data, mutable)) = environment.get(value.clone()) {
                     if mutable {

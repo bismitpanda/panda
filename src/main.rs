@@ -1,10 +1,3 @@
-#![warn(clippy::pedantic, clippy::nursery, clippy::all)]
-#![allow(
-    clippy::too_many_lines,
-    clippy::missing_const_for_fn,
-    clippy::cognitive_complexity
-)]
-
 mod ast;
 mod cmd;
 mod code;

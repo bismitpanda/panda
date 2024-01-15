@@ -385,11 +385,11 @@ pub fn read_uint16(ins: &[u8], offset: usize) -> usize {
     u16::from_be_bytes(u) as usize
 }
 
-pub fn read_uint8(ins: &[u8], offset: usize) -> usize {
+pub const fn read_uint8(ins: &[u8], offset: usize) -> usize {
     ins[offset] as usize
 }
 
-pub fn read_bool(ins: &[u8], offset: usize) -> bool {
+pub const fn read_bool(ins: &[u8], offset: usize) -> bool {
     ins[offset] != 0
 }
 

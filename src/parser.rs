@@ -821,7 +821,7 @@ impl Parser<'_> {
         Some(Expression::Index(Index {
             span,
             left: Box::new(left),
-            index: Box::new(index),
+            expr: Box::new(index),
         }))
     }
 
@@ -920,7 +920,7 @@ impl Parser<'_> {
         Some(Expression::Method(Method {
             span,
             left: Box::new(left),
-            method,
+            name: method,
             arguments,
         }))
     }

@@ -362,7 +362,7 @@ impl VirtualMachine {
 
                     self.push(Object::Iter(Iter {
                         size: iter.count(),
-                        iter,
+                        expr: iter,
                         current: 0,
                     }))?;
                 }
@@ -377,7 +377,7 @@ impl VirtualMachine {
                         ..iter.clone()
                     }))?;
 
-                    self.push(iter.iter.get(iter.current))?;
+                    self.push(iter.expr.get(iter.current))?;
                 }
 
                 Opcode::JumpEnd => {
@@ -445,10 +445,7 @@ impl VirtualMachine {
 
         args.reverse();
         let caller = self.pop();
-        let ret = caller.call_method(
-            u8::try_from(method_idx).unwrap(),
-            has_arguments.then_some(&args),
-        );
+        let ret = caller.call_method(method_idx as u8, has_arguments.then_some(&args));
         self.push(ret)?;
         Ok(())
     }

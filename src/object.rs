@@ -161,7 +161,7 @@ pub enum ControlFlow {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Iter {
-    pub iter: Iterable,
+    pub expr: Iterable,
     pub current: usize,
     pub size: usize,
 }
@@ -249,7 +249,7 @@ impl Display for Object {
             Self::ControlFlow(t) => write!(f, "{t}"),
 
             Self::Iter(Iter {
-                iter,
+                expr: iter,
                 current,
                 size,
             }) => {
