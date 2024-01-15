@@ -174,6 +174,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Float(Float { value }) = caller else {
                 return new_error(format!("expected FLOAT, got {}", caller.kind()));
             };
+
             if params.is_empty() {
                 Object::Str(Str {
                     value: format!("{:b}", value.to_bits()),
@@ -186,8 +187,48 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Float(Float { value }) = caller else {
                 return new_error(format!("expected FLOAT, got {}", caller.kind()));
             };
+
             if params.is_empty() {
                 Object::Float(Float { value: value.abs() })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
+            }
+        }),
+        ("isInf", |caller, params| {
+            let Object::Float(Float { value }) = caller else {
+                return new_error(format!("expected FLOAT, got {}", caller.kind()));
+            };
+
+            if params.is_empty() {
+                Object::Bool(Bool {
+                    value: *value == f64::INFINITY,
+                })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
+            }
+        }),
+        ("isNegInf", |caller, params| {
+            let Object::Float(Float { value }) = caller else {
+                return new_error(format!("expected FLOAT, got {}", caller.kind()));
+            };
+
+            if params.is_empty() {
+                Object::Bool(Bool {
+                    value: *value == f64::NEG_INFINITY,
+                })
+            } else {
+                new_error(format!("expected 0 parameters. got: {}", params.len()))
+            }
+        }),
+        ("isNaN", |caller, params| {
+            let Object::Float(Float { value }) = caller else {
+                return new_error(format!("expected FLOAT, got {}", caller.kind()));
+            };
+
+            if params.is_empty() {
+                Object::Bool(Bool {
+                    value: value.is_nan(),
+                })
             } else {
                 new_error(format!("expected 0 parameters. got: {}", params.len()))
             }

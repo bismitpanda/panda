@@ -16,11 +16,6 @@ struct EvalIntegerTestCase {
     expected: isize,
 }
 
-struct EvalBooleanTestCase {
-    input: String,
-    expected: bool,
-}
-
 #[test]
 fn test_eval_integer_expression() {
     let test_cases = [
@@ -90,6 +85,11 @@ fn test_eval_integer_expression() {
         let evaluated = test_eval(&test_case.input);
         test_integer_object(evaluated, test_case.expected);
     }
+}
+
+struct EvalBooleanTestCase {
+    input: String,
+    expected: bool,
 }
 
 #[test]
@@ -176,6 +176,98 @@ fn test_eval_boolean_expression() {
     for test_case in test_cases {
         let evaluated = test_eval(&test_case.input);
         test_boolean_object(evaluated, test_case.expected);
+    }
+}
+
+struct EvalFloatTestCase {
+    input: String,
+    expected: f64,
+}
+
+#[test]
+fn test_eval_float_expression() {
+    let test_cases = [
+        EvalFloatTestCase {
+            input: "-7.84 + -5.89".to_string(),
+            expected: -13.73,
+        },
+        EvalFloatTestCase {
+            input: "-5.94 * -8.94".to_string(),
+            expected: 53.1036,
+        },
+        EvalFloatTestCase {
+            input: "-8.65 - 0.65".to_string(),
+            expected: -9.3,
+        },
+        EvalFloatTestCase {
+            input: "5.17 / -9.39".to_string(),
+            expected: -0.550_585_729_499_467_5,
+        },
+        EvalFloatTestCase {
+            input: "2.25 - -9.86 / -6.43".to_string(),
+            expected: 0.716_562_986_003_110_4,
+        },
+        EvalFloatTestCase {
+            input: "-1.33 * -8.74 + 9.55".to_string(),
+            expected: 21.1742,
+        },
+        EvalFloatTestCase {
+            input: "-9.07 + 5.55 - -8.99".to_string(),
+            expected: 5.47,
+        },
+        EvalFloatTestCase {
+            input: "-7.73 / -1.28 * 7.35".to_string(),
+            expected: 44.387_109_374_999_994,
+        },
+        EvalFloatTestCase {
+            input: "-6.24 * -5.34 / -2.9".to_string(),
+            expected: -11.490_206_896_551_726,
+        },
+        EvalFloatTestCase {
+            input: "1.4 / 6.1 - -4.25".to_string(),
+            expected: 4.479_508_196_721_311,
+        },
+        EvalFloatTestCase {
+            input: "2.31 / 0.79 * 7.31".to_string(),
+            expected: 21.374_810_126_582_28,
+        },
+        EvalFloatTestCase {
+            input: "-5.01 + -3.01 * 6.63".to_string(),
+            expected: -24.966_299_999_999_997,
+        },
+        EvalFloatTestCase {
+            input: "3.87 / -4.74 + 2.99".to_string(),
+            expected: 2.173_544_303_797_468_7,
+        },
+        EvalFloatTestCase {
+            input: "-6.52 + -10.37 / -6.36".to_string(),
+            expected: -4.889_496_855_345_912,
+        },
+        EvalFloatTestCase {
+            input: "8.2 - -1.6 * 8.86".to_string(),
+            expected: 22.375_999_999_999_998,
+        },
+        EvalFloatTestCase {
+            input: "10.24 + -8.92 + -5.85".to_string(),
+            expected: -4.529_999_999_999_999,
+        },
+        EvalFloatTestCase {
+            input: "-4.34 * 4.28 / -6.41".to_string(),
+            expected: 2.897_847_113_884_555,
+        },
+        EvalFloatTestCase {
+            input: "3.53 + -2.38 / 0.56".to_string(),
+            expected: -0.719_999_999_999_999_3,
+        },
+        EvalFloatTestCase {
+            input: "5.07 / -4.03 / -3.23".to_string(),
+            expected: 0.389_493_658_244_282_45,
+        },
+    ];
+
+    for test_case in test_cases {
+        let evaluated = test_eval(&test_case.input);
+        test_float_object(evaluated, test_case.expected);
     }
 }
 
@@ -444,6 +536,14 @@ fn test_lambda_object() {
 }
 
 #[test]
+fn test_function_statement() {
+    let input = "fn addTwo(x) { x + 2 }; addTwo(10)";
+
+    let evaluated = test_eval(input);
+    assert_eq!(Object::Int(Int { value: 12 }), evaluated);
+}
+
+#[test]
 fn test_function_application() {
     let test_cases = [
         EvalIntegerTestCase {
@@ -511,6 +611,13 @@ fn test_char_literal() {
     let input = "'a'";
     let evaluated = test_eval(input);
     assert_eq!(evaluated, Object::Char(Char { value: 'a' }));
+}
+
+#[test]
+fn test_null_literal() {
+    let input = "null";
+    let evaluated = test_eval(input);
+    assert_eq!(evaluated, Object::Null);
 }
 
 #[test]
@@ -809,4 +916,8 @@ fn test_boolean_object(obj: Object, expected: bool) {
 
 fn test_null_object(obj: Object) {
     assert_eq!(obj, Object::Null);
+}
+
+fn test_float_object(obj: Object, expected: f64) {
+    assert_eq!(obj, Object::Float(Float { value: expected }));
 }
