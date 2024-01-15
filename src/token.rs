@@ -1,62 +1,16 @@
-use std::{
-    fmt::{Debug, Display},
-    ops::Add,
-};
+use std::fmt::Debug;
 
 use strum::Display;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
-pub struct Position {
-    pub row: usize,
-    pub col: usize,
-}
-
-impl Position {
-    pub fn new(row: usize, col: usize) -> Self {
-        Self { row, col }
-    }
-
-    pub fn move_forward(&mut self) {
-        self.col += 1;
-    }
-
-    pub fn new_line(&mut self) {
-        self.col = 0;
-        self.row += 1;
-    }
-}
-
-impl Display for Position {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "@{}:{}", self.row, self.row)
-    }
-}
-
-impl Add for Position {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            col: self.col + rhs.col,
-            row: self.row + rhs.row,
-        }
-    }
-}
-
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub struct Token {
-    pub position: Position,
     pub tok_type: Kind,
     pub tok_lit: String,
 }
 
 impl Token {
-    pub fn new(tok_type: Kind, tok_lit: String, position: Position) -> Self {
-        Self {
-            position,
-            tok_type,
-            tok_lit,
-        }
+    pub fn new(tok_type: Kind, tok_lit: String) -> Self {
+        Self { tok_type, tok_lit }
     }
 }
 

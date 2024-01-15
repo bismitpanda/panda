@@ -87,13 +87,12 @@ pub struct Dict {
 #[derive(Clone, PartialEq, Debug)]
 pub struct ClassMember {
     pub name: String,
-    pub mutable: bool,
     pub obj: Object,
 }
 
 impl ClassMember {
-    pub fn new(name: String, obj: Object, mutable: bool) -> Self {
-        Self { name, mutable, obj }
+    pub fn new(name: String, obj: Object) -> Self {
+        Self { name, obj }
     }
 }
 

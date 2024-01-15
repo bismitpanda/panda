@@ -325,7 +325,7 @@ const DEFINITIONS: &[Definition] = &[
     },
     Definition {
         name: "ClassMember",
-        operand_widths: &[1, 1, 1],
+        operand_widths: &[1, 1],
     },
     Definition {
         name: "Delete",

@@ -193,11 +193,11 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 }
             }
 
-            Statement::Break(_) => {
+            Statement::Break => {
                 return Some(Object::ControlFlow(ControlFlow::Break));
             }
 
-            Statement::Continue(_) => {
+            Statement::Continue => {
                 return Some(Object::ControlFlow(ControlFlow::Continue));
             }
 
@@ -505,25 +505,25 @@ fn eval_constructor_expression(
             let mut members = HashMap::new();
             for stmt in class.body {
                 match stmt {
-                    ClassStatement::Declaration(decl) => {
+                    ClassStatement::Variable(decl) => {
                         let obj = decl
                             .value
                             .map_or(NULL_OBJ, |val| eval(Node::Expr(val), environment).unwrap());
                         members.insert(
                             hash_method_name(&decl.name),
-                            ClassMember::new(decl.name, obj, decl.mutable),
+                            ClassMember::new(decl.name, obj),
                         );
                     }
 
-                    ClassStatement::Function(func) => {
+                    ClassStatement::Method(func) => {
                         let obj = Object::EvaluatedFunction(EvaluatedFunction {
                             parameters: func.parameters,
                             environment: environment.clone(),
                             body: func.body,
                         });
                         members.insert(
-                            hash_method_name(&func.ident),
-                            ClassMember::new(func.ident, obj, true),
+                            hash_method_name(&func.name),
+                            ClassMember::new(func.name, obj),
                         );
                     }
                 }
@@ -562,25 +562,25 @@ fn eval_constructor_expression(
 
             for stmt in class.body {
                 match stmt {
-                    ClassStatement::Declaration(decl) => {
+                    ClassStatement::Variable(decl) => {
                         let obj = decl
                             .value
                             .map_or(NULL_OBJ, |val| eval(Node::Expr(val), environment).unwrap());
                         members.insert(
                             hash_method_name(&decl.name),
-                            ClassMember::new(decl.name, obj, decl.mutable),
+                            ClassMember::new(decl.name, obj),
                         );
                     }
 
-                    ClassStatement::Function(func) => {
+                    ClassStatement::Method(func) => {
                         let obj = Object::EvaluatedFunction(EvaluatedFunction {
                             parameters: func.parameters,
                             environment: environment.clone(),
                             body: func.body,
                         });
                         members.insert(
-                            hash_method_name(&func.ident),
-                            ClassMember::new(func.ident, obj, true),
+                            hash_method_name(&func.name),
+                            ClassMember::new(func.name, obj),
                         );
                     }
                 }
@@ -589,7 +589,7 @@ fn eval_constructor_expression(
             for (name, value) in class.initializers.iter().zip(received_initializers.iter()) {
                 members.insert(
                     hash_method_name(name),
-                    ClassMember::new(name.to_string(), value.clone(), true),
+                    ClassMember::new(name.to_string(), value.clone()),
                 );
             }
 
@@ -627,25 +627,25 @@ fn eval_constructor_expression(
                     let mut members = HashMap::new();
                     for stmt in class.body {
                         match stmt {
-                            ClassStatement::Declaration(decl) => {
+                            ClassStatement::Variable(decl) => {
                                 let obj = decl.value.map_or(NULL_OBJ, |val| {
                                     eval(Node::Expr(val), environment).unwrap()
                                 });
                                 members.insert(
                                     hash_method_name(&decl.name),
-                                    ClassMember::new(decl.name, obj, decl.mutable),
+                                    ClassMember::new(decl.name, obj),
                                 );
                             }
 
-                            ClassStatement::Function(func) => {
+                            ClassStatement::Method(func) => {
                                 let obj = Object::EvaluatedFunction(EvaluatedFunction {
                                     parameters: func.parameters,
                                     environment: environment.clone(),
                                     body: func.body,
                                 });
                                 members.insert(
-                                    hash_method_name(&func.ident),
-                                    ClassMember::new(func.ident, obj, true),
+                                    hash_method_name(&func.name),
+                                    ClassMember::new(func.name, obj),
                                 );
                             }
                         }
@@ -687,27 +687,27 @@ fn eval_constructor_expression(
 
                     for stmt in class.body {
                         match stmt {
-                            ClassStatement::Declaration(decl) => {
+                            ClassStatement::Variable(decl) => {
                                 let obj = decl.value.map_or(NULL_OBJ, |val| {
                                     eval(Node::Expr(val), environment).unwrap()
                                 });
-                                members.insert(decl.name, (obj, decl.mutable));
+                                members.insert(decl.name, obj);
                             }
 
-                            ClassStatement::Function(func) => {
+                            ClassStatement::Method(func) => {
                                 let obj = Object::EvaluatedFunction(EvaluatedFunction {
                                     parameters: func.parameters,
                                     environment: environment.clone(),
                                     body: func.body,
                                 });
-                                members.insert(func.ident, (obj, true));
+                                members.insert(func.name, obj);
                             }
                         }
                     }
 
                     for (name, value) in class.initializers.iter().zip(received_initializers.iter())
                     {
-                        members.insert(name.clone(), (value.clone(), true));
+                        members.insert(name.clone(), value.clone());
                     }
 
                     Object::Class(Class {
@@ -1413,16 +1413,10 @@ fn eval_assign_expression(
 
                         match ast_node.members.entry(hash_method_name(&method)) {
                             Entry::Vacant(entry) => {
-                                entry.insert(ClassMember::new(method, val.clone(), true));
+                                entry.insert(ClassMember::new(method, val.clone()));
                             }
                             Entry::Occupied(mut entry) => {
-                                if !entry.get().mutable {
-                                    return Some(new_error(format!(
-                                        "class member is not mutable: {method}"
-                                    )));
-                                }
-
-                                entry.insert(ClassMember::new(method, val.clone(), true));
+                                entry.insert(ClassMember::new(method, val.clone()));
                             }
                         };
 

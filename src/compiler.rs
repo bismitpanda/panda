@@ -241,7 +241,7 @@ impl Compiler {
                     self.loop_state.in_loop = false;
                 }
 
-                Statement::Break(_) => {
+                Statement::Break => {
                     if self.loop_state.in_loop {
                         let pos = self.emit(Opcode::Jump, &[9999]);
                         self.loop_state.breaks.push(pos);
@@ -250,7 +250,7 @@ impl Compiler {
                     }
                 }
 
-                Statement::Continue(_) => {
+                Statement::Continue => {
                     if self.loop_state.in_loop {
                         let pos = self.emit(Opcode::Jump, &[9999]);
                         self.loop_state.continues.push(pos);
@@ -697,7 +697,7 @@ impl Compiler {
 
                             for stmt in class.body {
                                 match stmt {
-                                    ClassStatement::Declaration(decl) => {
+                                    ClassStatement::Variable(decl) => {
                                         if let Some(value) = decl.value {
                                             self.compile(Node::Expr(value))?;
                                         } else {
@@ -706,18 +706,14 @@ impl Compiler {
 
                                         self.emit(
                                             Opcode::ClassMember,
-                                            &[
-                                                hash_method_name(&decl.name) as usize,
-                                                0,
-                                                usize::from(decl.mutable),
-                                            ],
+                                            &[hash_method_name(&decl.name) as usize, 0],
                                         );
                                     }
 
-                                    ClassStatement::Function(func) => {
+                                    ClassStatement::Method(func) => {
                                         self.enter_scope();
 
-                                        self.symbol_table.define_function_name(&func.ident);
+                                        self.symbol_table.define_function_name(&func.name);
 
                                         let num_parameters = func.parameters.len();
 
@@ -761,7 +757,7 @@ impl Compiler {
 
                                         self.emit(
                                             Opcode::ClassMember,
-                                            &[hash_method_name(&func.ident) as usize, 1, 0],
+                                            &[hash_method_name(&func.name) as usize, 1],
                                         );
                                     }
                                 }

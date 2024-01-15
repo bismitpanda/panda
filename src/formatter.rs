@@ -31,8 +31,8 @@ impl Formatter for Node {
 impl Formatter for Statement {
     fn formatter(&self, level: usize) -> String {
         match self {
-            Self::Break(_) => format!("{}break;", "    ".repeat(level)),
-            Self::Continue(_) => format!("{}continue;", "    ".repeat(level)),
+            Self::Break => format!("{}break;", "    ".repeat(level)),
+            Self::Continue => format!("{}continue;", "    ".repeat(level)),
             Self::Import(Import { path, alias, .. }) => {
                 let mut out = format!("{}import \"{path}\"", "    ".repeat(level));
 

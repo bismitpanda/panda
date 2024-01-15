@@ -5,10 +5,9 @@ use pretty_assertions::assert_eq;
 
 use super::*;
 use crate::{
-    ast::{ExpressionStmt, Infix, Lit, Span},
+    ast::{ExpressionStmt, Infix, Lit},
     lexer::Lexer,
     parser::Parser,
-    token::Position,
 };
 
 struct EvalIntegerTestCase {
@@ -497,29 +496,13 @@ fn test_lambda_object() {
         Object::EvaluatedFunction(EvaluatedFunction {
             parameters: Vec::from(["x".to_string()]),
             body: Vec::from([Statement::ExpressionStmt(ExpressionStmt {
-                span: Span {
-                    start: Position::new(0, 9),
-                    end: Position::new(0, 14)
-                },
                 returns: true,
                 expression: Expression::Infix(Infix {
-                    span: Span {
-                        start: Position::new(0, 9),
-                        end: Position::new(0, 14)
-                    },
                     left: Box::new(Expression::Identifier(Identifier {
-                        span: Span {
-                            start: Position::new(0, 9),
-                            end: Position::new(0, 10)
-                        },
                         value: "x".to_string()
                     })),
                     operator: Operator::Add,
                     right: Box::new(Expression::Literal(Literal {
-                        span: Span {
-                            start: Position::new(0, 13),
-                            end: Position::new(0, 14)
-                        },
                         lit: Lit::Int { value: 2 }
                     }))
                 })

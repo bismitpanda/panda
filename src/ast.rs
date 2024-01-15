@@ -3,23 +3,12 @@ use std::{
     str::FromStr,
 };
 
-use crate::token::Position;
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Span {
-    pub start: Position,
-    pub end: Position,
-}
-
 pub type BlockStatement = Vec<Statement>;
 pub type Ident = String;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Node {
-    Program {
-        span: Span,
-        statements: BlockStatement,
-    },
+    Program { statements: BlockStatement },
     Stmt(Statement),
     Expr(Expression),
 }
@@ -44,7 +33,6 @@ impl Display for Node {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Declaration {
-    pub span: Span,
     pub name: Ident,
     pub mutable: bool,
     pub value: Option<Expression>,
@@ -52,26 +40,22 @@ pub struct Declaration {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Return {
-    pub span: Span,
     pub return_value: Expression,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Delete {
-    pub span: Span,
     pub delete_ident: Ident,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct ExpressionStmt {
-    pub span: Span,
     pub returns: bool,
     pub expression: Expression,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Function {
-    pub span: Span,
     pub ident: Ident,
     pub parameters: Vec<Ident>,
     pub body: BlockStatement,
@@ -79,14 +63,12 @@ pub struct Function {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct While {
-    pub span: Span,
     pub condition: Expression,
     pub body: BlockStatement,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct For {
-    pub span: Span,
     pub ident: Ident,
     pub iterator: Expression,
     pub body: BlockStatement,
@@ -94,7 +76,6 @@ pub struct For {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct ClassDecl {
-    pub span: Span,
     pub ident: Ident,
     pub initializers: Vec<Ident>,
     pub body: Vec<ClassStatement>,
@@ -102,23 +83,32 @@ pub struct ClassDecl {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Import {
-    pub span: Span,
     pub path: Ident,
     pub alias: Option<Ident>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub enum ClassStatement {
-    Declaration(Declaration),
-    Function(Function),
+pub struct ClassVariable {
+    pub value: Option<Expression>,
+    pub name: String,
 }
 
-impl ClassStatement {
-    pub fn to_statement(&self) -> Statement {
-        match self {
-            Self::Declaration(ast_node) => Statement::Declaration(ast_node.clone()),
-            Self::Function(ast_node) => Statement::Function(ast_node.clone()),
-        }
+#[derive(Clone, PartialEq, Debug)]
+pub struct ClassMethod {
+    pub name: Ident,
+    pub parameters: Vec<Ident>,
+    pub body: BlockStatement,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum ClassStatement {
+    Variable(ClassVariable),
+    Method(ClassMethod),
+}
+
+impl ToString for ClassStatement {
+    fn to_string(&self) -> String {
+        String::new()
     }
 }
 
@@ -133,8 +123,8 @@ pub enum Statement {
     For(For),
     ClassDecl(ClassDecl),
     Import(Import),
-    Break(Span),
-    Continue(Span),
+    Break,
+    Continue,
 }
 
 impl Display for Statement {
@@ -162,12 +152,10 @@ impl Display for Statement {
                 ..
             }) => write!(
                 f,
-                "class({}) {} {}",
+                "class {}({}) {}",
                 initializers.join(", "),
                 ident,
-                body.iter()
-                    .map(|stmt| stmt.to_statement().to_string())
-                    .collect::<String>()
+                body.iter().map(|stmt| stmt.to_string()).collect::<String>()
             ),
 
             Self::ExpressionStmt(ExpressionStmt {
@@ -233,9 +221,9 @@ impl Display for Statement {
                 body.iter().map(ToString::to_string).collect::<String>()
             ),
 
-            Self::Break(_) => write!(f, "break"),
+            Self::Break => write!(f, "break"),
 
-            Self::Continue(_) => write!(f, "continue"),
+            Self::Continue => write!(f, "continue"),
 
             Self::Delete(Delete { delete_ident, .. }) => write!(f, "delete {delete_ident};"),
         }
@@ -244,7 +232,6 @@ impl Display for Statement {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Method {
-    pub span: Span,
     pub left: Box<Expression>,
     pub name: Ident,
     pub arguments: Option<Vec<Expression>>,
@@ -252,13 +239,11 @@ pub struct Method {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Constructor {
-    pub span: Span,
     pub constructable: Constructable,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Range {
-    pub span: Span,
     pub start: Box<Expression>,
     pub end: Box<Expression>,
     pub step: Option<Box<Expression>>,
@@ -266,27 +251,23 @@ pub struct Range {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Identifier {
-    pub span: Span,
     pub value: Ident,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Assign {
-    pub span: Span,
     pub to: Assignable,
     pub value: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Prefix {
-    pub span: Span,
     pub operator: Operator,
     pub right: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Infix {
-    pub span: Span,
     pub left: Box<Expression>,
     pub operator: Operator,
     pub right: Box<Expression>,
@@ -294,7 +275,6 @@ pub struct Infix {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct If {
-    pub span: Span,
     pub condition: Box<Expression>,
     pub consequence: BlockStatement,
     pub alternative: Option<BlockStatement>,
@@ -302,7 +282,6 @@ pub struct If {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Lambda {
-    pub span: Span,
     pub parameters: Vec<Ident>,
     pub body: BlockStatement,
     pub name: Ident,
@@ -310,27 +289,23 @@ pub struct Lambda {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Call {
-    pub span: Span,
     pub function: Box<Expression>,
     pub arguments: Vec<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Index {
-    pub span: Span,
     pub left: Box<Expression>,
     pub expr: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Literal {
-    pub span: Span,
     pub lit: Lit,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Scope {
-    pub span: Span,
     pub module: Ident,
     pub member: Box<Expression>,
 }
@@ -350,26 +325,6 @@ pub enum Expression {
     Index(Index),
     Literal(Literal),
     Scope(Scope),
-}
-
-impl Expression {
-    pub const fn get_span(&self) -> Span {
-        match self {
-            Self::Method(node) => node.span,
-            Self::Constructor(node) => node.span,
-            Self::Range(node) => node.span,
-            Self::Identifier(node) => node.span,
-            Self::Assign(node) => node.span,
-            Self::Prefix(node) => node.span,
-            Self::Infix(node) => node.span,
-            Self::If(node) => node.span,
-            Self::Lambda(node) => node.span,
-            Self::Call(node) => node.span,
-            Self::Index(node) => node.span,
-            Self::Literal(node) => node.span,
-            Self::Scope(node) => node.span,
-        }
-    }
 }
 
 impl Display for Expression {
