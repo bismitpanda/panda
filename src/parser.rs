@@ -262,7 +262,7 @@ impl<'a> Parser<'a> {
             return None;
         }
 
-        let body = self.parse_class_block()?;
+        let body = self.parse_class_block();
 
         Some(Statement::ClassDecl(ClassDecl {
             ident,
@@ -366,7 +366,7 @@ impl<'a> Parser<'a> {
         statements
     }
 
-    fn parse_class_block(&mut self) -> Option<Vec<ClassStatement>> {
+    fn parse_class_block(&mut self) -> Vec<ClassStatement> {
         let mut statements = Vec::new();
 
         self.next_token();
@@ -379,7 +379,7 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        Some(statements)
+        statements
     }
 
     fn parse_class_member(&mut self) -> Option<ClassStatement> {

@@ -18,7 +18,7 @@ use code::instructions_to_string;
 use compiler::{symbol_table::SymbolTable, Compiler};
 use eval::{eval, Environment};
 use object::{builtins::BUILTINS, Object, DIR_ENV_VAR_NAME};
-use vm::{VirtualMachine, GLOBAL_SIZE};
+use vm::{GLOBAL_SIZE, VM};
 
 fn main() {
     let cli = cmd::Cli::parse();
@@ -94,7 +94,7 @@ fn main() {
                         return;
                     };
 
-                    instructions_to_string(&comp.byte_code().instructions)
+                    instructions_to_string(&comp.bytecode().instructions)
                 }
 
                 DebugOut::Stack => {
@@ -104,7 +104,8 @@ fn main() {
                         return;
                     };
 
-                    let mut machine = VirtualMachine::new(&comp.byte_code());
+                    let byte_code = comp.bytecode();
+                    let mut machine = VM::new(&byte_code);
                     if let Err(err) = machine.run() {
                         println!("vm error:\n\t{err}");
                     }
@@ -161,6 +162,7 @@ fn start_repl(engine: Engine) -> std::io::Result<()> {
                 }
             }
         }
+
         Engine::VM => {
             let mut constants = Vec::new();
             let mut globals = Vec::with_capacity(GLOBAL_SIZE);
@@ -196,10 +198,10 @@ fn start_repl(engine: Engine) -> std::io::Result<()> {
                 };
                 symbol_table = comp.get_symbol_table();
 
-                let code = comp.byte_code();
+                let code = comp.bytecode();
                 constants = code.constants.clone();
 
-                let mut machine = vm::VirtualMachine::new_with_global_store(&code, &globals);
+                let mut machine = VM::new_with_global_store(&code, &globals);
                 if let Err(err) = machine.run() {
                     println!("vm error:\n\t{err}");
                     continue;
@@ -251,7 +253,8 @@ fn eval_file(fname: String, engine: Engine) -> std::io::Result<()> {
                 return Ok(());
             };
 
-            let mut machine = vm::VirtualMachine::new(&comp.byte_code());
+            let bytecode = comp.bytecode();
+            let mut machine = VM::new(&bytecode);
             if let Err(err) = machine.run() {
                 println!("vm error:\n\t{err}");
                 return Ok(());

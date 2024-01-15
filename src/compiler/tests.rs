@@ -1120,7 +1120,7 @@ fn run_compiler_tests(test_cases: &[CompilerTestCase]) {
             panic!("compiler error: {e}");
         }
 
-        let bytecode = compiler.byte_code();
+        let bytecode = compiler.bytecode();
 
         test_instructions(&test_case.expected_instructions, &bytecode.instructions).unwrap();
 

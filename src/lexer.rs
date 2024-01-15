@@ -164,7 +164,7 @@ impl Lexer {
             self.read_char();
         }
 
-        String::from_iter(&self.input[pos..self.position])
+        String::from_iter(self.input[pos..self.position].to_vec())
     }
 
     fn read_number(&mut self) -> (String, Kind) {
@@ -191,7 +191,10 @@ impl Lexer {
             }
         }
 
-        (String::from_iter(&self.input[pos..self.position]), num_type)
+        (
+            String::from_iter(self.input[pos..self.position].to_vec()),
+            num_type,
+        )
     }
 
     fn read_string(&mut self) -> String {
@@ -209,7 +212,7 @@ impl Lexer {
             }
         }
 
-        String::from_iter(&self.input[pos..self.position])
+        String::from_iter(self.input[pos..self.position].to_vec())
     }
 
     fn read_chars(&mut self) -> String {
@@ -227,7 +230,7 @@ impl Lexer {
             }
         }
 
-        String::from_iter(&self.input[pos..self.position])
+        String::from_iter(self.input[pos..self.position].to_vec())
     }
 }
 
@@ -239,30 +242,16 @@ mod tests {
 
     struct TestCase {
         expected_type: Kind,
-        expected_lit: String,
+        expected_lit: &'static str,
     }
 
-    macro_rules! case {
-        (Eol) => {
-            TestCase {
-                expected_type: Kind::Eol,
-                expected_lit: String::new(),
+    impl TestCase {
+        fn new(expected_type: Kind, expected_lit: &'static str) -> Self {
+            Self {
+                expected_type,
+                expected_lit,
             }
-        };
-
-        ($typ:ident) => {
-            TestCase {
-                expected_type: Kind::$typ,
-                expected_lit: stringify!($typ).to_lowercase(),
-            }
-        };
-
-        ($typ:ident, $lit:literal) => {
-            TestCase {
-                expected_type: Kind::$typ,
-                expected_lit: $lit.to_string(),
-            }
-        };
+        }
     }
 
     #[test]
@@ -308,133 +297,133 @@ class test() {
 "#;
 
         let test_cases = [
-            case!(Var),
-            case!(Ident, "five"),
-            case!(Assign, "="),
-            case!(IntLiteral, "5"),
-            case!(Semicolon, ";"),
-            case!(Var),
-            case!(Ident, "ten"),
-            case!(Assign, "="),
-            case!(IntLiteral, "10"),
-            case!(Semicolon, ";"),
-            case!(Const),
-            case!(Ident, "five"),
-            case!(Assign, "="),
-            case!(IntLiteral, "5"),
-            case!(Semicolon, ";"),
-            case!(Var),
-            case!(Ident, "add"),
-            case!(Assign, "="),
-            case!(Function, "fn"),
-            case!(LParen, "("),
-            case!(Ident, "x"),
-            case!(Comma, ","),
-            case!(Ident, "y"),
-            case!(RParen, ")"),
-            case!(LBrace, "{"),
-            case!(Ident, "x"),
-            case!(Plus, "+"),
-            case!(Ident, "y"),
-            case!(Semicolon, ";"),
-            case!(RBrace, "}"),
-            case!(Semicolon, ";"),
-            case!(Var),
-            case!(Ident, "result"),
-            case!(Assign, "="),
-            case!(Ident, "add"),
-            case!(LParen, "("),
-            case!(Ident, "five"),
-            case!(Comma, ","),
-            case!(Ident, "ten"),
-            case!(RParen, ")"),
-            case!(Semicolon, ";"),
-            case!(Bang, "!"),
-            case!(Minus, "-"),
-            case!(Slash, "/"),
-            case!(Asterisk, "*"),
-            case!(IntLiteral, "5"),
-            case!(Semicolon, ";"),
-            case!(IntLiteral, "5"),
-            case!(Lt, "<"),
-            case!(IntLiteral, "10"),
-            case!(Gt, ">"),
-            case!(IntLiteral, "5"),
-            case!(Semicolon, ";"),
-            case!(If),
-            case!(LParen, "("),
-            case!(IntLiteral, "5"),
-            case!(Lt, "<"),
-            case!(IntLiteral, "10"),
-            case!(RParen, ")"),
-            case!(LBrace, "{"),
-            case!(Return),
-            case!(True),
-            case!(Semicolon, ";"),
-            case!(RBrace, "}"),
-            case!(Else),
-            case!(LBrace, "{"),
-            case!(Return),
-            case!(False),
-            case!(Semicolon, ";"),
-            case!(RBrace, "}"),
-            case!(IntLiteral, "10"),
-            case!(Eq, "=="),
-            case!(IntLiteral, "10"),
-            case!(Semicolon, ";"),
-            case!(IntLiteral, "10"),
-            case!(NotEq, "!="),
-            case!(IntLiteral, "9"),
-            case!(Semicolon, ";"),
-            case!(StrLiteral, "foobar"),
-            case!(StrLiteral, ""),
-            case!(LBracket, "["),
-            case!(IntLiteral, "1"),
-            case!(Comma, ","),
-            case!(IntLiteral, "2"),
-            case!(RBracket, "]"),
-            case!(Semicolon, ";"),
-            case!(LBrace, "{"),
-            case!(StrLiteral, "foo"),
-            case!(Colon, ":"),
-            case!(StrLiteral, "bar"),
-            case!(RBrace, "}"),
-            case!(CharLiteral, "c"),
-            case!(CharLiteral, "\\x7f"),
-            case!(CharLiteral, "\\u2022"),
-            case!(Null),
-            case!(Caret, "^"),
-            case!(BitAnd, "&"),
-            case!(BitOr, "|"),
-            case!(GtEq, ">="),
-            case!(LtEq, "<="),
-            case!(Shr, ">>"),
-            case!(Shl, "<<"),
-            case!(And, "&&"),
-            case!(Or, "||"),
-            case!(Dot, "."),
-            case!(Range, ".."),
-            case!(Scope, "::"),
-            case!(Delete),
-            case!(Ident, "foo"),
-            case!(Semicolon, ";"),
-            case!(Class),
-            case!(Ident, "test"),
-            case!(LParen, "("),
-            case!(RParen, ")"),
-            case!(LBrace, "{"),
-            case!(Ident, "a"),
-            case!(Assign, "="),
-            case!(IntLiteral, "45"),
-            case!(Semicolon, ";"),
-            case!(Ident, "b"),
-            case!(LParen, "("),
-            case!(RParen, ")"),
-            case!(LBrace, "{"),
-            case!(RBrace, "}"),
-            case!(Semicolon, ";"),
-            case!(RBrace, "}"),
-            case!(Eol),
+            TestCase::new(Kind::Var, "var"),
+            TestCase::new(Kind::Ident, "five"),
+            TestCase::new(Kind::Assign, "="),
+            TestCase::new(Kind::IntLiteral, "5"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::Var, "var"),
+            TestCase::new(Kind::Ident, "ten"),
+            TestCase::new(Kind::Assign, "="),
+            TestCase::new(Kind::IntLiteral, "10"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::Const, "const"),
+            TestCase::new(Kind::Ident, "five"),
+            TestCase::new(Kind::Assign, "="),
+            TestCase::new(Kind::IntLiteral, "5"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::Var, "var"),
+            TestCase::new(Kind::Ident, "add"),
+            TestCase::new(Kind::Assign, "="),
+            TestCase::new(Kind::Function, "fn"),
+            TestCase::new(Kind::LParen, "("),
+            TestCase::new(Kind::Ident, "x"),
+            TestCase::new(Kind::Comma, ","),
+            TestCase::new(Kind::Ident, "y"),
+            TestCase::new(Kind::RParen, ")"),
+            TestCase::new(Kind::LBrace, "{"),
+            TestCase::new(Kind::Ident, "x"),
+            TestCase::new(Kind::Plus, "+"),
+            TestCase::new(Kind::Ident, "y"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::RBrace, "}"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::Var, "var"),
+            TestCase::new(Kind::Ident, "result"),
+            TestCase::new(Kind::Assign, "="),
+            TestCase::new(Kind::Ident, "add"),
+            TestCase::new(Kind::LParen, "("),
+            TestCase::new(Kind::Ident, "five"),
+            TestCase::new(Kind::Comma, ","),
+            TestCase::new(Kind::Ident, "ten"),
+            TestCase::new(Kind::RParen, ")"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::Bang, "!"),
+            TestCase::new(Kind::Minus, "-"),
+            TestCase::new(Kind::Slash, "/"),
+            TestCase::new(Kind::Asterisk, "*"),
+            TestCase::new(Kind::IntLiteral, "5"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::IntLiteral, "5"),
+            TestCase::new(Kind::Lt, "<"),
+            TestCase::new(Kind::IntLiteral, "10"),
+            TestCase::new(Kind::Gt, ">"),
+            TestCase::new(Kind::IntLiteral, "5"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::If, "if"),
+            TestCase::new(Kind::LParen, "("),
+            TestCase::new(Kind::IntLiteral, "5"),
+            TestCase::new(Kind::Lt, "<"),
+            TestCase::new(Kind::IntLiteral, "10"),
+            TestCase::new(Kind::RParen, ")"),
+            TestCase::new(Kind::LBrace, "{"),
+            TestCase::new(Kind::Return, "return"),
+            TestCase::new(Kind::True, "true"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::RBrace, "}"),
+            TestCase::new(Kind::Else, "else"),
+            TestCase::new(Kind::LBrace, "{"),
+            TestCase::new(Kind::Return, "return"),
+            TestCase::new(Kind::False, "false"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::RBrace, "}"),
+            TestCase::new(Kind::IntLiteral, "10"),
+            TestCase::new(Kind::Eq, "=="),
+            TestCase::new(Kind::IntLiteral, "10"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::IntLiteral, "10"),
+            TestCase::new(Kind::NotEq, "!="),
+            TestCase::new(Kind::IntLiteral, "9"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::StrLiteral, "foobar"),
+            TestCase::new(Kind::StrLiteral, ""),
+            TestCase::new(Kind::LBracket, "["),
+            TestCase::new(Kind::IntLiteral, "1"),
+            TestCase::new(Kind::Comma, ","),
+            TestCase::new(Kind::IntLiteral, "2"),
+            TestCase::new(Kind::RBracket, "]"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::LBrace, "{"),
+            TestCase::new(Kind::StrLiteral, "foo"),
+            TestCase::new(Kind::Colon, ":"),
+            TestCase::new(Kind::StrLiteral, "bar"),
+            TestCase::new(Kind::RBrace, "}"),
+            TestCase::new(Kind::CharLiteral, "c"),
+            TestCase::new(Kind::CharLiteral, "\\x7f"),
+            TestCase::new(Kind::CharLiteral, "\\u2022"),
+            TestCase::new(Kind::Null, "null"),
+            TestCase::new(Kind::Caret, "^"),
+            TestCase::new(Kind::BitAnd, "&"),
+            TestCase::new(Kind::BitOr, "|"),
+            TestCase::new(Kind::GtEq, ">="),
+            TestCase::new(Kind::LtEq, "<="),
+            TestCase::new(Kind::Shr, ">>"),
+            TestCase::new(Kind::Shl, "<<"),
+            TestCase::new(Kind::And, "&&"),
+            TestCase::new(Kind::Or, "||"),
+            TestCase::new(Kind::Dot, "."),
+            TestCase::new(Kind::Range, ".."),
+            TestCase::new(Kind::Scope, "::"),
+            TestCase::new(Kind::Delete, "delete"),
+            TestCase::new(Kind::Ident, "foo"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::Class, "class"),
+            TestCase::new(Kind::Ident, "test"),
+            TestCase::new(Kind::LParen, "("),
+            TestCase::new(Kind::RParen, ")"),
+            TestCase::new(Kind::LBrace, "{"),
+            TestCase::new(Kind::Ident, "a"),
+            TestCase::new(Kind::Assign, "="),
+            TestCase::new(Kind::IntLiteral, "45"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::Ident, "b"),
+            TestCase::new(Kind::LParen, "("),
+            TestCase::new(Kind::RParen, ")"),
+            TestCase::new(Kind::LBrace, "{"),
+            TestCase::new(Kind::RBrace, "}"),
+            TestCase::new(Kind::Semicolon, ";"),
+            TestCase::new(Kind::RBrace, "}"),
+            TestCase::new(Kind::Eol, ""),
         ];
 
         let mut l = Lexer::new(input);

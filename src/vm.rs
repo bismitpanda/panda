@@ -38,8 +38,8 @@ const FALSE: Object = Object::Bool(Bool { value: false });
 const NULL: Object = Object::Null;
 
 #[derive(Debug)]
-pub struct VirtualMachine {
-    constants: Vec<Object>,
+pub struct VM<'a> {
+    constants: &'a [Object],
     globals: Vec<Object>,
 
     stack: Vec<Object>,
@@ -51,38 +51,12 @@ pub struct VirtualMachine {
     frames_index: usize,
 }
 
-impl VirtualMachine {
-    pub fn new(bytecode: &Bytecode) -> Self {
-        let main_fn = CompiledFunction {
-            instructions: bytecode.instructions.clone(),
-            num_locals: 0,
-            num_parameters: 0,
-        };
-
-        let main_closure = Closure {
-            func: main_fn,
-            free: Vec::new(),
-        };
-        let main_frame = Frame::new(main_closure, 0);
-
-        let mut frames = Vec::with_capacity(MAX_FRAMES);
-        frames.push(main_frame);
-
-        Self {
-            constants: bytecode.constants.clone(),
-
-            stack: std::vec::from_elem(Object::Null, STACK_SIZE),
-            sp: 0,
-
-            globals: Vec::with_capacity(GLOBAL_SIZE),
-            last_popped_stack_elem: None,
-
-            frames,
-            frames_index: 1,
-        }
+impl<'a> VM<'a> {
+    pub fn new(bytecode: &'a Bytecode) -> Self {
+        VM::new_with_global_store(bytecode, &Vec::with_capacity(GLOBAL_SIZE))
     }
 
-    pub fn new_with_global_store(bytecode: &Bytecode, s: &[Object]) -> Self {
+    pub fn new_with_global_store(bytecode: &'a Bytecode, s: &[Object]) -> Self {
         let main_fn = CompiledFunction {
             instructions: bytecode.instructions.clone(),
             num_locals: 0,
@@ -99,9 +73,9 @@ impl VirtualMachine {
         frames.push(main_frame);
 
         Self {
-            constants: bytecode.constants.clone(),
+            constants: &bytecode.constants,
 
-            stack: std::vec::from_elem(Object::Null, STACK_SIZE),
+            stack: vec![Object::Null; STACK_SIZE],
             sp: 0,
 
             globals: s.to_vec(),
@@ -553,7 +527,7 @@ impl VirtualMachine {
     }
 }
 
-impl VirtualMachine {
+impl VM<'_> {
     fn execute_binary_operation(&mut self, op: Opcode) -> Result<(), String> {
         let right = self.pop();
         let left = self.pop();

@@ -527,9 +527,9 @@ fn test_boolean_literal() {
 
 #[test]
 fn test_integer_literal() {
-    let input = 5;
+    let input = 5.to_string();
 
-    let mut l = Lexer::new(&input.to_string());
+    let mut l = Lexer::new(&input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();
@@ -554,9 +554,9 @@ fn test_integer_literal() {
 
 #[test]
 fn test_float_literal() {
-    let input = 5.103;
+    let input = 5.103.to_string();
 
-    let mut l = Lexer::new(&input.to_string());
+    let mut l = Lexer::new(&input);
     let mut p = Parser::new(&mut l);
 
     let program = p.parse_program();

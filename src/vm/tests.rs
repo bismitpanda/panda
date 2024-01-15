@@ -2,7 +2,7 @@ use std::{any::Any, collections::HashMap};
 
 use pretty_assertions::assert_eq;
 
-use super::VirtualMachine;
+use super::VM;
 use crate::{
     ast::Node,
     code::instructions_to_string,
@@ -940,7 +940,8 @@ fn test_calling_functions_with_wrong_arguments() {
             panic!("compiler error: {err}")
         }
 
-        let mut vm = VirtualMachine::new(&comp.byte_code());
+        let byte_code = comp.bytecode();
+        let mut vm = VM::new(&byte_code);
 
         if let Err(err) = vm.run() {
             assert_eq!(err, *test_case.expected.downcast_ref::<&str>().unwrap());
@@ -1204,11 +1205,11 @@ fn run_vm_tests(test_cases: &[VMTestCase]) {
             panic!("compiler error: {err}")
         }
 
-        let byte_code = comp.byte_code();
+        let byte_code = comp.bytecode();
 
         println!("{}", instructions_to_string(&byte_code.instructions));
 
-        let mut vm = VirtualMachine::new(&byte_code);
+        let mut vm = VM::new(&byte_code);
 
         if let Err(err) = vm.run() {
             panic!("vm error: {err}")

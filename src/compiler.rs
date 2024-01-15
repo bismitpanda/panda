@@ -785,7 +785,7 @@ impl Compiler {
         };
     }
 
-    pub fn byte_code(&mut self) -> Bytecode {
+    pub fn bytecode(&mut self) -> Bytecode {
         Bytecode {
             instructions: self.current_instructions().clone(),
             constants: self.constants.clone(),
