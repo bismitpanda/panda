@@ -860,7 +860,7 @@ fn test_builtin_methods() {
 
 #[test]
 fn test_class_method() {
-    let input = "class a { fn b() { 10 } };
+    let input = "class a { b() { 10 } };
 var c = new a();
 c.b()";
 

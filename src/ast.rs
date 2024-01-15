@@ -155,7 +155,7 @@ impl Display for Statement {
                 "class {}({}) {}",
                 initializers.join(", "),
                 ident,
-                body.iter().map(|stmt| stmt.to_string()).collect::<String>()
+                body.iter().map(ToString::to_string).collect::<String>()
             ),
 
             Self::ExpressionStmt(ExpressionStmt {

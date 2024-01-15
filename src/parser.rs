@@ -6,10 +6,10 @@ use precedence::{precedences, Precedence};
 
 use crate::{
     ast::{
-        Assign, Assignable, BlockStatement, Call, ClassDecl, ClassStatement, ClassVariable,
-        Constructable, Constructor, Declaration, Delete, Expression, ExpressionStmt, For, Function,
-        Identifier, If, Import, Index, Infix, Lambda, Lit, Literal, Method, Node, Prefix, Range,
-        Return, Scope, Statement, While,
+        Assign, Assignable, BlockStatement, Call, ClassDecl, ClassMethod, ClassStatement,
+        ClassVariable, Constructable, Constructor, Declaration, Delete, Expression, ExpressionStmt,
+        For, Function, Identifier, If, Import, Index, Infix, Lambda, Lit, Literal, Method, Node,
+        Prefix, Range, Return, Scope, Statement, While,
     },
     lexer::Lexer,
     token::{Kind, Token},
@@ -386,7 +386,20 @@ impl<'a> Parser<'a> {
         let name = self.cur_tok.tok_lit.clone();
 
         if self.peek_token_is(Kind::LParen) {
-            None
+            self.next_token();
+            let parameters = self.parse_function_parameters()?;
+
+            if !self.expect_peek(Kind::LBrace) {
+                return None;
+            }
+
+            let body = self.parse_block_statement();
+
+            Some(ClassStatement::Method(ClassMethod {
+                name,
+                parameters,
+                body,
+            }))
         } else {
             self.next_token();
 
@@ -400,10 +413,7 @@ impl<'a> Parser<'a> {
                     name,
                 }))
             } else {
-                Some(ClassStatement::Variable(ClassVariable {
-                    value: Some(Expression::Literal(Literal { lit: Lit::Null })),
-                    name,
-                }))
+                None
             }
         }
     }

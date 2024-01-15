@@ -20,15 +20,15 @@ const barbaz = 121212;
     check_parser_errors(p);
 
     let test_cases = [
-        ("x", true, 5, 9),
-        ("foobar", true, 838_383, 14),
-        ("y", false, 10, 11),
-        ("barbaz", false, 121_212, 16),
+        ("x", true, 5),
+        ("foobar", true, 838_383),
+        ("y", false, 10),
+        ("barbaz", false, 121_212),
     ];
 
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 4);
-        for (i, &(name, mutable, value, end_pos)) in test_cases.iter().enumerate() {
+        for (i, &(name, mutable, value)) in test_cases.iter().enumerate() {
             assert_eq!(
                 Statement::Declaration(Declaration {
                     name: name.to_string(),
@@ -60,12 +60,12 @@ return 838383;
 
     check_parser_errors(p);
 
-    let test_cases = [(5, 9), (10, 10), (838_383, 14)];
+    let test_cases = [5, 10, 838_383];
 
     if let Some(Node::Program { statements, .. }) = program {
         assert_eq!(statements.len(), 3);
 
-        for (i, &(test_case, end)) in test_cases.iter().enumerate() {
+        for (i, &test_case) in test_cases.iter().enumerate() {
             assert_eq!(
                 Statement::Return(Return {
                     return_value: Expression::Literal(Literal {
@@ -699,7 +699,6 @@ fn test_parsing_infix_expressions() {
         check_parser_errors(p);
 
         if let Some(Node::Program { statements, .. }) = program {
-            let end_pos = test_case.operator.to_string().len() + 4;
             assert_eq!(statements.len(), 1);
             assert_eq!(
                 Statement::ExpressionStmt(ExpressionStmt {
@@ -858,7 +857,6 @@ fn test_lambda_expression() {
 struct LambdaParameterTestCase {
     input: &'static str,
     expected_params: Vec<String>,
-    end_pos: usize,
 }
 
 #[test]
@@ -867,17 +865,14 @@ fn test_lambda_parameter_parsing() {
         LambdaParameterTestCase {
             input: "fn() {};",
             expected_params: [].into(),
-            end_pos: 7,
         },
         LambdaParameterTestCase {
             input: "fn(x) {};",
             expected_params: ["x".to_string()].into(),
-            end_pos: 8,
         },
         LambdaParameterTestCase {
             input: "fn(x, y, z) {};",
             expected_params: ["x".to_string(), "y".to_string(), "z".to_string()].into(),
-            end_pos: 14,
         },
     ];
 
@@ -1680,7 +1675,6 @@ fn test_scope_fn_expression() {
 struct AssignExpressionTestCase {
     input: &'static str,
     expected: Expression,
-    expr_stmt_end: usize,
 }
 
 #[test]
@@ -1696,7 +1690,6 @@ fn test_assign_expression() {
                     lit: Lit::Int { value: 45 },
                 })),
             }),
-            expr_stmt_end: 7,
         },
         AssignExpressionTestCase {
             input: "a.b = 45",
@@ -1712,7 +1705,6 @@ fn test_assign_expression() {
                     lit: Lit::Int { value: 45 },
                 })),
             }),
-            expr_stmt_end: 9,
         },
         AssignExpressionTestCase {
             input: "a[b] = 45",
@@ -1729,7 +1721,6 @@ fn test_assign_expression() {
                     lit: Lit::Int { value: 45 },
                 })),
             }),
-            expr_stmt_end: 10,
         },
     ];
 

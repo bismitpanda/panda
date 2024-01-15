@@ -445,7 +445,10 @@ impl VirtualMachine {
 
         args.reverse();
         let caller = self.pop();
-        let ret = caller.call_method(method_idx as u8, has_arguments.then_some(&args));
+        let ret = caller.call_method(
+            u8::try_from(method_idx).unwrap(),
+            has_arguments.then_some(&args),
+        );
         self.push(ret)?;
         Ok(())
     }

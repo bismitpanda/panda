@@ -539,7 +539,7 @@ pub fn hash_method_name(name: &str) -> u8 {
     let hash = hasher.finish();
 
     let mut out = 0u8;
-    for i in 0..8 {
+    for i in 0..4 {
         out ^= (hash >> (i * 8)) as u8;
     }
 
