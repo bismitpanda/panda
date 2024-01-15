@@ -1,8 +1,7 @@
 use pretty_assertions::assert_eq;
 
-use crate::{ast::*, token::Position};
-
 use super::*;
+use crate::{ast::*, token::Position};
 
 #[test]
 fn test_declaration_statement() {
@@ -1853,6 +1852,41 @@ fn test_char_literal_expression() {
                         end: Position::new(0, 2)
                     },
                     lit: Lit::Char { value: 'a' }
+                })
+            }),
+            statements[0]
+        );
+    } else {
+        panic!("p.parse_program() returned None")
+    }
+}
+
+#[test]
+fn test_null_literal_expression() {
+    let input = "null";
+
+    let mut l = Lexer::new(input);
+    let mut p = Parser::new(&mut l);
+
+    let program = p.parse_program();
+
+    check_parser_errors(p);
+
+    if let Some(Node::Program { statements, .. }) = program {
+        assert_eq!(statements.len(), 1);
+        assert_eq!(
+            Statement::ExpressionStmt(ExpressionStmt {
+                span: Span {
+                    start: Position::new(0, 1),
+                    end: Position::new(0, 5)
+                },
+                returns: true,
+                expression: Expression::Literal(Literal {
+                    span: Span {
+                        start: Position::new(0, 1),
+                        end: Position::new(0, 5)
+                    },
+                    lit: Lit::Null
                 })
             }),
             statements[0]

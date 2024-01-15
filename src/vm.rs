@@ -3,10 +3,9 @@ use hashbrown::HashMap;
 use crate::{
     code::{self, Instructions, Opcode},
     compiler::Bytecode,
-    object::{builtins::BUILTINS, Closure, Iter, Iterable},
     object::{
-        Array, Bool, Builtin, BuiltinFunction, Char, CompiledFunction, Dict, Error, Float,
-        HashPair, Hashable, Int, Object, Range, Str,
+        builtins::BUILTINS, Array, Bool, Builtin, BuiltinFunction, Char, Closure, CompiledFunction,
+        Dict, Error, Float, HashPair, Hashable, Int, Iter, Iterable, Object, Range, Str,
     },
 };
 

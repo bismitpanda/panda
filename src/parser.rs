@@ -2,15 +2,18 @@ mod precedence;
 #[cfg(test)]
 mod tests;
 
-use crate::ast::{
-    Assign, Assignable, BlockStatement, Call, ClassDecl, ClassStatement, Constructable,
-    Constructor, Declaration, Delete, Expression, ExpressionStmt, For, Function, Identifier, If,
-    Import, Index, Infix, Lambda, Lit, Literal, Method, Node, Prefix, Range, Return, Scope, Span,
-    Statement, While,
-};
-use crate::lexer::Lexer;
-use crate::token::{Kind, Position, Token};
 use precedence::{precedences, Precedence};
+
+use crate::{
+    ast::{
+        Assign, Assignable, BlockStatement, Call, ClassDecl, ClassStatement, Constructable,
+        Constructor, Declaration, Delete, Expression, ExpressionStmt, For, Function, Identifier,
+        If, Import, Index, Infix, Lambda, Lit, Literal, Method, Node, Prefix, Range, Return, Scope,
+        Span, Statement, While,
+    },
+    lexer::Lexer,
+    token::{Kind, Position, Token},
+};
 
 pub struct Parser<'a> {
     lexer: &'a mut Lexer,

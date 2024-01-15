@@ -574,6 +574,7 @@ pub enum Operator {
 
 impl FromStr for Operator {
     type Err = String;
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let op = match s {
             "==" => Self::Eq,

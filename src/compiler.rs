@@ -6,8 +6,10 @@ mod tests;
 pub mod symbol_table;
 
 use std::path::PathBuf;
+
 pub use symbol_table::*;
 
+use self::symbol_table::SymbolTable;
 use crate::{
     ast::{
         Assign, Assignable, BlockStatement, Call, ClassStatement, Constructable, Constructor,
@@ -23,8 +25,6 @@ use crate::{
     },
     parser::Parser,
 };
-
-use self::symbol_table::SymbolTable;
 
 pub struct CompilationScope {
     instructions: Instructions,

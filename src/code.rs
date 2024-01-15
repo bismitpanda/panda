@@ -1,5 +1,4 @@
-use std::fmt::Write;
-use std::vec::from_elem;
+use std::{fmt::Write, vec::from_elem};
 
 use strum::{Display, EnumIter};
 
@@ -467,10 +466,10 @@ pub fn read_operands(def: &Definition, ins: &[u8]) -> (Vec<usize>, usize) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use pretty_assertions::assert_eq;
     use strum::IntoEnumIterator;
+
+    use super::*;
 
     struct MakeTestCase {
         op: Opcode,

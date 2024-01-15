@@ -21,12 +21,10 @@ use std::{io::Write, process::exit};
 
 use clap::Parser;
 use cmd::{DebugOut, Engine};
-use eval::{eval, Environment};
-use object::{Object, DIR_ENV_VAR_NAME};
-
 use code::instructions_to_string;
 use compiler::{symbol_table::SymbolTable, Compiler};
-use object::builtins::BUILTINS;
+use eval::{eval, Environment};
+use object::{builtins::BUILTINS, Object, DIR_ENV_VAR_NAME};
 use vm::{VirtualMachine, GLOBAL_SIZE};
 
 fn main() {

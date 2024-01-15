@@ -1,8 +1,7 @@
 use hashbrown::HashMap;
 
-use crate::ast::ClassDecl;
-
 use super::{EvaluatedModule, Object};
+use crate::ast::ClassDecl;
 
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct Environment {

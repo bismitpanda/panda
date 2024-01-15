@@ -1,14 +1,15 @@
+use std::any::Any;
+
+use hashbrown::HashMap;
+use pretty_assertions::assert_eq;
+
+use super::*;
 use crate::{
     ast::{ExpressionStmt, Infix, Lit, Span},
     lexer::Lexer,
     parser::Parser,
     token::Position,
 };
-use hashbrown::HashMap;
-use pretty_assertions::assert_eq;
-use std::any::Any;
-
-use super::*;
 
 struct EvalIntegerTestCase {
     input: String,

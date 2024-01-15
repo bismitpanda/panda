@@ -1,13 +1,14 @@
+use std::any::Any;
+
+use pretty_assertions::assert_eq;
+
+use super::*;
 use crate::{
+    code::*,
     lexer::Lexer,
     object::{Bool, Char, CompiledFunction, Float, Int, Str},
     parser::Parser,
 };
-use pretty_assertions::assert_eq;
-use std::any::Any;
-
-use super::*;
-use crate::code::*;
 
 struct CompilerTestCase {
     input: String,
@@ -1186,12 +1187,7 @@ fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) {
 }
 
 fn test_integer_object(expected: isize, actual: &Object) {
-    assert_eq!(
-        &Object::Int(Int {
-            value: expected
-        }),
-        actual
-    );
+    assert_eq!(&Object::Int(Int { value: expected }), actual);
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {

@@ -1,20 +1,20 @@
-use hashbrown::{hash_map::Entry, HashMap};
 use std::path::PathBuf;
 
-use crate::ast::{Expression, Literal, Node, Operator, Statement};
-use crate::object::builtins::get_builtin_by_name;
+use hashbrown::{hash_map::Entry, HashMap};
+
 use crate::{
     ast::{
         Assign, Assignable, BlockStatement, Call, ClassStatement, Constructable, Constructor,
-        Declaration, Delete, ExpressionStmt, For, Function, Identifier, If, Import, Index, Infix,
-        Lambda, Lit, Method, Prefix, Range, Return, Scope, While,
+        Declaration, Delete, Expression, ExpressionStmt, For, Function, Identifier, If, Import,
+        Index, Infix, Lambda, Lit, Literal, Method, Node, Operator, Prefix, Range, Return, Scope,
+        Statement, While,
     },
     lexer::Lexer,
     object::{
-        allowed_in_array, hash_method_name, Array, Bool, Builtin, Char, Class, ClassMember,
-        ControlFlow, Dict, Error, EvaluatedFunction, EvaluatedModule, Float, HashPair, Hashable,
-        Int, Iterable, Object, Range as RangeObj, ReturnValue, Str, Type, DIR_ENV_VAR_NAME, FALSE,
-        NULL_OBJ, TRUE,
+        allowed_in_array, builtins::get_builtin_by_name, hash_method_name, Array, Bool, Builtin,
+        Char, Class, ClassMember, ControlFlow, Dict, Error, EvaluatedFunction, EvaluatedModule,
+        Float, HashPair, Hashable, Int, Iterable, Object, Range as RangeObj, ReturnValue, Str,
+        Type, DIR_ENV_VAR_NAME, FALSE, NULL_OBJ, TRUE,
     },
     parser::Parser,
 };

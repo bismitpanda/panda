@@ -1,17 +1,16 @@
-use pretty_assertions::assert_eq;
 use std::{any::Any, collections::HashMap};
 
+use pretty_assertions::assert_eq;
+
+use super::VirtualMachine;
 use crate::{
     ast::Node,
     code::instructions_to_string,
     compiler::Compiler,
     lexer::Lexer,
-    object::{Array, Bool, Char, Dict, Float, Hashable, Object, Str},
-    object::{Int, NULL_OBJ},
+    object::{Array, Bool, Char, Dict, Float, Hashable, Int, Object, Str, NULL_OBJ},
     parser::Parser,
 };
-
-use super::VirtualMachine;
 
 struct VMTestCase {
     input: String,

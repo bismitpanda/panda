@@ -1,5 +1,4 @@
 use hashbrown::HashMap;
-
 use pretty_assertions::assert_eq;
 
 use super::symbol_table::*;

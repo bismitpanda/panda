@@ -32,7 +32,7 @@
 - [x] Int
 - [x] Float
 - [x] Bool
-- [-] Null
+- [x] Null
 - [x] Str
 - [x] Char
 - [x] Array
