@@ -612,7 +612,7 @@ fn test_array_literals() {
 }
 
 #[test]
-fn test_hash_literals() {
+fn test_dict_literals() {
     let test_cases = [
         VMTestCase {
             input: "{}".to_string(),
@@ -624,13 +624,13 @@ fn test_hash_literals() {
                 (
                     Hashable::from_object(&Object::Int(Int { value: 1 }))
                         .unwrap()
-                        .hash_key(),
+                        .hash(),
                     2,
                 ),
                 (
                     Hashable::from_object(&Object::Int(Int { value: 2 }))
                         .unwrap()
-                        .hash_key(),
+                        .hash(),
                     3,
                 ),
             ])),
@@ -641,13 +641,13 @@ fn test_hash_literals() {
                 (
                     Hashable::from_object(&Object::Int(Int { value: 2 }))
                         .unwrap()
-                        .hash_key(),
+                        .hash(),
                     4,
                 ),
                 (
                     Hashable::from_object(&Object::Int(Int { value: 6 }))
                         .unwrap()
-                        .hash_key(),
+                        .hash(),
                     16,
                 ),
             ])),
@@ -1235,7 +1235,7 @@ fn test_expected_object(expected: &Box<dyn Any>, actual: &Object) {
     } else if let Some(expected) = (*expected).downcast_ref::<Vec<i32>>() {
         test_array_object(expected, actual);
     } else if let Some(expected) = (*expected).downcast_ref::<HashMap<u64, i32>>() {
-        test_hash_object(expected, actual);
+        test_dict_object(expected, actual);
     } else {
         assert_eq!(&Object::Null, actual);
     }
@@ -1280,7 +1280,7 @@ fn test_array_object(expected: &[i32], actual: &Object) {
     );
 }
 
-fn test_hash_object(expected: &HashMap<u64, i32>, actual: &Object) {
+fn test_dict_object(expected: &HashMap<u64, i32>, actual: &Object) {
     if let Object::Dict(Dict { pairs }) = actual {
         assert_eq!(expected.len(), pairs.len());
 

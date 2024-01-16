@@ -5,7 +5,7 @@ use crate::{
     compiler::Bytecode,
     object::{
         builtins::BUILTINS, Array, Bool, Builtin, BuiltinFunction, Char, Closure, CompiledFunction,
-        Dict, Error, Float, HashPair, Hashable, Int, Iter, Iterable, Object, Range, Str,
+        Dict, DictPair, Error, Float, Hashable, Int, Iter, Iterable, Object, Range, Str,
     },
 };
 
@@ -217,9 +217,9 @@ impl<'a> VM<'a> {
                     self.push(Object::Array(Array { elements }))?;
                 }
 
-                Opcode::Hash => {
+                Opcode::Dict => {
                     let num_pairs = code::read_uint16(&ins, ip + 1);
-                    self.exec_hash_literal(num_pairs)?;
+                    self.exec_dict_literal(num_pairs)?;
                 }
 
                 Opcode::Index => {
@@ -384,7 +384,7 @@ impl<'a> VM<'a> {
         Ok(())
     }
 
-    fn exec_hash_literal(&mut self, num_pairs: usize) -> Result<(), String> {
+    fn exec_dict_literal(&mut self, num_pairs: usize) -> Result<(), String> {
         self.current_frame().ip += 2;
         let mut pairs = HashMap::new();
         for _ in 0..num_pairs {
@@ -395,8 +395,8 @@ impl<'a> VM<'a> {
                 .ok_or_else(|| format!("unusable as hash key: {}", key.kind()))?;
 
             pairs.insert(
-                hashable.hash_key(),
-                HashPair {
+                hashable.hash(),
+                DictPair {
                     key: hashable,
                     value,
                 },
@@ -756,7 +756,7 @@ impl VM<'_> {
                     right
                 }
             }
-            _ => unreachable!(),
+            _ => unsafe { std::hint::unreachable_unchecked() },
         };
 
         self.push(result)
@@ -777,7 +777,7 @@ impl VM<'_> {
                 self.exec_string_slice_expression(value, *start, *end, *step)?;
             }
             (Object::Dict(Dict { pairs }), _) => {
-                self.exec_hash_index_expression(pairs, index)?;
+                self.exec_dict_index_expression(pairs, index)?;
             }
             _ => {
                 return Err(format!(
@@ -861,16 +861,16 @@ impl VM<'_> {
         self.push(Object::Str(Str { value }))
     }
 
-    fn exec_hash_index_expression(
+    fn exec_dict_index_expression(
         &mut self,
-        pairs: &HashMap<u64, HashPair>,
+        pairs: &HashMap<u64, DictPair>,
         index: &Object,
     ) -> Result<(), String> {
         let Some(hashable) = Hashable::from_object(index) else {
             return Err(format!("unusable as hash key: {}", index.kind()));
         };
 
-        pairs.get(&hashable.hash_key()).map_or_else(
+        pairs.get(&hashable.hash()).map_or_else(
             || Err(format!("key error: no entry found for key \"{index}\"")),
             |pair| self.push(pair.value.clone()),
         )

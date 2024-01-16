@@ -464,7 +464,7 @@ pub enum Lit {
     Array {
         elements: Vec<Expression>,
     },
-    Hash {
+    Dict {
         pairs: Vec<(Expression, Expression)>,
     },
 }
@@ -488,7 +488,7 @@ impl Display for Lit {
 
             Self::Float { value } => write!(f, "{value}"),
 
-            Self::Hash { pairs } => write!(
+            Self::Dict { pairs } => write!(
                 f,
                 "{{{}}}",
                 pairs

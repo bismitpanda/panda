@@ -444,12 +444,12 @@ fn test_array_literals() {
 }
 
 #[test]
-fn test_hash_literals() {
+fn test_dict_literals() {
     let test_cases = [
         CompilerTestCase {
             input: "{}".to_string(),
             expected_constants: Vec::new(),
-            expected_instructions: Vec::from([make(Opcode::Hash, &[0]), make(Opcode::Pop, &[])]),
+            expected_instructions: Vec::from([make(Opcode::Dict, &[0]), make(Opcode::Pop, &[])]),
         },
         CompilerTestCase {
             input: "{1: 2, 3: 4, 5: 6}".to_string(),
@@ -468,7 +468,7 @@ fn test_hash_literals() {
                 make(Opcode::Constant, &[3]),
                 make(Opcode::Constant, &[4]),
                 make(Opcode::Constant, &[5]),
-                make(Opcode::Hash, &[3]),
+                make(Opcode::Dict, &[3]),
                 make(Opcode::Pop, &[]),
             ]),
         },
@@ -491,7 +491,7 @@ fn test_hash_literals() {
                 make(Opcode::Constant, &[4]),
                 make(Opcode::Constant, &[5]),
                 make(Opcode::Mul, &[]),
-                make(Opcode::Hash, &[2]),
+                make(Opcode::Dict, &[2]),
                 make(Opcode::Pop, &[]),
             ]),
         },
@@ -535,7 +535,7 @@ fn test_index_expression() {
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
-                make(Opcode::Hash, &[1]),
+                make(Opcode::Dict, &[1]),
                 make(Opcode::Constant, &[2]),
                 make(Opcode::Constant, &[3]),
                 make(Opcode::Sub, &[]),

@@ -2,7 +2,7 @@ use std::process::exit;
 
 use super::{
     allowed_in_array, intersperse, new_error, AHasher, Array, Bool, BuiltinFunction, Char, Class,
-    Dict, Float, HashPair, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write, NULL_OBJ,
+    Dict, DictPair, Float, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write, NULL_OBJ,
 };
 
 pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
@@ -145,6 +145,7 @@ pub fn get_builtin_by_name(name: &str) -> Option<BuiltinFunction> {
 }
 
 pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
+    // Int
     &[
         ("bits", |caller, params| {
             let Object::Int(Int { value }) = caller else {
@@ -169,6 +170,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
     ],
+    // Float
     &[
         ("bits", |caller, params| {
             let Object::Float(Float { value }) = caller else {
@@ -234,6 +236,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
     ],
+    // Str
     &[
         ("len", |caller, params| {
             let Object::Str(Str { value }) = caller else {
@@ -375,6 +378,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
     ],
+    // Char
     &[
         ("isAlphabetic", |caller, params| {
             let Object::Char(Char { value }) = caller else {
@@ -671,6 +675,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
     ],
+    // Array
     &[
         ("len", |caller, params| {
             let Object::Array(Array { elements }) = caller else {
@@ -804,7 +809,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                                 value: intersperse(
                                     elements.iter().map(|elem| match elem {
                                         Object::Char(Char { value }) => *value,
-                                        _ => unreachable!(),
+                                        _ => unsafe { std::hint::unreachable_unchecked() },
                                     }),
                                     *value,
                                 )
@@ -815,6 +820,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                             new_error("to join, the elements must be CHAR".to_string())
                         }
                     }
+
                     Object::Str(Str { value }) => {
                         if elements.iter().all(|elem| matches!(elem, Object::Str(_))) {
                             Object::Str(Str {
@@ -822,7 +828,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                                     .iter()
                                     .map(|elem| match elem {
                                         Object::Str(Str { value }) => value.as_str(),
-                                        _ => unreachable!(),
+                                        _ => unsafe { std::hint::unreachable_unchecked() },
                                     })
                                     .collect::<Vec<_>>()
                                     .join(value.as_str())
@@ -843,10 +849,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             }
         }),
     ],
+    // HashMap
     &[
         ("len", |caller, params| {
             let Object::Dict(Dict { pairs }) = caller else {
-                return new_error(format!("expected HASH, got {}", caller.kind()));
+                return new_error(format!("expected DICT, got {}", caller.kind()));
             };
             if params.is_empty() {
                 Object::Int(Int {
@@ -858,7 +865,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
         }),
         ("keys", |caller, params| {
             let Object::Dict(Dict { pairs }) = caller else {
-                return new_error(format!("expected HASH, got {}", caller.kind()));
+                return new_error(format!("expected DICT, got {}", caller.kind()));
             };
             if params.is_empty() {
                 Object::Array(Array {
@@ -870,7 +877,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
         }),
         ("values", |caller, params| {
             let Object::Dict(Dict { pairs }) = caller else {
-                return new_error(format!("expected HASH, got {}", caller.kind()));
+                return new_error(format!("expected DICT, got {}", caller.kind()));
             };
             if params.is_empty() {
                 Object::Array(Array {
@@ -882,7 +889,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
         }),
         ("insert", |caller, params| {
             let Object::Dict(Dict { pairs }) = caller else {
-                return new_error(format!("expected HASH, got {}", caller.kind()));
+                return new_error(format!("expected DICT, got {}", caller.kind()));
             };
             if params.len() == 2 {
                 let mut pairs = pairs.clone();
@@ -890,8 +897,8 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                     return new_error(format!("unusable as hash key: {}", params[0].kind()));
                 };
                 pairs.insert(
-                    hashable.hash_key(),
-                    HashPair {
+                    hashable.hash(),
+                    DictPair {
                         key: hashable,
                         value: params[1].clone(),
                     },
@@ -903,7 +910,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
         }),
         ("contains", |caller, params| {
             let Object::Dict(Dict { pairs }) = caller else {
-                return new_error(format!("expected HASH, got {}", caller.kind()));
+                return new_error(format!("expected DICT, got {}", caller.kind()));
             };
             if params.len() == 1 {
                 let Some(hashable) = Hashable::from_object(&params[0]) else {
@@ -911,7 +918,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 };
 
                 Object::Bool(Bool {
-                    value: pairs.contains_key(&hashable.hash_key()),
+                    value: pairs.contains_key(&hashable.hash()),
                 })
             } else {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))

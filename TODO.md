@@ -57,7 +57,7 @@
 -   [x] ExpressionStmt
 -   [x] Function
 -   [ ] While
--   [ ] For
+-   [x] For
 -   [ ] ClassDecl
 -   [ ] Import
 -   [ ] Break

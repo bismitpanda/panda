@@ -73,7 +73,7 @@ impl Formatter for Lit {
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
-            Self::Hash { pairs } => format!(
+            Self::Dict { pairs } => format!(
                 "{{{}}}",
                 pairs
                     .iter()

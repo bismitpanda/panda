@@ -20,7 +20,7 @@ pub const NULL_OBJ: Object = Object::Null {};
 pub const DIR_ENV_VAR_NAME: &str = "STARTING_POINT_DIR";
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct HashPair {
+pub struct DictPair {
     pub key: Hashable,
     pub value: Object,
 }
@@ -81,7 +81,7 @@ pub struct Array {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Dict {
-    pub pairs: HashMap<u64, HashPair>,
+    pub pairs: HashMap<u64, DictPair>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -320,7 +320,7 @@ impl Object {
             Self::Str(_) => "STR",
             Self::Error(_) => "ERROR",
             Self::Array(_) => "ARRAY",
-            Self::Dict(_) => "HASH",
+            Self::Dict(_) => "DICT",
             Self::CompiledFunction(_) => "COMPILED_FUNCTION",
             Self::Closure(_) => "CLOSURE",
             Self::ControlFlow(_) => "CONTROL_FLOW",
@@ -420,7 +420,7 @@ pub enum Hashable {
 }
 
 impl Hashable {
-    pub fn hash_key(&self) -> u64 {
+    pub fn hash(&self) -> u64 {
         let mut hasher = AHasher::default();
         match self {
             Self::Char(Char { value }) => {
@@ -477,7 +477,7 @@ impl Display for Hashable {
 pub enum Iterable {
     Range(Range),
     Array(Array),
-    Hash(Dict),
+    Dict(Dict),
     Str(Str),
 }
 
@@ -486,7 +486,7 @@ impl Iterable {
         match obj {
             Object::Range(ast_node) => Some(Self::Range(ast_node)),
             Object::Array(ast_node) => Some(Self::Array(ast_node)),
-            Object::Dict(ast_node) => Some(Self::Hash(ast_node)),
+            Object::Dict(ast_node) => Some(Self::Dict(ast_node)),
             Object::Str(ast_node) => Some(Self::Str(ast_node)),
             _ => None,
         }
@@ -496,7 +496,7 @@ impl Iterable {
         match self.clone() {
             Self::Range(ast_node) => Object::Range(ast_node),
             Self::Array(ast_node) => Object::Array(ast_node),
-            Self::Hash(ast_node) => Object::Dict(ast_node),
+            Self::Dict(ast_node) => Object::Dict(ast_node),
             Self::Str(ast_node) => Object::Str(ast_node),
         }
     }
@@ -505,7 +505,7 @@ impl Iterable {
         match self {
             Self::Range(ast_node) => ast_node.len(),
             Self::Array(ast_node) => ast_node.elements.len(),
-            Self::Hash(ast_node) => ast_node.pairs.len(),
+            Self::Dict(ast_node) => ast_node.pairs.len(),
             Self::Str(ast_node) => ast_node.value.len(),
         }
     }
@@ -516,7 +516,7 @@ impl Iterable {
                 value: ast_node.nth(idx),
             }),
             Self::Array(ast_node) => ast_node.elements[idx].clone(),
-            Self::Hash(ast_node) => ast_node
+            Self::Dict(ast_node) => ast_node
                 .pairs
                 .values()
                 .map(|value| value.key.clone())
@@ -567,18 +567,18 @@ mod tests {
         });
 
         assert_eq!(
-            hello1.hash_key(),
-            hello2.hash_key(),
+            hello1.hash(),
+            hello2.hash(),
             "strings with same content have different hash keys"
         );
         assert_eq!(
-            diff1.hash_key(),
-            diff2.hash_key(),
+            diff1.hash(),
+            diff2.hash(),
             "strings with same content have different hash keys"
         );
         assert_ne!(
-            hello1.hash_key(),
-            diff1.hash_key(),
+            hello1.hash(),
+            diff1.hash(),
             "strings with different content have same hash keys"
         );
     }

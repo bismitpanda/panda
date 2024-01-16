@@ -12,9 +12,9 @@ use crate::{
     lexer::Lexer,
     object::{
         allowed_in_array, builtins::get_builtin_by_name, hash_method_name, Array, Bool, Builtin,
-        Char, Class, ClassMember, ControlFlow, Dict, Error, EvaluatedFunction, EvaluatedModule,
-        Float, HashPair, Hashable, Int, Iterable, Object, Range as RangeObj, ReturnValue, Str,
-        Type, DIR_ENV_VAR_NAME, FALSE, NULL_OBJ, TRUE,
+        Char, Class, ClassMember, ControlFlow, Dict, DictPair, Error, EvaluatedFunction,
+        EvaluatedModule, Float, Hashable, Int, Iterable, Object, Range as RangeObj, ReturnValue,
+        Str, Type, DIR_ENV_VAR_NAME, FALSE, NULL_OBJ, TRUE,
     },
     parser::Parser,
 };
@@ -101,6 +101,10 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                     return Some(condition_obj);
                 }
 
+                if body.is_empty() {
+                    return None;
+                }
+
                 while is_truthy(&condition_obj) {
                     if let Some(obj) = eval_loop_block_statement(&body, environment) {
                         if is_error(&obj) {
@@ -148,9 +152,10 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 let start_dir = std::env::var(DIR_ENV_VAR_NAME).ok()?;
 
                 if let Some(ext) = path_buf.extension() {
-                    if ext != "pd" {
+                    if ext != "pnd" {
                         return Some(new_error("cannot import non panda files".to_string()));
                     }
+
                     let import_file =
                         std::fs::read_to_string(PathBuf::from(start_dir).join(&path_buf)).ok()?;
 
@@ -473,8 +478,8 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
 
                 Lit::Char { value } => return Some(Object::Char(Char { value })),
 
-                Lit::Hash { pairs } => {
-                    return eval_hash_literal(&pairs, environment);
+                Lit::Dict { pairs } => {
+                    return eval_dict_literal(&pairs, environment);
                 }
 
                 Lit::Null => return Some(NULL_OBJ),
@@ -765,6 +770,10 @@ fn eval_for_statement(
         if let Err(err) = validate_range(obj) {
             return Some(Object::Error(err));
         }
+    }
+
+    if body.is_empty() {
+        return None;
     }
 
     for idx in 0..iter_len {
@@ -1162,7 +1171,7 @@ fn eval_index_expression(left: &Object, index: &Object) -> Object {
         (Object::Str(Str { value }), Object::Range(RangeObj { start, end, step })) => {
             eval_string_slice_expression(value, *start, *end, *step)
         }
-        (Object::Dict(Dict { pairs }), _) => eval_hash_index_expression(pairs, index),
+        (Object::Dict(Dict { pairs }), _) => eval_dict_index_expression(pairs, index),
         _ => new_error(format!(
             "index operator not supported: {}[{}]",
             left.kind(),
@@ -1234,17 +1243,17 @@ fn eval_string_slice_expression(string: &str, start: isize, end: isize, step: is
     Object::Str(Str { value })
 }
 
-fn eval_hash_index_expression(pairs: &HashMap<u64, HashPair>, index: &Object) -> Object {
+fn eval_dict_index_expression(pairs: &HashMap<u64, DictPair>, index: &Object) -> Object {
     let Some(hashable) = Hashable::from_object(index) else {
         return new_error(format!("unusable as hash key: {}", index.kind()));
     };
 
     pairs
-        .get(&hashable.hash_key())
+        .get(&hashable.hash())
         .map_or(NULL_OBJ, |pair| pair.value.clone())
 }
 
-fn eval_hash_literal(
+fn eval_dict_literal(
     pairs: &[(Expression, Expression)],
     environment: &mut Environment,
 ) -> Option<Object> {
@@ -1268,8 +1277,8 @@ fn eval_hash_literal(
         };
 
         obj_pairs.insert(
-            hashable.hash_key(),
-            HashPair {
+            hashable.hash(),
+            DictPair {
                 key: hashable,
                 value,
             },
@@ -1366,8 +1375,8 @@ fn eval_assign_expression(
                                 };
 
                                 new_data.insert(
-                                    hashable.hash_key(),
-                                    HashPair {
+                                    hashable.hash(),
+                                    DictPair {
                                         key: hashable,
                                         value: val.clone(),
                                     },

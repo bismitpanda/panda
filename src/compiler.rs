@@ -471,7 +471,7 @@ impl Compiler {
                         self.emit(Opcode::Array, &[n]);
                     }
 
-                    Lit::Hash { pairs } => {
+                    Lit::Dict { pairs } => {
                         let n = pairs.len();
 
                         for (k, v) in pairs {
@@ -479,7 +479,7 @@ impl Compiler {
                             self.compile(Node::Expr(v))?;
                         }
 
-                        self.emit(Opcode::Hash, &[n]);
+                        self.emit(Opcode::Dict, &[n]);
                     }
                 },
 

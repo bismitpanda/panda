@@ -51,7 +51,7 @@ pub enum Opcode {
 
     // Complex Literal
     Array,
-    Hash,
+    Dict,
     Index,
     Range,
 
@@ -76,6 +76,9 @@ pub enum Opcode {
     Next,
     Start,
     JumpEnd,
+
+    // Method Name
+    String,
 }
 
 impl TryFrom<u8> for Opcode {
@@ -112,7 +115,7 @@ impl TryFrom<u8> for Opcode {
             26 => Self::GetGlobal,
             27 => Self::SetGlobal,
             28 => Self::Array,
-            29 => Self::Hash,
+            29 => Self::Dict,
             30 => Self::Index,
             31 => Self::Range,
             32 => Self::ReturnValue,
@@ -132,6 +135,7 @@ impl TryFrom<u8> for Opcode {
             46 => Self::Next,
             47 => Self::Start,
             48 => Self::JumpEnd,
+            49 => Self::String,
             _ => return Err(format!("{value} is not a valid Opcode.")),
         };
 
@@ -264,7 +268,7 @@ const DEFINITIONS: &[Definition] = &[
         operand_widths: &[2],
     },
     Definition {
-        name: "Hash",
+        name: "Dict",
         operand_widths: &[2],
     },
     Definition {
@@ -343,6 +347,10 @@ const DEFINITIONS: &[Definition] = &[
         name: "JumpEnd",
         operand_widths: &[2, 2],
     },
+    Definition {
+        name: "String",
+        operand_widths: &[1],
+    },
 ];
 
 pub fn make(op: Opcode, operands: &[usize]) -> Instructions {
@@ -365,10 +373,14 @@ pub fn make(op: Opcode, operands: &[usize]) -> Instructions {
             1 => {
                 instruction[offset] = u8::try_from(*o).unwrap();
             }
+
             2 => {
-                let _ = instruction
-                    .splice(offset..offset + 2, u16::try_from(*o).unwrap().to_be_bytes())
-                    .collect::<Vec<_>>();
+                instruction = [
+                    &instruction[..offset],
+                    &u16::try_from(*o).unwrap().to_be_bytes(),
+                    &instruction[offset + 2..],
+                ]
+                .concat();
             }
             _ => {}
         }

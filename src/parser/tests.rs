@@ -167,6 +167,39 @@ fn test_while_statement() {
 }
 
 #[test]
+fn test_empty_while_statement() {
+    let input = "while (i < n) { }";
+
+    let mut l = Lexer::new(input);
+    let mut p = Parser::new(&mut l);
+
+    let program = p.parse_program();
+
+    check_parser_errors(p);
+
+    if let Some(Node::Program { statements, .. }) = program {
+        assert_eq!(statements.len(), 1);
+        assert_eq!(
+            Statement::While(While {
+                condition: Expression::Infix(Infix {
+                    left: Box::new(Expression::Identifier(Identifier {
+                        value: "i".to_string(),
+                    })),
+                    operator: Operator::Lt,
+                    right: Box::new(Expression::Identifier(Identifier {
+                        value: "n".to_string(),
+                    })),
+                }),
+                body: Vec::new(),
+            }),
+            statements[0]
+        );
+    } else {
+        panic!("p.parse_program() returned None")
+    }
+}
+
+#[test]
 fn test_while_with_break_statement() {
     let input = "while (i < n) { if (i == 3) { break; }}";
 
@@ -298,6 +331,40 @@ fn test_for_statement() {
                         })),
                     }),
                 })]),
+            }),
+            statements[0]
+        );
+    } else {
+        panic!("p.parse_program() returned None")
+    }
+}
+
+#[test]
+fn test_empty_for_statement() {
+    let input = "for (i in 0..100) { }";
+
+    let mut l = Lexer::new(input);
+    let mut p = Parser::new(&mut l);
+
+    let program = p.parse_program();
+
+    check_parser_errors(p);
+
+    if let Some(Node::Program { statements, .. }) = program {
+        assert_eq!(statements.len(), 1);
+        assert_eq!(
+            Statement::For(For {
+                ident: "i".to_string(),
+                iterator: Expression::Range(Range {
+                    start: Box::new(Expression::Literal(Literal {
+                        lit: Lit::Int { value: 0 }
+                    })),
+                    end: Box::new(Expression::Literal(Literal {
+                        lit: Lit::Int { value: 100 }
+                    })),
+                    step: None
+                }),
+                body: Vec::new()
             }),
             statements[0]
         );
@@ -1350,7 +1417,7 @@ fn test_parsing_index_expressions() {
 }
 
 #[test]
-fn test_parsing_hash_literal_string_keys() {
+fn test_parsing_dict_literal_string_keys() {
     let input = r#"{"one": 1, "two": 2, "three": 3}"#;
 
     let mut l = Lexer::new(input);
@@ -1366,7 +1433,7 @@ fn test_parsing_hash_literal_string_keys() {
             Statement::ExpressionStmt(ExpressionStmt {
                 returns: true,
                 expression: Expression::Literal(Literal {
-                    lit: Lit::Hash {
+                    lit: Lit::Dict {
                         pairs: Vec::from([
                             (
                                 Expression::Literal(Literal {
@@ -1410,7 +1477,7 @@ fn test_parsing_hash_literal_string_keys() {
 }
 
 #[test]
-fn test_parsing_empty_hash_literal() {
+fn test_parsing_empty_dict_literal() {
     let input = "{}";
 
     let mut l = Lexer::new(input);
@@ -1426,7 +1493,7 @@ fn test_parsing_empty_hash_literal() {
             Statement::ExpressionStmt(ExpressionStmt {
                 returns: true,
                 expression: Expression::Literal(Literal {
-                    lit: Lit::Hash { pairs: Vec::new() }
+                    lit: Lit::Dict { pairs: Vec::new() }
                 })
             }),
             statements[0]
@@ -1437,7 +1504,7 @@ fn test_parsing_empty_hash_literal() {
 }
 
 #[test]
-fn test_parsing_hash_literal_with_expressions() {
+fn test_parsing_dict_literal_with_expressions() {
     let input = r#"{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}"#;
 
     let mut l = Lexer::new(input);
@@ -1453,7 +1520,7 @@ fn test_parsing_hash_literal_with_expressions() {
             Statement::ExpressionStmt(ExpressionStmt {
                 returns: true,
                 expression: Expression::Literal(Literal {
-                    lit: Lit::Hash {
+                    lit: Lit::Dict {
                         pairs: Vec::from([
                             (
                                 Expression::Literal(Literal {
@@ -1521,95 +1588,71 @@ struct RangeExpressionTestCase {
     step: Option<isize>,
 }
 
-// TODO: add range test cases
 #[test]
 fn test_range_expression() {
-    let test_case = RangeExpressionTestCase {
-        input: "0..100",
-        start: 0,
-        end: 100,
-        step: None,
-    };
+    let test_cases = [
+        RangeExpressionTestCase {
+            input: "0..100",
+            start: 0,
+            end: 100,
+            step: None,
+        },
+        RangeExpressionTestCase {
+            input: "0..100..10",
+            start: 0,
+            end: 100,
+            step: Some(10),
+        },
+        RangeExpressionTestCase {
+            input: "100..0",
+            start: 100,
+            end: 0,
+            step: None,
+        },
+    ];
 
-    let mut l = Lexer::new(test_case.input);
-    let mut p = Parser::new(&mut l);
+    for test_case in test_cases {
+        let mut l = Lexer::new(test_case.input);
+        let mut p = Parser::new(&mut l);
 
-    let program = p.parse_program();
+        let program = p.parse_program();
 
-    check_parser_errors(p);
+        check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
-        assert_eq!(statements.len(), 1);
-        assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmt {
-                returns: true,
-                expression: Expression::Range(Range {
-                    start: Box::new(Expression::Literal(Literal {
-                        lit: Lit::Int {
-                            value: test_case.start
-                        }
-                    })),
-                    end: Box::new(Expression::Literal(Literal {
-                        lit: Lit::Int {
-                            value: test_case.end
-                        }
-                    })),
-                    step: None
-                })
-            }),
-            statements[0]
-        );
-    } else {
-        panic!("p.parse_program() returned None")
-    }
-
-    let test_case = RangeExpressionTestCase {
-        input: "0..100..10",
-        start: 0,
-        end: 100,
-        step: Some(10),
-    };
-
-    let mut l = Lexer::new(test_case.input);
-    let mut p = Parser::new(&mut l);
-
-    let program = p.parse_program();
-
-    check_parser_errors(p);
-
-    if let Some(Node::Program { statements, .. }) = program {
-        assert_eq!(statements.len(), 1);
-        assert_eq!(
-            Statement::ExpressionStmt(ExpressionStmt {
-                returns: true,
-                expression: Expression::Range(Range {
-                    start: Box::new(Expression::Literal(Literal {
-                        lit: Lit::Int {
-                            value: test_case.start
-                        }
-                    })),
-                    end: Box::new(Expression::Literal(Literal {
-                        lit: Lit::Int {
-                            value: test_case.end
-                        }
-                    })),
-                    step: test_case
-                        .step
-                        .map(|expected| Box::new(Expression::Literal(Literal {
-                            lit: Lit::Int { value: expected }
-                        })))
-                })
-            }),
-            statements[0]
-        );
-    } else {
-        panic!("p.parse_program() returned None")
+        if let Some(Node::Program { statements, .. }) = program {
+            assert_eq!(statements.len(), 1);
+            assert_eq!(
+                Statement::ExpressionStmt(ExpressionStmt {
+                    returns: true,
+                    expression: Expression::Range(Range {
+                        start: Box::new(Expression::Literal(Literal {
+                            lit: Lit::Int {
+                                value: test_case.start
+                            }
+                        })),
+                        end: Box::new(Expression::Literal(Literal {
+                            lit: Lit::Int {
+                                value: test_case.end
+                            }
+                        })),
+                        step: test_case.step.map(|expected| Box::new(Expression::Literal(
+                            Literal {
+                                lit: Lit::Int { value: expected }
+                            }
+                        )))
+                    })
+                }),
+                statements[0]
+            );
+        } else {
+            panic!("p.parse_program() returned None")
+        }
     }
 }
 
 #[test]
 fn test_scope_var_expression() {
-    let input = r#"fs::MAX_FILE_PATH"#;
+    let input = r"fs::MAX_FILE_PATH";
 
     let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
@@ -1639,7 +1682,7 @@ fn test_scope_var_expression() {
 
 #[test]
 fn test_scope_fn_expression() {
-    let input = r#"fs::readFile(fname)"#;
+    let input = r"fs::readFile(fname)";
 
     let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);

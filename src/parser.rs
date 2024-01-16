@@ -289,7 +289,7 @@ impl<'a> Parser<'a> {
             Kind::StrLiteral => Some(self.parse_string_literal()),
             Kind::CharLiteral => self.parse_char_literal(),
             Kind::LBracket => self.parse_array_literal(),
-            Kind::LBrace => self.parse_hash_literal(),
+            Kind::LBrace => self.parse_dict_literal(),
             Kind::New => self.parse_constructor_expression(),
             Kind::Semicolon => return Some(Expression::Literal(Literal { lit: Lit::Null })),
             _ => {
@@ -684,7 +684,7 @@ impl Parser<'_> {
         }))
     }
 
-    fn parse_hash_literal(&mut self) -> Option<Expression> {
+    fn parse_dict_literal(&mut self) -> Option<Expression> {
         let mut pairs = Vec::new();
 
         while !self.peek_token_is(Kind::RBrace) {
@@ -712,7 +712,7 @@ impl Parser<'_> {
         }
 
         Some(Expression::Literal(Literal {
-            lit: Lit::Hash { pairs },
+            lit: Lit::Dict { pairs },
         }))
     }
 
