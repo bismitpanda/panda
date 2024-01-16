@@ -1,11 +1,12 @@
-use hashbrown::HashMap;
+use std::collections::HashMap;
 
 use crate::{
     code::{self, Instructions, Opcode},
     compiler::Bytecode,
     object::{
-        builtins::BUILTINS, Array, Bool, Builtin, BuiltinFunction, Char, Closure, CompiledFunction,
-        Dict, DictPair, Error, Float, Hashable, Int, Iter, Iterable, Object, Range, Str,
+        builtins::BUILTINS, Array, Boolean, Builtin, BuiltinFunction, Char, Closure,
+        CompiledFunction, Dict, DictPair, Error, Float, Hashable, Int, Iter, Iterable, Object,
+        Range, Str,
     },
 };
 
@@ -33,8 +34,8 @@ const STACK_SIZE: usize = 2048;
 pub const GLOBAL_SIZE: usize = 65536;
 const MAX_FRAMES: usize = 1024;
 
-const TRUE: Object = Object::Bool(Bool { value: true });
-const FALSE: Object = Object::Bool(Bool { value: false });
+const TRUE: Object = Object::Boolean(Boolean { value: true });
+const FALSE: Object = Object::Boolean(Boolean { value: false });
 const NULL: Object = Object::Null;
 
 #[derive(Debug)]
@@ -927,7 +928,7 @@ impl VM<'_> {
 fn is_truthy(obj: &Object) -> bool {
     match obj {
         Object::Null => false,
-        Object::Bool(Bool { value }) => *value,
+        Object::Boolean(Boolean { value }) => *value,
         Object::Int(Int { value }) => *value != 0,
         Object::Str(Str { value }) => !value.is_empty(),
         Object::Char(Char { value }) => *value != '\0',

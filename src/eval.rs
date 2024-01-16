@@ -1,6 +1,7 @@
-use std::path::PathBuf;
-
-use hashbrown::{hash_map::Entry, HashMap};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    path::PathBuf,
+};
 
 use crate::{
     ast::{
@@ -11,7 +12,7 @@ use crate::{
     },
     lexer::Lexer,
     object::{
-        allowed_in_array, builtins::get_builtin_by_name, hash_method_name, Array, Bool, Builtin,
+        allowed_in_array, builtins::get_builtin_by_name, hash_method_name, Array, Boolean, Builtin,
         Char, Class, ClassMember, ControlFlow, Dict, DictPair, Error, EvaluatedFunction,
         EvaluatedModule, Float, Hashable, Int, Iterable, Object, Range as RangeObj, ReturnValue,
         Str, Type, DIR_ENV_VAR_NAME, FALSE, NULL_OBJ, TRUE,
@@ -463,7 +464,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
 
                 Lit::Float { value } => return Some(Object::Float(Float { value })),
 
-                Lit::Bool { value } => return Some(if value { TRUE } else { FALSE }),
+                Lit::Boolean { value } => return Some(if value { TRUE } else { FALSE }),
 
                 Lit::Str { value } => return Some(Object::Str(Str { value })),
 
@@ -919,12 +920,13 @@ fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Obj
         (Object::Char(Char { value: left }), Object::Char(Char { value: right })) => {
             eval_char_infix_expression(operator, left, right)
         }
-        (Object::Bool(Bool { value: left }), Object::Bool(Bool { value: right })) => match operator
-        {
-            Operator::Eq => native_bool_boolean_object(left == right),
-            Operator::NotEq => native_bool_boolean_object(left != right),
-            _ => new_error(format!("unknown operator: BOOL {operator} BOOL",)),
-        },
+        (Object::Boolean(Boolean { value: left }), Object::Boolean(Boolean { value: right })) => {
+            match operator {
+                Operator::Eq => native_bool_boolean_object(left == right),
+                Operator::NotEq => native_bool_boolean_object(left != right),
+                _ => new_error(format!("unknown operator: BOOLEAN {operator} BOOLEAN",)),
+            }
+        }
         (Object::Type(Type { id: left, .. }), Object::Type(Type { id: right, .. })) => {
             match operator {
                 Operator::Eq => native_bool_boolean_object(left == right),
@@ -1033,10 +1035,10 @@ fn eval_string_infix_expression(operator: Operator, left: &str, right: &str) -> 
             new_val.push_str(right);
             Object::Str(Str { value: new_val })
         }
-        Operator::Eq => Object::Bool(Bool {
+        Operator::Eq => Object::Boolean(Boolean {
             value: left == right,
         }),
-        Operator::NotEq => Object::Bool(Bool {
+        Operator::NotEq => Object::Boolean(Boolean {
             value: left != right,
         }),
         _ => new_error(format!("unknown operator: STR {operator} STR",)),
@@ -1445,7 +1447,7 @@ fn eval_assign_expression(
 fn is_truthy(obj: &Object) -> bool {
     match obj {
         Object::Null => false,
-        Object::Bool(Bool { value }) => *value,
+        Object::Boolean(Boolean { value }) => *value,
         Object::Int(Int { value }) => *value != 0,
         Object::Str(Str { value }) => !value.is_empty(),
         Object::Char(Char { value }) => *value != '\0',

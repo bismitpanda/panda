@@ -450,7 +450,7 @@ impl Compiler {
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
-                    Lit::Bool { value } => {
+                    Lit::Boolean { value } => {
                         if value {
                             self.emit_op(Opcode::True)
                         } else {

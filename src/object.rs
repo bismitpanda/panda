@@ -1,20 +1,20 @@
 pub mod builtins;
 
 use std::{
+    collections::HashMap,
     fmt::Display,
     hash::{Hash as StdHash, Hasher},
 };
 
 use ahash::AHasher;
-use hashbrown::HashMap;
 
 use super::{Environment, Write};
 use crate::{ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable};
 
 pub type BuiltinFunction = fn(&Object, &[Object]) -> Object;
 
-pub const TRUE: Object = Object::Bool(Bool { value: true });
-pub const FALSE: Object = Object::Bool(Bool { value: false });
+pub const TRUE: Object = Object::Boolean(Boolean { value: true });
+pub const FALSE: Object = Object::Boolean(Boolean { value: false });
 pub const NULL_OBJ: Object = Object::Null {};
 
 pub const DIR_ENV_VAR_NAME: &str = "STARTING_POINT_DIR";
@@ -41,7 +41,7 @@ pub struct Char {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Bool {
+pub struct Boolean {
     pub value: bool,
 }
 
@@ -169,7 +169,7 @@ pub struct Iter {
 pub enum Object {
     Int(Int),
     Float(Float),
-    Bool(Bool),
+    Boolean(Boolean),
     Str(Str),
     Char(Char),
     Null,
@@ -201,7 +201,7 @@ impl Display for Object {
                     .join(", ")
             ),
 
-            Self::Bool(Bool { value }) => write!(f, "{value}"),
+            Self::Boolean(Boolean { value }) => write!(f, "{value}"),
 
             Self::Builtin(Builtin { name, .. }) => write!(f, "built-in function \"{name}\""),
 
@@ -263,7 +263,7 @@ impl Object {
         match self {
             Self::Int(_)
             | Self::Float(_)
-            | Self::Bool(_)
+            | Self::Boolean(_)
             | Self::Null
             | Self::ReturnValue(_)
             | Self::Builtin(_)
@@ -308,7 +308,7 @@ impl Object {
         let out = match self {
             Self::Int(_) => "INT",
             Self::Float(_) => "FLOAT",
-            Self::Bool(_) => "BOOL",
+            Self::Boolean(_) => "BOOLEAN",
             Self::Null => "NULL",
             Self::ReturnValue(_) => "RETURN_VALUE",
             Self::Builtin(_) => "BUILTIN",
@@ -402,7 +402,7 @@ pub fn allowed_in_array(obj: &Object) -> bool {
         obj,
         Object::Int(_)
             | Object::Float(_)
-            | Object::Bool(_)
+            | Object::Boolean(_)
             | Object::Null
             | Object::Str(_)
             | Object::Char(_)
@@ -415,7 +415,7 @@ pub fn allowed_in_array(obj: &Object) -> bool {
 pub enum Hashable {
     Char(Char),
     Int(Int),
-    Bool(Bool),
+    Boolean(Boolean),
     Str(Str),
 }
 
@@ -431,7 +431,7 @@ impl Hashable {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
-            Self::Bool(Bool { value }) => {
+            Self::Boolean(Boolean { value }) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
@@ -446,7 +446,7 @@ impl Hashable {
         match self {
             Self::Char(node) => Object::Char(node.clone()),
             Self::Int(node) => Object::Int(node.clone()),
-            Self::Bool(node) => Object::Bool(node.clone()),
+            Self::Boolean(node) => Object::Boolean(node.clone()),
             Self::Str(node) => Object::Str(node.clone()),
         }
     }
@@ -455,7 +455,7 @@ impl Hashable {
         match obj {
             Object::Char(node) => Some(Self::Char(node.clone())),
             Object::Int(node) => Some(Self::Int(node.clone())),
-            Object::Bool(node) => Some(Self::Bool(node.clone())),
+            Object::Boolean(node) => Some(Self::Boolean(node.clone())),
             Object::Str(node) => Some(Self::Str(node.clone())),
             _ => None,
         }
@@ -465,7 +465,7 @@ impl Hashable {
 impl Display for Hashable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Bool(Bool { value }) => write!(f, "{value}"),
+            Self::Boolean(Boolean { value }) => write!(f, "{value}"),
             Self::Char(Char { value }) => write!(f, "{value}"),
             Self::Int(Int { value }) => write!(f, "{value}"),
             Self::Str(Str { value }) => write!(f, "{value}"),

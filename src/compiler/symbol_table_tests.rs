@@ -1,4 +1,5 @@
-use hashbrown::HashMap;
+use std::collections::HashMap;
+
 use pretty_assertions::assert_eq;
 
 use super::symbol_table::*;

@@ -1,4 +1,4 @@
-use hashbrown::HashMap;
+use std::collections::HashMap;
 
 use super::{EvaluatedModule, Object};
 use crate::ast::ClassDecl;

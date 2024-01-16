@@ -6,7 +6,7 @@ use super::*;
 use crate::{
     code::*,
     lexer::Lexer,
-    object::{Bool, Char, CompiledFunction, Float, Int, Str},
+    object::{Boolean, Char, CompiledFunction, Float, Int, Str},
     parser::Parser,
 };
 
@@ -1191,7 +1191,7 @@ fn test_integer_object(expected: isize, actual: &Object) {
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {
-    assert_eq!(&Object::Bool(Bool { value: expected }), actual);
+    assert_eq!(&Object::Boolean(Boolean { value: expected }), actual);
 }
 
 fn test_float_object(expected: f64, actual: &Object) {

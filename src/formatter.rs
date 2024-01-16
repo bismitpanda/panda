@@ -61,7 +61,7 @@ impl Formatter for Lit {
         match self {
             Self::Str { value } => format!(r#""{value}""#),
             Self::Char { value } => format!("'{value}'"),
-            Self::Bool { value } => value.to_string(),
+            Self::Boolean { value } => value.to_string(),
             Self::Null => "null".to_string(),
             Self::Int { value } => value.to_string(),
             Self::Float { value } => value.to_string(),

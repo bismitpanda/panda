@@ -1,4 +1,5 @@
-use hashbrown::HashMap;
+use std::collections::HashMap;
+
 use pretty_assertions::assert_eq;
 
 use super::*;
@@ -89,79 +90,79 @@ fn test_eval_boolean_expression() {
     let test_cases = [
         TestCase {
             input: "true",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "false",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "1 < 2",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "1 > 2",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "1 < 1",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "1 > 1",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "1 == 1",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "1 != 1",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "1 == 2",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "1 != 2",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "true == true",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "false == false",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "true == false",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "true != false",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "false != true",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "(1 < 2) == true",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "(1 < 2) == false",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "(1 > 2) == true",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "(1 > 2) == false",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
     ];
 
@@ -291,27 +292,27 @@ fn test_bang_operator() {
     let test_cases = [
         TestCase {
             input: "!true",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "!false",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "!5",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "!!true",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "!!false",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "!!5",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
     ];
 
@@ -401,31 +402,31 @@ fn test_error_handling() {
     let test_cases = [
         ErrorHandlingTestCase {
             input: "5 + true;".to_string(),
-            expected_message: "type mismatch: INT + BOOL".to_string(),
+            expected_message: "type mismatch: INT + BOOLEAN".to_string(),
         },
         ErrorHandlingTestCase {
             input: "5 + true; 5;".to_string(),
-            expected_message: "type mismatch: INT + BOOL".to_string(),
+            expected_message: "type mismatch: INT + BOOLEAN".to_string(),
         },
         ErrorHandlingTestCase {
             input: "-true".to_string(),
-            expected_message: "unknown operator: -BOOL".to_string(),
+            expected_message: "unknown operator: -BOOLEAN".to_string(),
         },
         ErrorHandlingTestCase {
             input: "true + false;".to_string(),
-            expected_message: "unknown operator: BOOL + BOOL".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
         ErrorHandlingTestCase {
             input: "5; true + false; 5".to_string(),
-            expected_message: "unknown operator: BOOL + BOOL".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
         ErrorHandlingTestCase {
             input: "if (10 > 1) { true + false; }".to_string(),
-            expected_message: "unknown operator: BOOL + BOOL".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
         ErrorHandlingTestCase {
             input: "if (10 > 1) { if (10 > 1) { return true + false; } return 1; }".to_string(),
-            expected_message: "unknown operator: BOOL + BOOL".to_string(),
+            expected_message: "unknown operator: BOOLEAN + BOOLEAN".to_string(),
         },
         ErrorHandlingTestCase {
             input: "foobar".to_string(),
@@ -810,7 +811,7 @@ fn test_builtin_methods() {
     let test_cases = [
         TestCase {
             input: "[2, 3].contains(2)",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "(-3).abs()",
@@ -822,15 +823,15 @@ fn test_builtin_methods() {
         },
         TestCase {
             input: "var isDigit = 'a'.isDigit; isDigit(16)",
-            expected: Object::Bool(Bool { value: true }),
+            expected: Object::Boolean(Boolean { value: true }),
         },
         TestCase {
             input: "var isDigit = 'g'.isDigit; isDigit(16)",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
         TestCase {
             input: "var c = 'g'; c.isDigit(16)",
-            expected: Object::Bool(Bool { value: false }),
+            expected: Object::Boolean(Boolean { value: false }),
         },
     ];
 
@@ -861,15 +862,33 @@ delete i";
 
 #[test]
 fn test_for_statement() {
-    let input = "var i = 0;
+    let test_cases = [
+        TestCase {
+            input: "var i = 0;
 for (j in 0..10) {
     i = i + j;
 }
 
-i";
+i",
+            expected: Object::Int(Int { value: 45 }),
+        },
+        TestCase {
+            input: "var arr = [];
+for (i in 0..2) {
+    arr = arr.push(i)
+}
 
-    let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Int(Int { value: 45 }));
+arr",
+            expected: Object::Array(Array {
+                elements: vec![Object::Int(Int { value: 0 }), Object::Int(Int { value: 1 })],
+            }),
+        },
+    ];
+
+    for test_case in test_cases {
+        let evaluated = test_eval(test_case.input);
+        assert_eq!(evaluated, test_case.expected);
+    }
 }
 
 fn test_eval(input: &str) -> Object {

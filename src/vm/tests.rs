@@ -8,7 +8,7 @@ use crate::{
     code::instructions_to_string,
     compiler::Compiler,
     lexer::Lexer,
-    object::{Array, Bool, Char, Dict, Float, Hashable, Int, Object, Str, NULL_OBJ},
+    object::{Array, Boolean, Char, Dict, Float, Hashable, Int, Object, Str, NULL_OBJ},
     parser::Parser,
 };
 
@@ -1246,7 +1246,7 @@ fn test_integer_object(expected: isize, actual: &Object) {
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {
-    assert_eq!(&Object::Bool(Bool { value: expected }), actual);
+    assert_eq!(&Object::Boolean(Boolean { value: expected }), actual);
 }
 
 fn test_float_object(expected: f64, actual: &Object) {

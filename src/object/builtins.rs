@@ -1,8 +1,9 @@
 use std::process::exit;
 
 use super::{
-    allowed_in_array, intersperse, new_error, AHasher, Array, Bool, BuiltinFunction, Char, Class,
-    Dict, DictPair, Float, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write, NULL_OBJ,
+    allowed_in_array, intersperse, new_error, AHasher, Array, Boolean, BuiltinFunction, Char,
+    Class, Dict, DictPair, Float, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write,
+    NULL_OBJ,
 };
 
 pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
@@ -202,7 +203,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
 
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: *value == f64::INFINITY,
                 })
             } else {
@@ -215,7 +216,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
 
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: *value == f64::NEG_INFINITY,
                 })
             } else {
@@ -228,7 +229,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
 
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_nan(),
                 })
             } else {
@@ -256,7 +257,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
             if params.len() == 1 {
                 match params[0] {
-                    Object::Char(Char { value: ch }) => Object::Bool(Bool {
+                    Object::Char(Char { value: ch }) => Object::Boolean(Boolean {
                         value: value.contains(ch),
                     }),
                     _ => new_error(format!(
@@ -370,7 +371,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected STR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.chars().all(|ch| ch.is_ascii()),
                 })
             } else {
@@ -385,7 +386,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_alphabetic(),
                 })
             } else {
@@ -397,7 +398,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_alphanumeric(),
                 })
             } else {
@@ -409,7 +410,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii(),
                 })
             } else {
@@ -421,7 +422,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_alphabetic(),
                 })
             } else {
@@ -433,7 +434,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_alphanumeric(),
                 })
             } else {
@@ -445,7 +446,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_control(),
                 })
             } else {
@@ -457,7 +458,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_digit(),
                 })
             } else {
@@ -469,7 +470,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_digit(),
                 })
             } else {
@@ -481,7 +482,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_graphic(),
                 })
             } else {
@@ -493,7 +494,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_lowercase(),
                 })
             } else {
@@ -505,7 +506,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_punctuation(),
                 })
             } else {
@@ -517,7 +518,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_uppercase(),
                 })
             } else {
@@ -529,7 +530,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_whitespace(),
                 })
             } else {
@@ -541,7 +542,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_control(),
                 })
             } else {
@@ -553,7 +554,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_ascii_hexdigit(),
                 })
             } else {
@@ -565,7 +566,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_digit(8),
                 })
             } else {
@@ -577,7 +578,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_digit(2),
                 })
             } else {
@@ -590,7 +591,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
             if params.len() == 1 {
                 match &params[0] {
-                    Object::Int(Int { value: i }) => Object::Bool(Bool {
+                    Object::Int(Int { value: i }) => Object::Boolean(Boolean {
                         value: value.is_digit((*i).try_into().unwrap()),
                     }),
                     _ => new_error(format!(
@@ -607,7 +608,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_lowercase(),
                 })
             } else {
@@ -619,7 +620,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_numeric(),
                 })
             } else {
@@ -631,7 +632,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_uppercase(),
                 })
             } else {
@@ -643,7 +644,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return new_error(format!("expected CHAR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: value.is_whitespace(),
                 })
             } else {
@@ -707,9 +708,10 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                             Object::Float(Float { value: lhs }),
                             Object::Float(Float { value: rhs }),
                         ) => (*lhs - *rhs).abs() < f64::EPSILON,
-                        (Object::Bool(Bool { value: lhs }), Object::Bool(Bool { value: rhs })) => {
-                            *lhs == *rhs
-                        }
+                        (
+                            Object::Boolean(Boolean { value: lhs }),
+                            Object::Boolean(Boolean { value: rhs }),
+                        ) => *lhs == *rhs,
                         (Object::Char(Char { value: lhs }), Object::Char(Char { value: rhs })) => {
                             *lhs == *rhs
                         }
@@ -729,11 +731,11 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                     };
 
                     if contains {
-                        return Object::Bool(Bool { value: contains });
+                        return Object::Boolean(Boolean { value: contains });
                     }
                 }
 
-                Object::Bool(Bool { value: false })
+                Object::Boolean(Boolean { value: false })
             } else {
                 new_error(format!("expected 1 parameters. got: {}", params.len()))
             }
@@ -801,6 +803,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Array(Array { elements }) = caller else {
                 return new_error(format!("expected ARRAY, got {}", caller.kind()));
             };
+
             if params.len() == 1 {
                 match &params[0] {
                     Object::Char(Char { value }) => {
@@ -917,7 +920,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                     return new_error(format!("unusable as hash key: {}", params[0].kind()));
                 };
 
-                Object::Bool(Bool {
+                Object::Boolean(Boolean {
                     value: pairs.contains_key(&hashable.hash()),
                 })
             } else {

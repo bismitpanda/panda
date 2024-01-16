@@ -582,7 +582,7 @@ fn test_boolean_literal() {
             Statement::ExpressionStmt(ExpressionStmt {
                 returns: true,
                 expression: Expression::Literal(Literal {
-                    lit: Lit::Bool { value: true }
+                    lit: Lit::Boolean { value: true }
                 })
             }),
             statements[0]

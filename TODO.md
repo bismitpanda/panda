@@ -36,7 +36,7 @@
 
 -   [x] Int
 -   [x] Float
--   [x] Bool
+-   [x] Boolean
 -   [x] Null
 -   [x] Str
 -   [x] Char
@@ -83,7 +83,7 @@
 
 -   [x] Int
 -   [x] Float
--   [x] Bool
+-   [x] Boolean
 -   [x] Null
 -   [x] Str
 -   [x] Char
@@ -134,7 +134,7 @@
 
 -   [x] Int
 -   [x] Float
--   [x] Bool
+-   [x] Boolean
 -   [x] Null
 -   [x] Str
 -   [x] Char
@@ -194,7 +194,7 @@
 
 -   [x] Int
 -   [x] Float
--   [x] Bool
+-   [x] Boolean
 -   [x] Null
 -   [x] Str
 -   [ ] Char
