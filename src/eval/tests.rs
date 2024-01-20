@@ -414,7 +414,7 @@ fn test_error_handling() {
     ];
 
     for test_case in test_cases {
-        let evaluated = test_eval(&test_case.input);
+        let evaluated = test_eval(test_case.input);
         assert_eq!(evaluated, test_case.expected);
     }
 }
@@ -587,9 +587,7 @@ fn test_array_literals() {
     let evaluated = test_eval(input);
     assert_eq!(
         evaluated,
-        Object::Array(Array {
-            elements: Vec::from([Object::int(1), Object::int(4), Object::int(6)])
-        })
+        Object::array(Vec::from([Object::int(1), Object::int(4), Object::int(6)]))
     );
 }
 
@@ -656,56 +654,54 @@ fn test_dict_literals() {
     let key2 = Hashable::Str("two".to_string());
     let key3 = Hashable::Str("three".to_string());
     let key4 = Hashable::Int(4);
-    let key5 = Hashable::from_object(&TRUE).unwrap();
-    let key6 = Hashable::from_object(&FALSE).unwrap();
+    let key5 = Hashable::from_object(&Object::TRUE).unwrap();
+    let key6 = Hashable::from_object(&Object::FALSE).unwrap();
     assert_eq!(
         evaluated,
-        Object::Dict(Dict {
-            pairs: HashMap::from([
-                (
-                    key1.hash(),
-                    DictPair {
-                        key: key1,
-                        value: Object::int(1)
-                    }
-                ),
-                (
-                    key2.hash(),
-                    DictPair {
-                        key: key2,
-                        value: Object::int(2)
-                    }
-                ),
-                (
-                    key3.hash(),
-                    DictPair {
-                        key: key3,
-                        value: Object::int(3)
-                    }
-                ),
-                (
-                    key4.hash(),
-                    DictPair {
-                        key: key4,
-                        value: Object::int(4)
-                    }
-                ),
-                (
-                    key5.hash(),
-                    DictPair {
-                        key: key5,
-                        value: Object::int(5)
-                    }
-                ),
-                (
-                    key6.hash(),
-                    DictPair {
-                        key: key6,
-                        value: Object::int(6)
-                    }
-                ),
-            ])
-        })
+        Object::dict(HashMap::from([
+            (
+                key1.hash(),
+                DictPair {
+                    key: key1,
+                    value: Object::int(1)
+                }
+            ),
+            (
+                key2.hash(),
+                DictPair {
+                    key: key2,
+                    value: Object::int(2)
+                }
+            ),
+            (
+                key3.hash(),
+                DictPair {
+                    key: key3,
+                    value: Object::int(3)
+                }
+            ),
+            (
+                key4.hash(),
+                DictPair {
+                    key: key4,
+                    value: Object::int(4)
+                }
+            ),
+            (
+                key5.hash(),
+                DictPair {
+                    key: key5,
+                    value: Object::int(5)
+                }
+            ),
+            (
+                key6.hash(),
+                DictPair {
+                    key: key6,
+                    value: Object::int(6)
+                }
+            ),
+        ]))
     );
 }
 
@@ -821,9 +817,7 @@ for (i in 0..2) {
 }
 
 arr",
-            expected: Object::Array(Array {
-                elements: vec![Object::int(0), Object::int(1)],
-            }),
+            expected: Object::array(Vec::from([Object::int(0), Object::int(1)])),
         },
     ];
 

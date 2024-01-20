@@ -2,7 +2,7 @@ use std::process::exit;
 
 use super::{
     allowed_in_array, intersperse, AHasher, Array, Bool, BuiltinFunction, Char, Class, Dict,
-    DictPair, Float, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write, NULL_OBJ,
+    DictPair, Float, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write,
 };
 
 pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
@@ -55,7 +55,7 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
         }
 
         print!("{}", str_args.join(" "));
-        NULL_OBJ
+        Object::Null
     }),
     ("println", |_, args| {
         let mut str_args = Vec::new();
@@ -70,7 +70,7 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
         }
 
         println!("{}", str_args.join(" "));
-        NULL_OBJ
+        Object::Null
     }),
 ];
 
@@ -293,8 +293,8 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             };
             if params.len() == 1 {
                 match params[0] {
-                    Object::Char(Char { value: ch }) => Object::Array(Array {
-                        elements: value
+                    Object::Char(Char { value: ch }) => Object::array(
+                        value
                             .split(|c| c == ch)
                             .map(|part| {
                                 Object::Str(Str {
@@ -302,7 +302,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                                 })
                             })
                             .collect(),
-                    }),
+                    ),
                     _ => Object::error(format!(
                         "STR cannot be split using {}, expected: CHAR",
                         params[0].kind()
@@ -341,9 +341,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return Object::error(format!("expected STR, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Array(Array {
-                    elements: value.chars().map(|value| Object::char(value)).collect(),
-                })
+                Object::array(value.chars().map(Object::char).collect())
             } else {
                 Object::error(format!("expected 0 parameters. got: {}", params.len()))
             }
@@ -744,9 +742,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
 
                 new_elements.push(params[0].clone());
 
-                Object::Array(Array {
-                    elements: new_elements,
-                })
+                Object::array(new_elements)
             } else {
                 Object::error(format!("expected 1 parameters. got: {}", params.len()))
             }
@@ -760,7 +756,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             } else if let Some(first) = elements.first() {
                 first.clone()
             } else {
-                NULL_OBJ
+                Object::Null
             }
         }),
         ("last", |caller, params| {
@@ -772,21 +768,20 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             } else if let Some(last) = elements.last() {
                 last.clone()
             } else {
-                NULL_OBJ
+                Object::Null
             }
         }),
         ("rest", |caller, params| {
             let Object::Array(Array { elements }) = caller else {
                 return Object::error(format!("expected ARRAY, got {}", caller.kind()));
             };
+
             if params.len() != 1 {
                 Object::error(format!("expected 1 parameters. got: {}", params.len()))
             } else if let Some((_, rest)) = elements.split_first() {
-                Object::Array(Array {
-                    elements: rest.to_vec(),
-                })
+                Object::array(rest.to_vec())
             } else {
-                NULL_OBJ
+                Object::Null
             }
         }),
         ("join", |caller, params| {
@@ -859,9 +854,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return Object::error(format!("expected DICT, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Array(Array {
-                    elements: pairs.values().map(|pair| pair.key.to_object()).collect(),
-                })
+                Object::array(pairs.values().map(|pair| pair.key.to_object()).collect())
             } else {
                 Object::error(format!("expected 0 parameters. got: {}", params.len()))
             }
@@ -871,9 +864,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                 return Object::error(format!("expected DICT, got {}", caller.kind()));
             };
             if params.is_empty() {
-                Object::Array(Array {
-                    elements: pairs.values().map(|pair| pair.value.clone()).collect(),
-                })
+                Object::array(pairs.values().map(|pair| pair.value.clone()).collect())
             } else {
                 Object::error(format!("expected 0 parameters. got: {}", params.len()))
             }
@@ -882,11 +873,13 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             let Object::Dict(Dict { pairs }) = caller else {
                 return Object::error(format!("expected DICT, got {}", caller.kind()));
             };
+
             if params.len() == 2 {
                 let mut pairs = pairs.clone();
                 let Some(hashable) = Hashable::from_object(&params[0]) else {
                     return Object::error(format!("unusable as hash key: {}", params[0].kind()));
                 };
+
                 pairs.insert(
                     hashable.hash(),
                     DictPair {
@@ -894,7 +887,8 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                         value: params[1].clone(),
                     },
                 );
-                Object::Dict(Dict { pairs })
+
+                Object::dict(pairs)
             } else {
                 Object::error(format!("expected 2 parameters. got: {}", params.len()))
             }

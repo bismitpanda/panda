@@ -18,9 +18,11 @@ use crate::{
         Statement, While,
     },
     code::{make, Instructions, Opcode},
-    hash::hash_method_name,
     lexer::Lexer,
-    object::{builtins::BUILTINS, CompiledFunction, CompiledModule, Object, Str, DIR_ENV_VAR_NAME},
+    object::{
+        builtins::BUILTINS, hash_method_name, CompiledFunction, CompiledModule, Object, Str,
+        DIR_ENV_VAR_NAME,
+    },
     parser::Parser,
 };
 
@@ -661,7 +663,7 @@ impl Compiler {
 
                     self.emit(
                         Opcode::Method,
-                        &[method_hash as usize, usize::from(has_arguments), n],
+                        &[method_hash, usize::from(has_arguments), n],
                     );
                 }
 
@@ -704,7 +706,7 @@ impl Compiler {
 
                                         self.emit(
                                             Opcode::ClassMember,
-                                            &[hash_method_name(&decl.name) as usize, 0],
+                                            &[hash_method_name(&decl.name), 0],
                                         );
                                     }
 
@@ -755,7 +757,7 @@ impl Compiler {
 
                                         self.emit(
                                             Opcode::ClassMember,
-                                            &[hash_method_name(&func.name) as usize, 1],
+                                            &[hash_method_name(&func.name), 1],
                                         );
                                     }
                                 }

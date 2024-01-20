@@ -9,16 +9,9 @@ use std::{
 use ahash::AHasher;
 
 use super::{Environment, Write};
-use crate::{
-    ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable,
-    hash::METHOD_NAMES,
-};
+use crate::{ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable};
 
 pub type BuiltinFunction = fn(&Object, &[Object]) -> Object;
-
-pub const TRUE: Object = Object::bool(true);
-pub const FALSE: Object = Object::bool(false);
-pub const NULL_OBJ: Object = Object::Null;
 
 pub const DIR_ENV_VAR_NAME: &str = "STARTING_POINT_DIR";
 
@@ -192,6 +185,9 @@ pub enum Object {
 }
 
 impl Object {
+    pub const FALSE: Self = Self::bool(false);
+    pub const TRUE: Self = Self::bool(true);
+
     pub const fn int(value: isize) -> Self {
         Self::Int(Int { value })
     }
@@ -214,6 +210,14 @@ impl Object {
 
     pub const fn error(value: String) -> Self {
         Self::Error(Error { value })
+    }
+
+    pub const fn array(elements: Vec<Object>) -> Self {
+        Self::Array(Array { elements })
+    }
+
+    pub const fn dict(pairs: HashMap<u64, DictPair>) -> Self {
+        Self::Dict(Dict { pairs })
     }
 }
 
@@ -338,7 +342,7 @@ impl Object {
             Self::Int(_) => "INT",
             Self::Float(_) => "FLOAT",
             Self::Bool(_) => "BOOLEAN",
-            Self::Null => "NULL",
+            Self::Null => "Object::Null",
             Self::ReturnValue(_) => "RETURN_VALUE",
             Self::Builtin(_) => "BUILTIN",
             Self::Range(_) => "RANGE",
@@ -390,14 +394,9 @@ impl Object {
             | Self::Char(_)
             | Self::Array(_)
             | Self::Dict(_) => {
-                let method_name = METHOD_NAMES[method];
-
                 let (_, func) = builtins::BUILTIN_METHODS[self.get_id()]
                     .iter()
-                    .find(|(name, _)| {
-                        println!("{name} {method_name}");
-                        *name == method_name
-                    })
+                    .find(|(name, _)| hash_method_name(name) == method)
                     .unwrap();
 
                 params.map_or_else(
@@ -591,4 +590,11 @@ mod tests {
             "strings with different content have same hash keys"
         );
     }
+}
+
+pub fn hash_method_name(method_name: &str) -> usize {
+    let mut hasher = AHasher::default();
+
+    method_name.hash(&mut hasher);
+    hasher.finish() as usize
 }

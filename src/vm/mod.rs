@@ -5,8 +5,7 @@ use crate::{
     compiler::Bytecode,
     object::{
         builtins::BUILTINS, Array, Bool, Builtin, BuiltinFunction, Char, Closure, CompiledFunction,
-        Dict, DictPair, Error, Float, Hashable, Int, Iter, Iterable, Object, Range, Str, FALSE,
-        NULL_OBJ as NULL, TRUE,
+        Dict, DictPair, Error, Float, Hashable, Int, Iter, Iterable, Object, Range, Str,
     },
 };
 
@@ -141,9 +140,9 @@ impl<'a> VM<'a> {
                     self.last_popped_stack_elem = None;
                 }
 
-                Opcode::True => self.push(TRUE)?,
-                Opcode::False => self.push(FALSE)?,
-                Opcode::Null => self.push(NULL)?,
+                Opcode::True => self.push(Object::TRUE)?,
+                Opcode::False => self.push(Object::FALSE)?,
+                Opcode::Null => self.push(Object::Null)?,
 
                 Opcode::Equal
                 | Opcode::GreaterThan
@@ -211,7 +210,7 @@ impl<'a> VM<'a> {
                     }
 
                     elements.reverse();
-                    self.push(Object::Array(Array { elements }))?;
+                    self.push(Object::array(elements))?;
                 }
 
                 Opcode::Dict => {
@@ -253,7 +252,7 @@ impl<'a> VM<'a> {
                     let frame = self.pop_frame();
                     self.sp = frame.bp - 1;
 
-                    self.push(NULL)?;
+                    self.push(Object::Null)?;
                 }
 
                 Opcode::SetLocal => {
@@ -399,7 +398,7 @@ impl<'a> VM<'a> {
                 },
             );
         }
-        self.push(Object::Dict(Dict { pairs }))?;
+        self.push(Object::dict(pairs))?;
         Ok(())
     }
 
@@ -642,8 +641,16 @@ impl VM<'_> {
                 Object::Char(Char { value: right_value }),
             ) => self.execute_char_comparison(op, *left_value, *right_value),
             _ => match op {
-                Opcode::Equal => self.push(if left == right { TRUE } else { FALSE }),
-                Opcode::NotEqual => self.push(if left == right { FALSE } else { TRUE }),
+                Opcode::Equal => self.push(if left == right {
+                    Object::TRUE
+                } else {
+                    Object::FALSE
+                }),
+                Opcode::NotEqual => self.push(if left == right {
+                    Object::FALSE
+                } else {
+                    Object::TRUE
+                }),
                 _ => {
                     return Err(format!(
                         "unknown operator: {} ({} {})",
@@ -672,7 +679,7 @@ impl VM<'_> {
             _ => return Err(format!("unknown operator: {op}")),
         };
 
-        self.push(if value { TRUE } else { FALSE })
+        self.push(if value { Object::TRUE } else { Object::FALSE })
     }
 
     fn execute_float_comparison(
@@ -689,7 +696,7 @@ impl VM<'_> {
             _ => return Err(format!("unknown operator: {op}")),
         };
 
-        self.push(if value { TRUE } else { FALSE })
+        self.push(if value { Object::TRUE } else { Object::FALSE })
     }
 
     fn execute_char_comparison(
@@ -706,16 +713,16 @@ impl VM<'_> {
             _ => return Err(format!("unknown operator: {op}")),
         };
 
-        self.push(if value { TRUE } else { FALSE })
+        self.push(if value { Object::TRUE } else { Object::FALSE })
     }
 
     fn execute_bang_operator(&mut self) -> Result<(), String> {
         let operand = self.pop();
 
         if is_truthy(&operand) {
-            self.push(FALSE)
+            self.push(Object::FALSE)
         } else {
-            self.push(TRUE)
+            self.push(Object::TRUE)
         }
     }
 
@@ -828,7 +835,7 @@ impl VM<'_> {
             i += step;
         }
 
-        self.push(Object::Array(Array { elements }))
+        self.push(Object::array(elements))
     }
 
     fn exec_string_slice_expression(
@@ -875,9 +882,11 @@ impl VM<'_> {
         match callee {
             Object::Closure(callee) => self.call_closure(&callee, num_args),
 
-            Object::Builtin(Builtin { func, caller, .. }) => {
-                self.call_builtin(func, &(caller.unwrap_or_else(|| Box::new(NULL))), num_args)
-            }
+            Object::Builtin(Builtin { func, caller, .. }) => self.call_builtin(
+                func,
+                &(caller.unwrap_or_else(|| Box::new(Object::Null))),
+                num_args,
+            ),
 
             _ => Err(format!(
                 "calling non-function and non-builtin: {}",
