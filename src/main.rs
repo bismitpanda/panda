@@ -4,6 +4,7 @@ mod code;
 mod compiler;
 mod eval;
 mod formatter;
+mod hash;
 mod lexer;
 mod object;
 mod parser;

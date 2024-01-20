@@ -18,11 +18,9 @@ use crate::{
         Statement, While,
     },
     code::{make, Instructions, Opcode},
+    hash::hash_method_name,
     lexer::Lexer,
-    object::{
-        builtins::BUILTINS, hash_method_name, Char, CompiledFunction, CompiledModule, Float, Int,
-        Object, Str, DIR_ENV_VAR_NAME,
-    },
+    object::{builtins::BUILTINS, CompiledFunction, CompiledModule, Object, Str, DIR_ENV_VAR_NAME},
     parser::Parser,
 };
 
@@ -427,19 +425,19 @@ impl Compiler {
 
                 Expression::Literal(Literal { lit, .. }) => match lit {
                     Lit::Int { value } => {
-                        let integer = Object::Int(Int { value });
+                        let integer = Object::int(value);
                         let operand = self.add_constant(integer);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
                     Lit::Float { value } => {
-                        let float = Object::Float(Float { value });
+                        let float = Object::float(value);
                         let operand = self.add_constant(float);
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
                     Lit::Char { value } => {
-                        let ch = Object::Char(Char { value });
+                        let ch = Object::char(value);
                         let operand = self.add_constant(ch);
                         self.emit(Opcode::Constant, &[operand]);
                     }
@@ -450,7 +448,7 @@ impl Compiler {
                         self.emit(Opcode::Constant, &[operand]);
                     }
 
-                    Lit::Boolean { value } => {
+                    Lit::Bool { value } => {
                         if value {
                             self.emit_op(Opcode::True)
                         } else {

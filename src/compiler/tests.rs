@@ -6,7 +6,7 @@ use super::*;
 use crate::{
     code::*,
     lexer::Lexer,
-    object::{Boolean, Char, CompiledFunction, Float, Int, Str},
+    object::{CompiledFunction, Str},
     parser::Parser,
 };
 
@@ -1187,19 +1187,19 @@ fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) {
 }
 
 fn test_integer_object(expected: isize, actual: &Object) {
-    assert_eq!(&Object::Int(Int { value: expected }), actual);
+    assert_eq!(&Object::int(expected), actual);
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {
-    assert_eq!(&Object::Boolean(Boolean { value: expected }), actual);
+    assert_eq!(&Object::bool(expected), actual);
 }
 
 fn test_float_object(expected: f64, actual: &Object) {
-    assert_eq!(&Object::Float(Float { value: expected }), actual);
+    assert_eq!(&Object::float(expected), actual);
 }
 
 fn test_char_object(expected: char, actual: &Object) {
-    assert_eq!(&Object::Char(Char { value: expected }), actual);
+    assert_eq!(&Object::char(expected), actual);
 }
 
 fn test_string_object(expected: &str, actual: &Object) {

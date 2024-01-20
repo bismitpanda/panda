@@ -4,9 +4,9 @@ use crate::{
     code::{self, Instructions, Opcode},
     compiler::Bytecode,
     object::{
-        builtins::BUILTINS, Array, Boolean, Builtin, BuiltinFunction, Char, Closure,
-        CompiledFunction, Dict, DictPair, Error, Float, Hashable, Int, Iter, Iterable, Object,
-        Range, Str,
+        builtins::BUILTINS, Array, Bool, Builtin, BuiltinFunction, Char, Closure, CompiledFunction,
+        Dict, DictPair, Error, Float, Hashable, Int, Iter, Iterable, Object, Range, Str, FALSE,
+        NULL_OBJ as NULL, TRUE,
     },
 };
 
@@ -33,10 +33,6 @@ impl Frame {
 const STACK_SIZE: usize = 2048;
 pub const GLOBAL_SIZE: usize = 65536;
 const MAX_FRAMES: usize = 1024;
-
-const TRUE: Object = Object::Boolean(Boolean { value: true });
-const FALSE: Object = Object::Boolean(Boolean { value: false });
-const NULL: Object = Object::Null;
 
 #[derive(Debug)]
 pub struct VM<'a> {
@@ -118,7 +114,7 @@ impl<'a> VM<'a> {
 
             match op {
                 Opcode::Constant => {
-                    let const_idx = code::read_uint16(&ins, ip + 1);
+                    let const_idx = code::read_u16(&ins, ip + 1);
                     self.current_frame().ip += 2;
 
                     self.push(self.constants[const_idx].clone())?;
@@ -169,12 +165,12 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Jump => {
-                    let pos = code::read_uint16(&ins, ip + 1);
+                    let pos = code::read_u16(&ins, ip + 1);
                     self.current_frame().ip = (pos - 1) as isize;
                 }
 
                 Opcode::JumpNotTruthy => {
-                    let pos = code::read_uint16(&ins, ip + 1);
+                    let pos = code::read_u16(&ins, ip + 1);
                     self.current_frame().ip += 2;
 
                     let condition = self.pop();
@@ -184,7 +180,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::SetGlobal => {
-                    let global_idx = code::read_uint16(&ins, ip + 1);
+                    let global_idx = code::read_u16(&ins, ip + 1);
                     self.current_frame().ip += 2;
 
                     let obj = self.pop();
@@ -197,7 +193,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::GetGlobal => {
-                    let global_idx = code::read_uint16(&ins, ip + 1);
+                    let global_idx = code::read_u16(&ins, ip + 1);
                     self.current_frame().ip += 2;
 
                     let obj = self.globals[global_idx].clone();
@@ -206,7 +202,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Array => {
-                    let num_elements = code::read_uint16(&ins, ip + 1);
+                    let num_elements = code::read_u16(&ins, ip + 1);
                     self.current_frame().ip += 2;
 
                     let mut elements = Vec::new();
@@ -219,7 +215,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Dict => {
-                    let num_pairs = code::read_uint16(&ins, ip + 1);
+                    let num_pairs = code::read_u16(&ins, ip + 1);
                     self.exec_dict_literal(num_pairs)?;
                 }
 
@@ -238,7 +234,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Call => {
-                    let num_args = code::read_uint8(&ins, ip + 1);
+                    let num_args = code::read_u8(&ins, ip + 1);
                     self.current_frame().ip += 1;
 
                     self.exec_call(num_args)?;
@@ -261,7 +257,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::SetLocal => {
-                    let local_index = code::read_uint8(&ins, ip + 1);
+                    let local_index = code::read_u8(&ins, ip + 1);
                     self.current_frame().ip += 1;
 
                     let base_pointer = self.current_frame().bp;
@@ -270,7 +266,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::GetLocal => {
-                    let local_index = code::read_uint8(&ins, ip + 1);
+                    let local_index = code::read_u8(&ins, ip + 1);
                     self.current_frame().ip += 1;
 
                     let base_pointer = self.current_frame().bp;
@@ -280,7 +276,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::GetBuiltin => {
-                    let builtin_idx = code::read_uint8(&ins, ip + 1);
+                    let builtin_idx = code::read_u8(&ins, ip + 1);
                     self.current_frame().ip += 1;
 
                     let (name, func) = BUILTINS[builtin_idx];
@@ -293,8 +289,8 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Closure => {
-                    let const_idx = code::read_uint16(&ins, ip + 1);
-                    let num_free = code::read_uint8(&ins, ip + 3);
+                    let const_idx = code::read_u16(&ins, ip + 1);
+                    let num_free = code::read_u8(&ins, ip + 3);
 
                     self.current_frame().ip += 3;
 
@@ -302,7 +298,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::GetFree => {
-                    let free_idx = code::read_uint8(&ins, ip + 1);
+                    let free_idx = code::read_u8(&ins, ip + 1);
                     self.current_frame().ip += 1;
 
                     let current_closure = self.current_frame().cl.clone();
@@ -320,9 +316,9 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Method => {
-                    let method_idx = code::read_uint8(&ins, ip + 1);
+                    let method_idx = code::read_usize(&ins, ip + 1);
                     let has_arguments = code::read_bool(&ins, ip + 2);
-                    let num_args = code::read_uint8(&ins, ip + 3);
+                    let num_args = code::read_u8(&ins, ip + 3);
 
                     self.current_frame().ip += 3;
 
@@ -356,8 +352,8 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::JumpEnd => {
-                    let jump_pos = code::read_uint16(&ins, ip + 1);
-                    let symbol_idx = code::read_uint16(&ins, ip + 3);
+                    let jump_pos = code::read_u16(&ins, ip + 1);
+                    let symbol_idx = code::read_u16(&ins, ip + 3);
                     self.current_frame().ip += 4;
 
                     let Object::Iter(iter) = self.stack_top().unwrap() else {
@@ -372,7 +368,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Delete => {
-                    let index = code::read_uint16(&ins, ip + 1);
+                    let index = code::read_u16(&ins, ip + 1);
                     self.current_frame().ip += 2;
 
                     self.last_popped_stack_elem = Some(self.globals.remove(index));
@@ -420,10 +416,7 @@ impl<'a> VM<'a> {
 
         args.reverse();
         let caller = self.pop();
-        let ret = caller.call_method(
-            u8::try_from(method_idx).unwrap(),
-            has_arguments.then_some(&args),
-        );
+        let ret = caller.call_method(method_idx, has_arguments.then_some(&args));
         self.push(ret)?;
         Ok(())
     }
@@ -582,7 +575,7 @@ impl VM<'_> {
             _ => return Err(format!("unknown integer operation: {op}")),
         };
 
-        self.push(Object::Int(Int { value }))
+        self.push(Object::int(value))
     }
 
     fn execute_binary_float_operation(
@@ -599,7 +592,7 @@ impl VM<'_> {
             _ => return Err(format!("unknown float operation: {op}")),
         };
 
-        self.push(Object::Float(Float { value }))
+        self.push(Object::float(value))
     }
 
     fn execute_binary_string_operation(
@@ -730,9 +723,9 @@ impl VM<'_> {
         let operand = self.pop();
 
         if let Object::Int(Int { value }) = operand {
-            self.push(Object::Int(Int { value: -value }))
+            self.push(Object::int(-value))
         } else if let Object::Float(Float { value }) = operand {
-            self.push(Object::Float(Float { value: -value }))
+            self.push(Object::float(-value))
         } else {
             Err(format!("unsupported type for negation: {}", operand.kind()))
         }
@@ -809,9 +802,9 @@ impl VM<'_> {
             return Err(format!("index out of bounds. got: {idx}"));
         }
 
-        self.push(Object::Char(Char {
-            value: string.chars().nth(normalize_index(idx, max)).unwrap(),
-        }))
+        self.push(Object::char(
+            string.chars().nth(normalize_index(idx, max)).unwrap(),
+        ))
     }
 
     fn exec_array_slice_expression(
@@ -928,18 +921,18 @@ impl VM<'_> {
 fn is_truthy(obj: &Object) -> bool {
     match obj {
         Object::Null => false,
-        Object::Boolean(Boolean { value }) => *value,
+        Object::Bool(Bool { value }) => *value,
         Object::Int(Int { value }) => *value != 0,
         Object::Str(Str { value }) => !value.is_empty(),
         Object::Char(Char { value }) => *value != '\0',
         Object::Array(Array { elements }) => !elements.is_empty(),
         Object::Dict(Dict { pairs }) => !pairs.is_empty(),
         Object::Float(Float { value }) => !(value.is_nan() || *value == 0f64),
-        Object::Error(Error { message }) => !message.is_empty(),
+        Object::Error(Error { value: message }) => !message.is_empty(),
         _ => true,
     }
 }
 
 fn normalize_index(idx: isize, max: isize) -> usize {
-    usize::try_from(if idx.is_negative() { max - idx } else { idx }).unwrap()
+    usize::try_from(if idx.is_negative() { max + idx } else { idx }).unwrap()
 }

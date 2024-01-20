@@ -8,7 +8,7 @@ use crate::{
     code::instructions_to_string,
     compiler::Compiler,
     lexer::Lexer,
-    object::{Array, Boolean, Char, Dict, Float, Hashable, Int, Object, Str, NULL_OBJ},
+    object::{Array, Dict, Hashable, Object, Str, NULL_OBJ},
     parser::Parser,
 };
 
@@ -621,35 +621,15 @@ fn test_dict_literals() {
         VMTestCase {
             input: "{1: 2, 2: 3}".to_string(),
             expected: Box::new(HashMap::from([
-                (
-                    Hashable::from_object(&Object::Int(Int { value: 1 }))
-                        .unwrap()
-                        .hash(),
-                    2,
-                ),
-                (
-                    Hashable::from_object(&Object::Int(Int { value: 2 }))
-                        .unwrap()
-                        .hash(),
-                    3,
-                ),
+                (Hashable::from_object(&Object::int(1)).unwrap().hash(), 2),
+                (Hashable::from_object(&Object::int(2)).unwrap().hash(), 3),
             ])),
         },
         VMTestCase {
             input: "{1 + 1: 2 * 2, 3 + 3: 4 * 4}".to_string(),
             expected: Box::new(HashMap::from([
-                (
-                    Hashable::from_object(&Object::Int(Int { value: 2 }))
-                        .unwrap()
-                        .hash(),
-                    4,
-                ),
-                (
-                    Hashable::from_object(&Object::Int(Int { value: 6 }))
-                        .unwrap()
-                        .hash(),
-                    16,
-                ),
+                (Hashable::from_object(&Object::int(2)).unwrap().hash(), 4),
+                (Hashable::from_object(&Object::int(6)).unwrap().hash(), 16),
             ])),
         },
     ];
@@ -1168,7 +1148,11 @@ fn test_assign_expressions() {
 fn test_builtin_method_expressions() {
     let test_cases = [
         VMTestCase {
-            input: "[2, 3].contains(2)".to_string(),
+            input: "{1:1, 2:2, 3:3}.len()".to_string(),
+            expected: Box::new(3),
+        },
+        VMTestCase {
+            input: "var isDigit = 'a'.isDigit; isDigit(16)".to_string(),
             expected: Box::new(true),
         },
         VMTestCase {
@@ -1176,11 +1160,7 @@ fn test_builtin_method_expressions() {
             expected: Box::new(3),
         },
         VMTestCase {
-            input: "{1:1, 2:2, 3:3}.len()".to_string(),
-            expected: Box::new(3),
-        },
-        VMTestCase {
-            input: "var isDigit = 'a'.isDigit; isDigit(16)".to_string(),
+            input: "[2, 3].contains(2)".to_string(),
             expected: Box::new(true),
         },
     ];
@@ -1242,19 +1222,19 @@ fn test_expected_object(expected: &Box<dyn Any>, actual: &Object) {
 }
 
 fn test_integer_object(expected: isize, actual: &Object) {
-    assert_eq!(&Object::Int(Int { value: expected }), actual);
+    assert_eq!(&Object::int(expected), actual);
 }
 
 fn test_boolean_object(expected: bool, actual: &Object) {
-    assert_eq!(&Object::Boolean(Boolean { value: expected }), actual);
+    assert_eq!(&Object::bool(expected), actual);
 }
 
 fn test_float_object(expected: f64, actual: &Object) {
-    assert_eq!(&Object::Float(Float { value: expected }), actual);
+    assert_eq!(&Object::float(expected), actual);
 }
 
 fn test_char_object(expected: char, actual: &Object) {
-    assert_eq!(&Object::Char(Char { value: expected }), actual);
+    assert_eq!(&Object::char(expected), actual);
 }
 
 fn test_string_object(expected: &str, actual: &Object) {
@@ -1271,9 +1251,7 @@ fn test_array_object(expected: &[i32], actual: &Object) {
         &Object::Array(Array {
             elements: expected
                 .iter()
-                .map(|el| Object::Int(Int {
-                    value: (*el).try_into().unwrap()
-                }))
+                .map(|el| Object::int(*el as isize))
                 .collect()
         }),
         actual
@@ -1286,12 +1264,7 @@ fn test_dict_object(expected: &HashMap<u64, i32>, actual: &Object) {
 
         for (&expected_key, &expected_value) in expected {
             let value = &pairs[&expected_key].value;
-            assert_eq!(
-                value,
-                &Object::Int(Int {
-                    value: expected_value.try_into().unwrap()
-                })
-            );
+            assert_eq!(value, &Object::int(expected_value as isize));
         }
     }
 }

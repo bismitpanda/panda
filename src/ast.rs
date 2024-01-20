@@ -451,7 +451,7 @@ pub enum Lit {
     Float {
         value: f64,
     },
-    Boolean {
+    Bool {
         value: bool,
     },
     Null,
@@ -482,7 +482,7 @@ impl Display for Lit {
                     .join(", ")
             ),
 
-            Self::Boolean { value } => write!(f, "{value}"),
+            Self::Bool { value } => write!(f, "{value}"),
 
             Self::Char { value } => write!(f, "{value}"),
 

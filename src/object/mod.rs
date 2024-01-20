@@ -9,13 +9,16 @@ use std::{
 use ahash::AHasher;
 
 use super::{Environment, Write};
-use crate::{ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable};
+use crate::{
+    ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable,
+    hash::METHOD_NAMES,
+};
 
 pub type BuiltinFunction = fn(&Object, &[Object]) -> Object;
 
-pub const TRUE: Object = Object::Boolean(Boolean { value: true });
-pub const FALSE: Object = Object::Boolean(Boolean { value: false });
-pub const NULL_OBJ: Object = Object::Null {};
+pub const TRUE: Object = Object::bool(true);
+pub const FALSE: Object = Object::bool(false);
+pub const NULL_OBJ: Object = Object::Null;
 
 pub const DIR_ENV_VAR_NAME: &str = "STARTING_POINT_DIR";
 
@@ -41,7 +44,7 @@ pub struct Char {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct Boolean {
+pub struct Bool {
     pub value: bool,
 }
 
@@ -52,7 +55,7 @@ pub struct Str {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Error {
-    pub message: String,
+    pub value: String,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -99,7 +102,7 @@ impl ClassMember {
 #[derive(Clone, PartialEq, Debug)]
 pub struct Class {
     pub name: String,
-    pub members: HashMap<u8, ClassMember>,
+    pub members: HashMap<usize, ClassMember>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -169,7 +172,7 @@ pub struct Iter {
 pub enum Object {
     Int(Int),
     Float(Float),
-    Boolean(Boolean),
+    Bool(Bool),
     Str(Str),
     Char(Char),
     Null,
@@ -188,6 +191,32 @@ pub enum Object {
     Iter(Iter),
 }
 
+impl Object {
+    pub const fn int(value: isize) -> Self {
+        Self::Int(Int { value })
+    }
+
+    pub const fn float(value: f64) -> Self {
+        Self::Float(Float { value })
+    }
+
+    pub const fn char(value: char) -> Self {
+        Self::Char(Char { value })
+    }
+
+    pub const fn bool(value: bool) -> Self {
+        Self::Bool(Bool { value })
+    }
+
+    pub const fn str(value: String) -> Self {
+        Self::Str(Str { value })
+    }
+
+    pub const fn error(value: String) -> Self {
+        Self::Error(Error { value })
+    }
+}
+
 impl Display for Object {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -201,7 +230,7 @@ impl Display for Object {
                     .join(", ")
             ),
 
-            Self::Boolean(Boolean { value }) => write!(f, "{value}"),
+            Self::Bool(Bool { value }) => write!(f, "{value}"),
 
             Self::Builtin(Builtin { name, .. }) => write!(f, "built-in function \"{name}\""),
 
@@ -209,7 +238,7 @@ impl Display for Object {
 
             Self::Class(Class { name, .. }) => write!(f, "<class \"{name}\">"),
 
-            Self::Error(Error { message }) => write!(f, "{message}"),
+            Self::Error(Error { value: message }) => write!(f, "{message}"),
 
             Self::Float(Float { value }) => write!(f, "{value}"),
 
@@ -263,7 +292,7 @@ impl Object {
         match self {
             Self::Int(_)
             | Self::Float(_)
-            | Self::Boolean(_)
+            | Self::Bool(_)
             | Self::Null
             | Self::ReturnValue(_)
             | Self::Builtin(_)
@@ -280,7 +309,7 @@ impl Object {
 
             Self::Str(Str { value }) => format!("\"{value}\""),
 
-            Self::Error(Error { message }) => format!("ERROR: {message}"),
+            Self::Error(Error { value: message }) => format!("ERROR: {message}"),
 
             Self::Array(Array { elements }) => format!(
                 "({} elements)[{}]",
@@ -308,7 +337,7 @@ impl Object {
         let out = match self {
             Self::Int(_) => "INT",
             Self::Float(_) => "FLOAT",
-            Self::Boolean(_) => "BOOLEAN",
+            Self::Bool(_) => "BOOLEAN",
             Self::Null => "NULL",
             Self::ReturnValue(_) => "RETURN_VALUE",
             Self::Builtin(_) => "BUILTIN",
@@ -342,11 +371,13 @@ impl Object {
         }
     }
 
-    pub fn call_method(&self, method: u8, params: Option<&[Self]>) -> Self {
+    pub fn call_method(&self, method: usize, params: Option<&[Self]>) -> Self {
+        dbg!(self, params);
+
         match self {
             Self::Class(Class { name, members }) => members.get(&method).map_or_else(
                 || {
-                    new_error(format!(
+                    Object::error(format!(
                         "no method named \"{method}\" found for class \"{name}\"",
                     ))
                 },
@@ -359,9 +390,14 @@ impl Object {
             | Self::Char(_)
             | Self::Array(_)
             | Self::Dict(_) => {
+                let method_name = METHOD_NAMES[method];
+
                 let (_, func) = builtins::BUILTIN_METHODS[self.get_id()]
                     .iter()
-                    .find(|(name, _)| hash_method_name(name) == method)
+                    .find(|(name, _)| {
+                        println!("{name} {method_name}");
+                        *name == method_name
+                    })
                     .unwrap();
 
                 params.map_or_else(
@@ -376,7 +412,7 @@ impl Object {
                 )
             }
 
-            _ => new_error(format!("{} cannot have user-defined method", self.kind())),
+            _ => Object::error(format!("{} cannot have user-defined method", self.kind())),
         }
     }
 }
@@ -393,16 +429,12 @@ fn intersperse<T: Copy, U: Iterator<Item = T>>(iter: U, sep: T) -> Vec<T> {
     out
 }
 
-fn new_error(message: String) -> Object {
-    Object::Error(Error { message })
-}
-
 pub fn allowed_in_array(obj: &Object) -> bool {
     matches!(
         obj,
         Object::Int(_)
             | Object::Float(_)
-            | Object::Boolean(_)
+            | Object::Bool(_)
             | Object::Null
             | Object::Str(_)
             | Object::Char(_)
@@ -413,29 +445,29 @@ pub fn allowed_in_array(obj: &Object) -> bool {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum Hashable {
-    Char(Char),
-    Int(Int),
-    Boolean(Boolean),
-    Str(Str),
+    Char(char),
+    Int(isize),
+    Bool(bool),
+    Str(String),
 }
 
 impl Hashable {
     pub fn hash(&self) -> u64 {
         let mut hasher = AHasher::default();
         match self {
-            Self::Char(Char { value }) => {
+            Self::Char(value) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
-            Self::Int(Int { value }) => {
+            Self::Int(value) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
-            Self::Boolean(Boolean { value }) => {
+            Self::Bool(value) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
-            Self::Str(Str { value }) => {
+            Self::Str(value) => {
                 value.hash(&mut hasher);
                 hasher.finish()
             }
@@ -444,19 +476,19 @@ impl Hashable {
 
     pub fn to_object(&self) -> Object {
         match self {
-            Self::Char(node) => Object::Char(node.clone()),
-            Self::Int(node) => Object::Int(node.clone()),
-            Self::Boolean(node) => Object::Boolean(node.clone()),
-            Self::Str(node) => Object::Str(node.clone()),
+            Self::Char(node) => Object::char(*node),
+            Self::Int(node) => Object::int(*node),
+            Self::Bool(node) => Object::bool(*node),
+            Self::Str(node) => Object::str(node.clone()),
         }
     }
 
     pub fn from_object(obj: &Object) -> Option<Self> {
         match obj {
-            Object::Char(node) => Some(Self::Char(node.clone())),
-            Object::Int(node) => Some(Self::Int(node.clone())),
-            Object::Boolean(node) => Some(Self::Boolean(node.clone())),
-            Object::Str(node) => Some(Self::Str(node.clone())),
+            Object::Char(node) => Some(Self::Char(node.value)),
+            Object::Int(node) => Some(Self::Int(node.value)),
+            Object::Bool(node) => Some(Self::Bool(node.value)),
+            Object::Str(node) => Some(Self::Str(node.value.clone())),
             _ => None,
         }
     }
@@ -465,10 +497,10 @@ impl Hashable {
 impl Display for Hashable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Boolean(Boolean { value }) => write!(f, "{value}"),
-            Self::Char(Char { value }) => write!(f, "{value}"),
-            Self::Int(Int { value }) => write!(f, "{value}"),
-            Self::Str(Str { value }) => write!(f, "{value}"),
+            Self::Bool(value) => write!(f, "{value}"),
+            Self::Char(value) => write!(f, "{value}"),
+            Self::Int(value) => write!(f, "{value}"),
+            Self::Str(value) => write!(f, "{value}"),
         }
     }
 }
@@ -512,9 +544,7 @@ impl Iterable {
 
     pub fn get(&self, idx: usize) -> Object {
         match self {
-            Self::Range(ast_node) => Object::Int(Int {
-                value: ast_node.nth(idx),
-            }),
+            Self::Range(ast_node) => Object::int(ast_node.nth(idx)),
             Self::Array(ast_node) => ast_node.elements[idx].clone(),
             Self::Dict(ast_node) => ast_node
                 .pairs
@@ -527,23 +557,10 @@ impl Iterable {
                 .value
                 .chars()
                 .nth(idx)
-                .map(|value| Object::Char(Char { value }))
+                .map(|value| Object::char(value))
                 .unwrap(),
         }
     }
-}
-
-pub fn hash_method_name(name: &str) -> u8 {
-    let mut hasher = AHasher::default();
-    name.hash(&mut hasher);
-    let hash = hasher.finish();
-
-    let mut out = 0u8;
-    for i in 0..4 {
-        out ^= (hash >> (i * 8)) as u8;
-    }
-
-    out
 }
 
 #[cfg(test)]
@@ -552,19 +569,11 @@ mod tests {
 
     #[test]
     fn test_string_hash_key() {
-        let hello1 = Hashable::Str(Str {
-            value: "Hello World!".to_string(),
-        });
-        let hello2 = Hashable::Str(Str {
-            value: "Hello World!".to_string(),
-        });
+        let hello1 = Hashable::Str("Hello World!".to_string());
+        let hello2 = Hashable::Str("Hello World!".to_string());
 
-        let diff1 = Hashable::Str(Str {
-            value: "My name is johnny.".to_string(),
-        });
-        let diff2 = Hashable::Str(Str {
-            value: "My name is johnny.".to_string(),
-        });
+        let diff1 = Hashable::Str("My name is johnny.".to_string());
+        let diff2 = Hashable::Str("My name is johnny.".to_string());
 
         assert_eq!(
             hello1.hash(),

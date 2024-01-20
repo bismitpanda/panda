@@ -277,7 +277,7 @@ impl<'a> Parser<'a> {
             Kind::IntLiteral => self.parse_integer_literal(),
             Kind::FloatLiteral => self.parse_float_literal(),
             Kind::False | Kind::True => Some(Expression::Literal(Literal {
-                lit: Lit::Boolean {
+                lit: Lit::Bool {
                     value: self.cur_token_is(Kind::True),
                 },
             })),
