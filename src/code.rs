@@ -1,10 +1,14 @@
 use std::{fmt::Write, vec::from_elem};
 
+use num_enum::TryFromPrimitive;
 use strum::{Display, EnumIter};
 
 pub type Instructions = Vec<u8>;
 
-#[derive(Clone, Copy, Display, EnumIter, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(
+    Clone, Copy, Display, EnumIter, PartialEq, Eq, PartialOrd, Ord, Debug, TryFromPrimitive,
+)]
+#[repr(u8)]
 pub enum Opcode {
     Constant,
     Pop,
@@ -16,6 +20,9 @@ pub enum Opcode {
     Sub,
     Mul,
     Div,
+    Mod,
+
+    // Infix bitwise operators
     BitXor,
     BitAnd,
     BitOr,
@@ -81,68 +88,6 @@ pub enum Opcode {
     String,
 }
 
-impl TryFrom<u8> for Opcode {
-    type Error = String;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        let op = match value {
-            0 => Self::Constant,
-            1 => Self::Pop,
-            2 => Self::PopNoRet,
-            3 => Self::Dup,
-            4 => Self::Add,
-            5 => Self::Sub,
-            6 => Self::Mul,
-            7 => Self::Div,
-            8 => Self::BitXor,
-            9 => Self::BitAnd,
-            10 => Self::BitOr,
-            11 => Self::Shr,
-            12 => Self::Shl,
-            13 => Self::True,
-            14 => Self::False,
-            15 => Self::Null,
-            16 => Self::Equal,
-            17 => Self::NotEqual,
-            18 => Self::GreaterThan,
-            19 => Self::GreaterThanEqual,
-            20 => Self::Minus,
-            21 => Self::Bang,
-            22 => Self::And,
-            23 => Self::Or,
-            24 => Self::Jump,
-            25 => Self::JumpNotTruthy,
-            26 => Self::GetGlobal,
-            27 => Self::SetGlobal,
-            28 => Self::Array,
-            29 => Self::Dict,
-            30 => Self::Index,
-            31 => Self::Range,
-            32 => Self::ReturnValue,
-            33 => Self::Call,
-            34 => Self::Return,
-            35 => Self::GetLocal,
-            36 => Self::SetLocal,
-            37 => Self::GetBuiltin,
-            38 => Self::Closure,
-            39 => Self::GetFree,
-            40 => Self::CurrentClosure,
-            41 => Self::Method,
-            42 => Self::Scope,
-            43 => Self::Constructor,
-            44 => Self::ClassMember,
-            45 => Self::Delete,
-            46 => Self::Next,
-            47 => Self::Start,
-            48 => Self::JumpEnd,
-            49 => Self::String,
-            _ => return Err(format!("{value} is not a valid Opcode.")),
-        };
-
-        Ok(op)
-    }
-}
-
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Definition {
@@ -181,6 +126,10 @@ const DEFINITIONS: &[Definition] = &[
     },
     Definition {
         name: "Div",
+        operand_widths: &[],
+    },
+    Definition {
+        name: "Mod",
         operand_widths: &[],
     },
     Definition {

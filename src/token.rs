@@ -41,6 +41,7 @@ pub enum Kind {
     Bang,
     Asterisk,
     Slash,
+    Modulo,
 
     // Equality Operators
     Lt,
@@ -57,7 +58,7 @@ pub enum Kind {
     Shr,
     Shl,
 
-    // Binary Operators
+    // Boolean Operators
     And,
     Or,
 

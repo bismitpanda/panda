@@ -50,6 +50,7 @@ impl Lexer {
                     Token::new(Kind::Assign, self.ch.to_string())
                 }
             }
+            '%' => Token::new(Kind::Modulo, self.ch.to_string()),
             '+' => Token::new(Kind::Plus, self.ch.to_string()),
             '-' => Token::new(Kind::Minus, self.ch.to_string()),
             '!' => {
@@ -265,7 +266,7 @@ var add = fn(x, y) {
 };
 
 var result = add(five, ten);
-!-/*5;
+!-/*%5;
 5 < 10 > 5;
 
 if (5 < 10) {
@@ -342,6 +343,7 @@ class test() {
             TestCase::new(Kind::Minus, "-"),
             TestCase::new(Kind::Slash, "/"),
             TestCase::new(Kind::Asterisk, "*"),
+            TestCase::new(Kind::Modulo, "%"),
             TestCase::new(Kind::IntLiteral, "5"),
             TestCase::new(Kind::Semicolon, ";"),
             TestCase::new(Kind::IntLiteral, "5"),

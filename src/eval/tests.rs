@@ -50,6 +50,10 @@ fn test_eval_integer_expression() {
             expected: Object::int(20),
         },
         TestCase {
+            input: "5 % 2 + 10",
+            expected: Object::int(11),
+        },
+        TestCase {
             input: "5 + 2 * 10",
             expected: Object::int(25),
         },
@@ -814,6 +818,39 @@ i",
             input: "var arr = [];
 for (i in 0..2) {
     arr = arr.push(i)
+}
+
+arr",
+            expected: Object::array(Vec::from([Object::int(0), Object::int(1)])),
+        },
+    ];
+
+    for test_case in test_cases {
+        let evaluated = test_eval(test_case.input);
+        assert_eq!(evaluated, test_case.expected);
+    }
+}
+
+#[test]
+fn test_while_statement() {
+    let test_cases = [
+        TestCase {
+            input: "var i = 0;
+var j = 0;
+while (j < 10) {
+    i = i + j;
+    j = j + 1;
+}
+
+i",
+            expected: Object::int(45),
+        },
+        TestCase {
+            input: "var arr = [];
+var i = 0;
+while (i < 2) {
+    arr = arr.push(i)
+    i = i + 1;
 }
 
 arr",

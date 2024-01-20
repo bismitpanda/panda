@@ -397,6 +397,7 @@ impl Compiler {
                         Operator::Sub => self.emit_op(Opcode::Sub),
                         Operator::Mul => self.emit_op(Opcode::Mul),
                         Operator::Div => self.emit_op(Opcode::Div),
+                        Operator::Mod => self.emit_op(Opcode::Mod),
                         Operator::BitXor => self.emit_op(Opcode::BitXor),
                         Operator::BitAnd => self.emit_op(Opcode::BitAnd),
                         Operator::BitOr => self.emit_op(Opcode::BitOr),

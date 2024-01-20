@@ -1,7 +1,6 @@
-use std::{
-    fmt::{Debug, Display},
-    str::FromStr,
-};
+use std::fmt::{Debug, Display};
+
+use crate::token::Kind;
 
 pub type BlockStatement = Vec<Statement>;
 pub type Ident = String;
@@ -512,6 +511,7 @@ pub enum Operator {
     Sub,
     Mul,
     Div,
+    Mod,
     BitXor,
     BitAnd,
     BitOr,
@@ -523,41 +523,32 @@ pub enum Operator {
     LtEq,
 }
 
-impl FromStr for Operator {
-    type Err = String;
+impl TryFrom<Kind> for Operator {
+    type Error = ();
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let op = match s {
-            "==" => Self::Eq,
-            "!=" => Self::NotEq,
-            "&&" => Self::And,
-            "||" => Self::Or,
-            "!" => Self::Bang,
-            "+" => Self::Add,
-            "-" => Self::Sub,
-            "*" => Self::Mul,
-            "/" => Self::Div,
-            "^" => Self::BitXor,
-            "&" => Self::BitAnd,
-            "|" => Self::BitOr,
-            ">>" => Self::Shr,
-            "<<" => Self::Shl,
-            ">" => Self::Gt,
-            "<" => Self::Lt,
-            ">=" => Self::GtEq,
-            "<=" => Self::LtEq,
-            _ => return Err(format!("invalid operator: {s}")),
-        };
-
-        Ok(op)
-    }
-}
-
-impl TryFrom<String> for Operator {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::from_str(&value)
+    fn try_from(value: Kind) -> Result<Self, Self::Error> {
+        match value {
+            Kind::Eq => Ok(Self::Eq),
+            Kind::NotEq => Ok(Self::NotEq),
+            Kind::And => Ok(Self::And),
+            Kind::Or => Ok(Self::Or),
+            Kind::Bang => Ok(Self::Bang),
+            Kind::Plus => Ok(Self::Add),
+            Kind::Minus => Ok(Self::Sub),
+            Kind::Asterisk => Ok(Self::Mul),
+            Kind::Slash => Ok(Self::Div),
+            Kind::Modulo => Ok(Self::Mod),
+            Kind::Caret => Ok(Self::BitXor),
+            Kind::BitAnd => Ok(Self::BitAnd),
+            Kind::BitOr => Ok(Self::BitOr),
+            Kind::Shr => Ok(Self::Shr),
+            Kind::Shl => Ok(Self::Shl),
+            Kind::Gt => Ok(Self::Gt),
+            Kind::Lt => Ok(Self::Lt),
+            Kind::GtEq => Ok(Self::GtEq),
+            Kind::LtEq => Ok(Self::LtEq),
+            _ => Err(()),
+        }
     }
 }
 
@@ -573,6 +564,7 @@ impl Display for Operator {
             Self::Sub => "-",
             Self::Mul => "*",
             Self::Div => "/",
+            Self::Mod => "%",
             Self::BitXor => "^",
             Self::BitAnd => "&",
             Self::BitOr => "|",

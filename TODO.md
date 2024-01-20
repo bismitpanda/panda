@@ -56,7 +56,7 @@
 -   [x] Delete
 -   [x] ExpressionStmt
 -   [x] Function
--   [ ] While
+-   [x] While
 -   [x] For
 -   [ ] ClassDecl
 -   [ ] Import

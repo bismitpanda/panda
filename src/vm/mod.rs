@@ -109,7 +109,7 @@ impl<'a> VM<'a> {
             ip = self.current_frame().ip as usize;
             ins = self.current_frame().instructions();
 
-            op = TryInto::<Opcode>::try_into(ins[ip])?;
+            op = ins[ip].try_into().unwrap();
 
             match op {
                 Opcode::Constant => {
@@ -123,6 +123,7 @@ impl<'a> VM<'a> {
                 | Opcode::Sub
                 | Opcode::Mul
                 | Opcode::Div
+                | Opcode::Mod
                 | Opcode::BitXor
                 | Opcode::BitAnd
                 | Opcode::BitOr
@@ -566,6 +567,7 @@ impl VM<'_> {
             Opcode::Sub => left - right,
             Opcode::Mul => left * right,
             Opcode::Div => left / right,
+            Opcode::Mod => left % right,
             Opcode::BitXor => left ^ right,
             Opcode::BitAnd => left & right,
             Opcode::BitOr => left | right,
@@ -588,6 +590,7 @@ impl VM<'_> {
             Opcode::Sub => left - right,
             Opcode::Mul => left * right,
             Opcode::Div => left / right,
+            Opcode::Mod => left % right,
             _ => return Err(format!("unknown float operation: {op}")),
         };
 

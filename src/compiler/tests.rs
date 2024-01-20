@@ -78,6 +78,16 @@ fn test_integer_arithmetic() {
             ]),
         },
         CompilerTestCase {
+            input: "1 % 2".to_string(),
+            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_instructions: Vec::from([
+                make(Opcode::Constant, &[0]),
+                make(Opcode::Constant, &[1]),
+                make(Opcode::Mod, &[]),
+                make(Opcode::Pop, &[]),
+            ]),
+        },
+        CompilerTestCase {
             input: "1 ^ 2".to_string(),
             expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
             expected_instructions: Vec::from([

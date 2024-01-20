@@ -308,6 +308,7 @@ impl<'a> Parser<'a> {
                 | Kind::Minus
                 | Kind::Slash
                 | Kind::Asterisk
+                | Kind::Modulo
                 | Kind::Eq
                 | Kind::NotEq
                 | Kind::Lt
@@ -492,7 +493,7 @@ impl Parser<'_> {
         let right = self.parse_expression(Precedence::Prefix)?;
 
         Some(Expression::Prefix(Prefix {
-            operator: token.tok_lit.try_into().ok()?,
+            operator: token.tok_type.try_into().ok()?,
             right: Box::new(right),
         }))
     }
@@ -507,7 +508,7 @@ impl Parser<'_> {
 
         Some(Expression::Infix(Infix {
             left: Box::new(left),
-            operator: token.tok_lit.try_into().ok()?,
+            operator: token.tok_type.try_into().ok()?,
             right: Box::new(right),
         }))
     }
