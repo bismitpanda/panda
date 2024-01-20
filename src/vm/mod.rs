@@ -317,10 +317,10 @@ impl<'a> VM<'a> {
 
                 Opcode::Method => {
                     let method_idx = code::read_usize(&ins, ip + 1);
-                    let has_arguments = code::read_bool(&ins, ip + 2);
-                    let num_args = code::read_u8(&ins, ip + 3);
+                    let has_arguments = code::read_bool(&ins, ip + 9);
+                    let num_args = code::read_u8(&ins, ip + 10);
 
-                    self.current_frame().ip += 3;
+                    self.current_frame().ip += 10;
 
                     self.exec_method_expression(num_args, method_idx, has_arguments)?;
                 }
