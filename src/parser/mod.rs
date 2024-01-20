@@ -419,6 +419,13 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_import_statement(&mut self) -> Option<Statement> {
+        let class = if self.peek_token_is(Kind::Class) {
+            self.next_token();
+            true
+        } else {
+            false
+        };
+
         if !self.expect_peek(Kind::StrLiteral) {
             return None;
         }
@@ -436,7 +443,7 @@ impl<'a> Parser<'a> {
             None
         };
 
-        Some(Statement::Import(Import { path, alias }))
+        Some(Statement::Import(Import { path, class, alias }))
     }
 }
 
@@ -760,7 +767,7 @@ impl Parser<'_> {
     }
 
     fn parse_scope_expression(&mut self, left: Expression) -> Option<Expression> {
-        let Expression::Identifier(Identifier { value: module, .. }) = left else {
+        let Expression::Identifier(Identifier { value: module }) = left else {
             self.errors.push("expected IDENT".to_string());
             return None;
         };

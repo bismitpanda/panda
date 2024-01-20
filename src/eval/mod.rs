@@ -28,7 +28,7 @@ mod tests;
 
 pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
     match node {
-        Node::Program { statements, .. } => {
+        Node::Program { statements } => {
             return eval_program(&statements, environment);
         }
 
@@ -45,7 +45,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 }
             }
 
-            Statement::Return(Return { return_value, .. }) => {
+            Statement::Return(Return { return_value }) => {
                 let value = eval(Node::Expr(return_value), environment)?;
 
                 if is_error(&value) {
@@ -93,9 +93,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 );
             }
 
-            Statement::While(While {
-                condition, body, ..
-            }) => {
+            Statement::While(While { condition, body }) => {
                 let mut condition_obj = eval(Node::Expr(condition.clone()), environment)?;
 
                 if is_error(&condition_obj) {
@@ -148,7 +146,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 environment.set_type(ast_node.ident.clone(), ast_node);
             }
 
-            Statement::Import(Import { path, alias, .. }) => {
+            Statement::Import(Import { path, alias, class }) => {
                 let path_buf = PathBuf::from(&path);
                 let start_dir = std::env::var(DIR_ENV_VAR_NAME).ok()?;
 
@@ -182,6 +180,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                     if let Some(evaluated) = evaluated {
                         if matches!(evaluated, Object::Error { .. }) {
                             println!("{}", evaluated.inspect());
+                            return None;
                         }
                     }
 
@@ -194,6 +193,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                         EvaluatedModule {
                             environment: module_env,
                             name: module_name,
+                            class,
                         },
                     );
                 }
@@ -207,7 +207,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 return Some(Object::ControlFlow(ControlFlow::Continue));
             }
 
-            Statement::Delete(Delete { delete_ident, .. }) => {
+            Statement::Delete(Delete { delete_ident }) => {
                 return environment.delete(&delete_ident).map_or_else(
                     || {
                         Some(Object::error(format!(
@@ -220,9 +220,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
         },
 
         Node::Expr(expr) => match expr {
-            Expression::Prefix(Prefix {
-                right, operator, ..
-            }) => {
+            Expression::Prefix(Prefix { right, operator }) => {
                 let right = eval(Node::Expr(*right), environment)?;
 
                 if is_error(&right) {
@@ -262,7 +260,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 return eval_if_expression(*condition, &consequence, alternative, environment);
             }
 
-            Expression::Identifier(Identifier { value, .. }) => {
+            Expression::Identifier(Identifier { value }) => {
                 return Some(eval_identifier(value, environment));
             }
 
@@ -296,9 +294,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 return Some(apply_function(&function, &args));
             }
 
-            Expression::Index(Index {
-                left, expr: index, ..
-            }) => {
+            Expression::Index(Index { left, expr: index }) => {
                 let left = eval(Node::Expr(*left), environment)?;
 
                 if is_error(&left) {
@@ -314,7 +310,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 return Some(eval_index_expression(&left, &index));
             }
 
-            Expression::Assign(Assign { to, value, .. }) => {
+            Expression::Assign(Assign { to, value }) => {
                 return eval_assign_expression(to, &value, environment);
             }
 
@@ -338,7 +334,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 ));
             }
 
-            Expression::Constructor(Constructor { constructable, .. }) => {
+            Expression::Constructor(Constructor { constructable }) => {
                 return Some(eval_constructor_expression(constructable, environment));
             }
 
@@ -406,13 +402,13 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 return Some(Object::Range(RangeObj { start, end, step }));
             }
 
-            Expression::Scope(Scope { module, member, .. }) => {
+            Expression::Scope(Scope { module, member }) => {
                 let Some(import) = environment.get_import(&module) else {
                     return Some(Object::error(format!("no module named \"{module}\" found")));
                 };
 
                 match *member {
-                    Expression::Identifier(Identifier { ref value, .. }) => {
+                    Expression::Identifier(Identifier { ref value }) => {
                         let Some((member, _)) = import.environment.get(value.clone()) else {
                             return Some(Object::error(format!(
                                 "member '{member}' not found in module '{module}'"
@@ -426,9 +422,8 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                         ref arguments,
                         ..
                     }) => {
-                        let Expression::Identifier(Identifier {
-                            value: member_name, ..
-                        }) = *function.clone()
+                        let Expression::Identifier(Identifier { value: member_name }) =
+                            *function.clone()
                         else {
                             return Some(Object::error(
                                 "expected Identifier in scope expression".to_string(),
@@ -459,7 +454,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 };
             }
 
-            Expression::Literal(Literal { lit, .. }) => match lit {
+            Expression::Literal(Literal { lit }) => match lit {
                 Lit::Int { value } => return Some(Object::int(value)),
 
                 Lit::Float { value } => return Some(Object::float(value)),
@@ -498,7 +493,7 @@ fn eval_constructor_expression(
     environment: &mut Environment,
 ) -> Object {
     match constructable {
-        Constructable::Identifier(Identifier { ref value, .. }) => {
+        Constructable::Identifier(Identifier { ref value }) => {
             let Some(class) = environment.get_type(value) else {
                 return Object::error(format!("no class named '{value}' found."));
             };
@@ -548,7 +543,7 @@ fn eval_constructor_expression(
             arguments,
             ..
         }) => {
-            let Expression::Identifier(Identifier { value: member, .. }) = *function else {
+            let Expression::Identifier(Identifier { value: member }) = *function else {
                 return Object::error(String::new());
             };
 
@@ -619,7 +614,7 @@ fn eval_constructor_expression(
             };
 
             match *member.clone() {
-                Expression::Identifier(Identifier { value, .. }) => {
+                Expression::Identifier(Identifier { value }) => {
                     let Some(class) = module.environment.get_type(&value) else {
                         return Object::error(format!(
                             "no class named '{}' found in module '{}'",
@@ -672,7 +667,7 @@ fn eval_constructor_expression(
                     arguments,
                     ..
                 }) => {
-                    let Expression::Identifier(Identifier { value: member, .. }) = *function else {
+                    let Expression::Identifier(Identifier { value: member }) = *function else {
                         return Object::error(String::new());
                     };
 
@@ -1286,7 +1281,7 @@ fn eval_assign_expression(
     }
 
     match to {
-        Assignable::Identifier(Identifier { value, .. }) => {
+        Assignable::Identifier(Identifier { value }) => {
             if let Some((_, mutable)) = environment.get(value.clone()) {
                 if mutable {
                     environment.set(value, val.clone(), mutable);
@@ -1298,19 +1293,14 @@ fn eval_assign_expression(
                 Some(Object::error(format!("identifier not found: {value}")))
             }
         }
-        Assignable::Index(Index {
-            left, expr: index, ..
-        }) => {
+        Assignable::Index(Index { left, expr: index }) => {
             let index = eval(Node::Expr(*index), environment)?;
 
             if is_error(&index) {
                 return Some(index);
             }
 
-            if let Expression::Identifier(Identifier {
-                value: index_ident, ..
-            }) = *left
-            {
+            if let Expression::Identifier(Identifier { value: index_ident }) = *left {
                 if let Some((data, mutable)) = environment.get(index_ident.clone()) {
                     if mutable {
                         match (data.clone(), index.clone()) {
@@ -1387,7 +1377,7 @@ fn eval_assign_expression(
         Assignable::Method(Method {
             left, name: method, ..
         }) => {
-            if let Expression::Identifier(Identifier { value, .. }) = *left {
+            if let Expression::Identifier(Identifier { value }) = *left {
                 if let Some((data, mutable)) = environment.get(value.clone()) {
                     if mutable {
                         let mut new_obj = data.clone();

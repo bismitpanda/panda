@@ -26,7 +26,7 @@ const barbaz = 121212;
         ("barbaz", false, 121_212),
     ];
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 4);
         for (i, &(name, mutable, value)) in test_cases.iter().enumerate() {
             assert_eq!(
@@ -62,7 +62,7 @@ return 838383;
 
     let test_cases = [5, 10, 838_383];
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 3);
 
         for (i, &test_case) in test_cases.iter().enumerate() {
@@ -91,7 +91,7 @@ fn test_function_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::Function(Function {
@@ -128,7 +128,7 @@ fn test_while_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::While(While {
@@ -177,7 +177,7 @@ fn test_empty_while_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::While(While {
@@ -210,7 +210,7 @@ fn test_while_with_break_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::While(While {
@@ -258,7 +258,7 @@ fn test_while_with_continue_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::While(While {
@@ -306,7 +306,7 @@ fn test_for_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::For(For {
@@ -350,7 +350,7 @@ fn test_empty_for_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::For(For {
@@ -384,7 +384,7 @@ fn test_for_with_break_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::For(For {
@@ -427,7 +427,7 @@ fn test_for_with_continue_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::For(For {
@@ -470,7 +470,7 @@ fn test_class_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ClassDecl(ClassDecl {
@@ -503,6 +503,7 @@ fn test_import_statement() {
             expected: Statement::Import(Import {
                 path: "fs".to_string(),
                 alias: None,
+                class: false,
             }),
         },
         ImportStatementTestCase {
@@ -510,13 +511,15 @@ fn test_import_statement() {
             expected: Statement::Import(Import {
                 path: "std/datetime/duration".to_string(),
                 alias: None,
+                class: false,
             }),
         },
         ImportStatementTestCase {
-            input: r#"import "std/datetime/duration" as duration"#,
+            input: r#"import class "std/datetime/duration" as dur"#,
             expected: Statement::Import(Import {
                 path: "std/datetime/duration".to_string(),
-                alias: Some("duration".to_string()),
+                alias: Some("dur".to_string()),
+                class: true,
             }),
         },
     ];
@@ -529,7 +532,7 @@ fn test_import_statement() {
 
         check_parser_errors(p);
 
-        if let Some(Node::Program { statements, .. }) = program {
+        if let Some(Node::Program { statements }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(test_case.expected, statements[0]);
         } else {
@@ -549,7 +552,7 @@ fn test_identifier_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -576,7 +579,7 @@ fn test_boolean_literal() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -603,7 +606,7 @@ fn test_integer_literal() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -630,7 +633,7 @@ fn test_float_literal() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -688,7 +691,7 @@ fn test_parsing_prefix_expressions() {
 
         check_parser_errors(p);
 
-        if let Some(Node::Program { statements, .. }) = program {
+        if let Some(Node::Program { statements }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(test_case.expected, statements[0]);
         } else {
@@ -765,7 +768,7 @@ fn test_parsing_infix_expressions() {
 
         check_parser_errors(p);
 
-        if let Some(Node::Program { statements, .. }) = program {
+        if let Some(Node::Program { statements }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(
                 Statement::ExpressionStmt(ExpressionStmt {
@@ -803,7 +806,7 @@ fn test_if_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -845,7 +848,7 @@ fn test_if_else_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -892,7 +895,7 @@ fn test_lambda_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -951,7 +954,7 @@ fn test_lambda_parameter_parsing() {
 
         check_parser_errors(p);
 
-        if let Some(Node::Program { statements, .. }) = program {
+        if let Some(Node::Program { statements }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(
                 Statement::ExpressionStmt(ExpressionStmt {
@@ -981,7 +984,7 @@ fn test_call_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1033,7 +1036,7 @@ fn test_method_call_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1072,7 +1075,7 @@ fn test_method_ident_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1105,7 +1108,7 @@ fn test_constructor_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::Declaration(Declaration {
@@ -1148,7 +1151,7 @@ fn test_constructor_expression_empty_initializer() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::Declaration(Declaration {
@@ -1178,7 +1181,7 @@ fn test_scope_constructor_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::Declaration(Declaration {
@@ -1224,7 +1227,7 @@ fn test_scope_constructor_expression_empty_initializer() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::Declaration(Declaration {
@@ -1257,7 +1260,7 @@ fn test_string_literal_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1286,7 +1289,7 @@ fn test_char_literal_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1313,7 +1316,7 @@ fn test_null_literal_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1338,7 +1341,7 @@ fn test_parsing_array_literals() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1389,7 +1392,7 @@ fn test_parsing_index_expressions() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1427,7 +1430,7 @@ fn test_parsing_dict_literal_string_keys() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1487,7 +1490,7 @@ fn test_parsing_empty_dict_literal() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1514,7 +1517,7 @@ fn test_parsing_dict_literal_with_expressions() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1619,7 +1622,7 @@ fn test_range_expression() {
 
         check_parser_errors(p);
 
-        if let Some(Node::Program { statements, .. }) = program {
+        if let Some(Node::Program { statements }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(
                 Statement::ExpressionStmt(ExpressionStmt {
@@ -1661,7 +1664,7 @@ fn test_scope_var_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1691,7 +1694,7 @@ fn test_scope_fn_expression() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
@@ -1775,7 +1778,7 @@ fn test_assign_expression() {
 
         check_parser_errors(p);
 
-        if let Some(Node::Program { statements, .. }) = program {
+        if let Some(Node::Program { statements }) = program {
             assert_eq!(statements.len(), 1);
             assert_eq!(
                 Statement::ExpressionStmt(ExpressionStmt {
@@ -1801,7 +1804,7 @@ fn test_function_literal_with_name() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
         assert_eq!(
             Statement::Declaration(Declaration {
@@ -1831,7 +1834,7 @@ fn test_delete_statement() {
 
     check_parser_errors(p);
 
-    if let Some(Node::Program { statements, .. }) = program {
+    if let Some(Node::Program { statements }) = program {
         assert_eq!(statements.len(), 1);
 
         assert_eq!(

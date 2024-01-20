@@ -26,9 +26,6 @@ pub enum Commands {
     /// Start the panda REPL
     Repl(ReplArgs),
 
-    /// Formats the provided panda source file
-    Format(FormatArgs),
-
     /// Outputs debug outputs for testing
     Debug(DebugArgs),
 }
@@ -48,16 +45,6 @@ pub struct ReplArgs {
     /// The engine to use as the interpreter
     #[arg(long, short, default_value_t = Engine::Eval)]
     pub engine: Engine,
-}
-
-#[derive(Args)]
-pub struct FormatArgs {
-    /// The input file path
-    pub file_name: String,
-
-    /// The output file path
-    #[arg(long, short)]
-    pub out: Option<String>,
 }
 
 #[derive(

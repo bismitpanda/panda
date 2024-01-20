@@ -3,7 +3,6 @@ mod cmd;
 mod code;
 mod compiler;
 mod eval;
-mod formatter;
 mod lexer;
 mod object;
 mod parser;
@@ -43,19 +42,6 @@ fn main() {
                 std::env::current_dir().unwrap().to_str().unwrap(),
             );
             start_repl(repl_args.engine).unwrap();
-        }
-
-        cmd::Commands::Format(format_args) => {
-            match formatter::formatter(&format_args.file_name) {
-                Ok(pretty) => {
-                    if let Some(out) = format_args.out {
-                        std::fs::write(out, pretty).unwrap();
-                    } else {
-                        println!("{pretty}");
-                    }
-                }
-                Err(err) => println!("{err}"),
-            };
         }
 
         cmd::Commands::Debug(debug_args) => {

@@ -16,7 +16,7 @@ pub enum Node {
 impl Display for Node {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Program { statements, .. } => {
+            Self::Program { statements } => {
                 for stmt in statements {
                     write!(f, "{stmt}")?;
                 }
@@ -83,7 +83,8 @@ pub struct ClassDecl {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Import {
-    pub path: Ident,
+    pub path: String,
+    pub class: bool,
     pub alias: Option<Ident>,
 }
 
@@ -190,21 +191,22 @@ impl Display for Statement {
                 body.iter().map(ToString::to_string).collect::<String>()
             ),
 
-            Self::Import(Import { path, alias, .. }) => write!(
+            Self::Import(Import { path, alias, class }) => write!(
                 f,
-                "import \"{}\"{}",
+                "import{} \"{}\"{}",
+                if *class { " class" } else { "" },
                 path,
                 alias
                     .clone()
                     .map_or_else(String::new, |alias| format!(" as {alias}"))
             ),
 
-            Self::Return(Return { return_value, .. }) => write!(
+            Self::Return(Return { return_value }) => write!(
                 f,
                 "return {};",
                 if matches!(
                     return_value,
-                    Expression::Literal(Literal { lit: Lit::Null, .. })
+                    Expression::Literal(Literal { lit: Lit::Null })
                 ) {
                     String::new()
                 } else {
@@ -212,9 +214,7 @@ impl Display for Statement {
                 }
             ),
 
-            Self::While(While {
-                condition, body, ..
-            }) => write!(
+            Self::While(While { condition, body }) => write!(
                 f,
                 "while ({}) {}",
                 condition,
@@ -225,7 +225,7 @@ impl Display for Statement {
 
             Self::Continue => write!(f, "continue"),
 
-            Self::Delete(Delete { delete_ident, .. }) => write!(f, "delete {delete_ident};"),
+            Self::Delete(Delete { delete_ident }) => write!(f, "delete {delete_ident};"),
         }
     }
 }
@@ -330,7 +330,7 @@ pub enum Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Assign(Assign { to, value, .. }) => write!(f, "{to} = {value};"),
+            Self::Assign(Assign { to, value }) => write!(f, "{to} = {value};"),
 
             Self::Call(Call {
                 function,
@@ -346,7 +346,7 @@ impl Display for Expression {
                     .collect::<String>()
             ),
 
-            Self::Constructor(Constructor { constructable, .. }) => {
+            Self::Constructor(Constructor { constructable }) => {
                 write!(f, "new {constructable};")
             }
 
@@ -367,7 +367,7 @@ impl Display for Expression {
                 body.iter().map(ToString::to_string).collect::<String>()
             ),
 
-            Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
+            Self::Identifier(Identifier { value }) => write!(f, "{value}"),
 
             Self::If(If {
                 condition,
@@ -388,9 +388,7 @@ impl Display for Expression {
                 ))
             ),
 
-            Self::Index(Index {
-                left, expr: index, ..
-            }) => write!(f, "({left}[{index}])"),
+            Self::Index(Index { left, expr: index }) => write!(f, "({left}[{index}])"),
 
             Self::Infix(Infix {
                 left,
@@ -399,7 +397,7 @@ impl Display for Expression {
                 ..
             }) => write!(f, "({left} {operator} {right})"),
 
-            Self::Literal(Literal { lit, .. }) => write!(f, "{lit}"),
+            Self::Literal(Literal { lit }) => write!(f, "{lit}"),
 
             Self::Method(Method {
                 left,
@@ -423,22 +421,18 @@ impl Display for Expression {
                     ))
             ),
 
-            Self::Prefix(Prefix {
-                operator, right, ..
-            }) => {
+            Self::Prefix(Prefix { operator, right }) => {
                 write!(f, "({operator}{right})")
             }
 
-            Self::Range(Range {
-                start, end, step, ..
-            }) => write!(
+            Self::Range(Range { start, end, step }) => write!(
                 f,
                 "{start}..{end}{}",
                 step.as_ref()
                     .map_or_else(String::new, |step| format!("..{step}"))
             ),
 
-            Self::Scope(Scope { module, member, .. }) => write!(f, "{module}::{member}"),
+            Self::Scope(Scope { module, member }) => write!(f, "{module}::{member}"),
         }
     }
 }
@@ -617,9 +611,9 @@ impl Display for Constructable {
                     .collect::<String>()
             ),
 
-            Self::Scope(Scope { module, member, .. }) => write!(f, "{module}::{member}"),
+            Self::Scope(Scope { module, member }) => write!(f, "{module}::{member}"),
 
-            Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
+            Self::Identifier(Identifier { value }) => write!(f, "{value}"),
         }
     }
 }
@@ -656,11 +650,9 @@ impl Display for Assignable {
                     ))
             ),
 
-            Self::Index(Index {
-                left, expr: index, ..
-            }) => write!(f, "{left}[{index}]"),
+            Self::Index(Index { left, expr: index }) => write!(f, "{left}[{index}]"),
 
-            Self::Identifier(Identifier { value, .. }) => write!(f, "{value}"),
+            Self::Identifier(Identifier { value }) => write!(f, "{value}"),
         }
     }
 }

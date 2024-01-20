@@ -100,7 +100,7 @@ impl Compiler {
 
     pub fn compile(&mut self, node: Node) -> Result<(), String> {
         match node {
-            Node::Program { statements, .. } => {
+            Node::Program { statements } => {
                 for s in statements {
                     self.compile(Node::Stmt(s))?;
                 }
@@ -141,12 +141,12 @@ impl Compiler {
                     }
                 }
 
-                Statement::Return(Return { return_value, .. }) => {
+                Statement::Return(Return { return_value }) => {
                     self.compile(Node::Expr(return_value))?;
                     self.emit_op(Opcode::ReturnValue);
                 }
 
-                Statement::Delete(Delete { delete_ident, .. }) => {
+                Statement::Delete(Delete { delete_ident }) => {
                     let Some(symbol) = self.symbol_table.delete(&delete_ident) else {
                         return Err(format!("undefined variable `{delete_ident}`"));
                     };
@@ -212,9 +212,7 @@ impl Compiler {
                     }
                 }
 
-                Statement::While(While {
-                    condition, body, ..
-                }) => {
+                Statement::While(While { condition, body }) => {
                     self.loop_state.in_loop = true;
 
                     let start_pos = self.current_instructions().len();
@@ -263,7 +261,7 @@ impl Compiler {
                     self.symbol_table.define_type(decl.ident.clone(), decl);
                 }
 
-                Statement::Import(Import { path, alias, .. }) => {
+                Statement::Import(Import { path, alias, class }) => {
                     let path_buf = PathBuf::from(&path);
                     let start_dir =
                         std::env::var(DIR_ENV_VAR_NAME).map_err(|err| err.to_string())?;
@@ -307,6 +305,7 @@ impl Compiler {
                                 symbol_table: module_symbol_table,
                                 name: module_name,
                                 constants: comp.constants,
+                                class,
                             },
                         );
                     }
@@ -413,9 +412,7 @@ impl Compiler {
                     };
                 }
 
-                Expression::Prefix(Prefix {
-                    operator, right, ..
-                }) => {
+                Expression::Prefix(Prefix { operator, right }) => {
                     self.compile(Node::Expr(*right))?;
 
                     match operator {
@@ -425,7 +422,7 @@ impl Compiler {
                     };
                 }
 
-                Expression::Literal(Literal { lit, .. }) => match lit {
+                Expression::Literal(Literal { lit }) => match lit {
                     Lit::Int { value } => {
                         let integer = Object::int(value);
                         let operand = self.add_constant(integer);
@@ -517,7 +514,7 @@ impl Compiler {
                     self.change_operand(jump_pos, after_alternative_pos);
                 }
 
-                Expression::Identifier(Identifier { value, .. }) => {
+                Expression::Identifier(Identifier { value }) => {
                     let symbol = self
                         .symbol_table
                         .resolve(&value)
@@ -526,18 +523,14 @@ impl Compiler {
                     self.load_symbol(&symbol);
                 }
 
-                Expression::Index(Index {
-                    left, expr: index, ..
-                }) => {
+                Expression::Index(Index { left, expr: index }) => {
                     self.compile(Node::Expr(*left))?;
                     self.compile(Node::Expr(*index))?;
 
                     self.emit_op(Opcode::Index);
                 }
 
-                Expression::Range(Range {
-                    start, end, step, ..
-                }) => {
+                Expression::Range(Range { start, end, step }) => {
                     if let Some(step) = step {
                         self.compile(Node::Expr(*step))?;
                         self.emit(Opcode::Range, &[3]);
@@ -617,8 +610,8 @@ impl Compiler {
                     self.emit(Opcode::Call, &[n]);
                 }
 
-                Expression::Assign(Assign { to, value, .. }) => match to {
-                    Assignable::Identifier(Identifier { value: name, .. }) => {
+                Expression::Assign(Assign { to, value }) => match to {
+                    Assignable::Identifier(Identifier { value: name }) => {
                         self.compile(Node::Expr(*value))?;
 
                         let symbol = self
@@ -678,9 +671,9 @@ impl Compiler {
                     todo!();
                 }
 
-                Expression::Constructor(Constructor { constructable, .. }) => {
+                Expression::Constructor(Constructor { constructable }) => {
                     match constructable {
-                        Constructable::Identifier(Identifier { ref value, .. }) => {
+                        Constructable::Identifier(Identifier { ref value }) => {
                             let class = self
                                 .symbol_table
                                 .resolve_type(value)

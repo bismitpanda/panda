@@ -125,6 +125,7 @@ impl Range {
 pub struct EvaluatedModule {
     pub name: String,
     pub environment: Environment,
+    pub class: bool,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -132,6 +133,7 @@ pub struct CompiledModule {
     pub name: String,
     pub symbol_table: SymbolTable,
     pub constants: Vec<Object>,
+    pub class: bool,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -212,7 +214,7 @@ impl Object {
         Self::Error(Error { value })
     }
 
-    pub const fn array(elements: Vec<Object>) -> Self {
+    pub const fn array(elements: Vec<Self>) -> Self {
         Self::Array(Array { elements })
     }
 
@@ -376,15 +378,9 @@ impl Object {
     }
 
     pub fn call_method(&self, method: usize, params: Option<&[Self]>) -> Self {
-        dbg!(self, params);
-
         match self {
             Self::Class(Class { name, members }) => members.get(&method).map_or_else(
-                || {
-                    Object::error(format!(
-                        "no method named \"{method}\" found for class \"{name}\"",
-                    ))
-                },
+                || Self::error(format!("no method found for class \"{name}\"",)),
                 |class_member| class_member.obj.clone(),
             ),
 
@@ -411,7 +407,7 @@ impl Object {
                 )
             }
 
-            _ => Object::error(format!("{} cannot have user-defined method", self.kind())),
+            _ => Self::error(format!("{} cannot have user-defined method", self.kind())),
         }
     }
 }
@@ -552,14 +548,16 @@ impl Iterable {
                 .nth(idx)
                 .map(|some| some.to_object())
                 .unwrap(),
-            Self::Str(ast_node) => ast_node
-                .value
-                .chars()
-                .nth(idx)
-                .map(|value| Object::char(value))
-                .unwrap(),
+            Self::Str(ast_node) => ast_node.value.chars().nth(idx).map(Object::char).unwrap(),
         }
     }
+}
+
+pub fn hash_method_name(method_name: &str) -> usize {
+    let mut hasher = AHasher::default();
+
+    method_name.hash(&mut hasher);
+    hasher.finish() as usize
 }
 
 #[cfg(test)]
@@ -590,11 +588,4 @@ mod tests {
             "strings with different content have same hash keys"
         );
     }
-}
-
-pub fn hash_method_name(method_name: &str) -> usize {
-    let mut hasher = AHasher::default();
-
-    method_name.hash(&mut hasher);
-    hasher.finish() as usize
 }

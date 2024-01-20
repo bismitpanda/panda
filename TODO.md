@@ -209,12 +209,6 @@
 -   [x] Recursive Functions
 -   [x] Builtin
 
-# Formatter:
-
--   [ ] Implement for `Statement`
--   [ ] Implement for `Expression`
--   [x] Implement for `Literal`
-
 # Opcode:
 
 -   [ ] Implement class method call `Opcode::Method`
