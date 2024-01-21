@@ -268,11 +268,11 @@ fn test_boolean_expressions() {
 }
 
 #[test]
-fn test_null_literal() {
+fn test_nil_literal() {
     let test_cases = [CompilerTestCase {
-        input: "null".to_string(),
+        input: "nil".to_string(),
         expected_constants: Vec::new(),
-        expected_instructions: Vec::from([make(Opcode::Null, &[]), make(Opcode::Pop, &[])]),
+        expected_instructions: Vec::from([make(Opcode::Nil, &[]), make(Opcode::Pop, &[])]),
     }];
 
     run_compiler_tests(&test_cases);
@@ -289,7 +289,7 @@ fn test_conditionals() {
                 make(Opcode::JumpNotTruthy, &[10]),
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Jump, &[11]),
-                make(Opcode::Null, &[]),
+                make(Opcode::Nil, &[]),
                 make(Opcode::PopNoRet, &[]),
                 make(Opcode::Constant, &[1]),
                 make(Opcode::PopNoRet, &[]),
@@ -1191,7 +1191,7 @@ fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) {
         } else if let Some(constant) = (*constant).downcast_ref::<Vec<Vec<u8>>>() {
             test_function_object(constant, &actual[i]);
         } else {
-            assert_eq!(&Object::Null, &actual[i]);
+            assert_eq!(&Object::Nil, &actual[i]);
         }
     }
 }

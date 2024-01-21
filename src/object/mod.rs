@@ -170,7 +170,7 @@ pub enum Object {
     Bool(Bool),
     Str(Str),
     Char(Char),
-    Null,
+    Nil,
     ReturnValue(ReturnValue),
     Error(Error),
     EvaluatedFunction(EvaluatedFunction),
@@ -264,7 +264,7 @@ impl Display for Object {
 
             Self::Int(Int { value }) => write!(f, "{value}"),
 
-            Self::Null => write!(f, "null"),
+            Self::Nil => write!(f, "nil"),
 
             Self::Range(Range { start, end, step }) => {
                 write!(f, "{start}..{end}..{step}")
@@ -299,7 +299,7 @@ impl Object {
             Self::Int(_)
             | Self::Float(_)
             | Self::Bool(_)
-            | Self::Null
+            | Self::Nil
             | Self::ReturnValue(_)
             | Self::Builtin(_)
             | Self::Range(_)
@@ -344,7 +344,7 @@ impl Object {
             Self::Int(_) => "INT",
             Self::Float(_) => "FLOAT",
             Self::Bool(_) => "BOOLEAN",
-            Self::Null => "Object::Null",
+            Self::Nil => "Object::Nil",
             Self::ReturnValue(_) => "RETURN_VALUE",
             Self::Builtin(_) => "BUILTIN",
             Self::Range(_) => "RANGE",
@@ -430,7 +430,7 @@ pub fn allowed_in_array(obj: &Object) -> bool {
         Object::Int(_)
             | Object::Float(_)
             | Object::Bool(_)
-            | Object::Null
+            | Object::Nil
             | Object::Str(_)
             | Object::Char(_)
             | Object::Array(_)

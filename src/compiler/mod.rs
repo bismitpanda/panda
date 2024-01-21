@@ -131,7 +131,7 @@ impl Compiler {
                     if let Some(value) = value {
                         self.compile(Node::Expr(value))?;
                     } else {
-                        self.emit_op(Opcode::Null);
+                        self.emit_op(Opcode::Nil);
                     }
 
                     if symbol.scope == SymbolScope::Global {
@@ -320,7 +320,7 @@ impl Compiler {
                     self.loop_state.in_loop = true;
 
                     let symbol = self.symbol_table.define(&ident, false);
-                    self.emit_op(Opcode::Null);
+                    self.emit_op(Opcode::Nil);
 
                     if symbol.scope == SymbolScope::Global {
                         self.emit(Opcode::SetGlobal, &[symbol.index]);
@@ -456,8 +456,8 @@ impl Compiler {
                         };
                     }
 
-                    Lit::Null => {
-                        self.emit_op(Opcode::Null);
+                    Lit::Nil => {
+                        self.emit_op(Opcode::Nil);
                     }
 
                     Lit::Array { elements } => {
@@ -508,7 +508,7 @@ impl Compiler {
                             self.remove_last_pop();
                         }
                     } else {
-                        self.emit_op(Opcode::Null);
+                        self.emit_op(Opcode::Nil);
                     }
 
                     let after_alternative_pos = self.current_instructions().len();
@@ -695,7 +695,7 @@ impl Compiler {
                                         if let Some(value) = decl.value {
                                             self.compile(Node::Expr(value))?;
                                         } else {
-                                            self.emit_op(Opcode::Null);
+                                            self.emit_op(Opcode::Nil);
                                         }
 
                                         self.emit(

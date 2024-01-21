@@ -203,10 +203,7 @@ impl Display for Statement {
             Self::Return(Return { return_value }) => write!(
                 f,
                 "return {};",
-                if matches!(
-                    return_value,
-                    Expression::Literal(Literal { lit: Lit::Null })
-                ) {
+                if matches!(return_value, Expression::Literal(Literal { lit: Lit::Nil })) {
                     String::new()
                 } else {
                     return_value.to_string()
@@ -447,7 +444,7 @@ pub enum Lit {
     Bool {
         value: bool,
     },
-    Null,
+    Nil,
     Str {
         value: String,
     },
@@ -493,7 +490,7 @@ impl Display for Lit {
 
             Self::Int { value } => write!(f, "{value}"),
 
-            Self::Null => write!(f, "null"),
+            Self::Nil => write!(f, "nil"),
 
             Self::Str { value } => write!(f, "{value}"),
         }

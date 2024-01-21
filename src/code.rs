@@ -32,7 +32,7 @@ pub enum Opcode {
     // Keyword literals
     True,
     False,
-    Null,
+    Nil,
 
     // Infix comparison operators
     Equal,
@@ -161,7 +161,7 @@ const DEFINITIONS: &[Definition] = &[
         operand_widths: &[],
     },
     Definition {
-        name: "Null",
+        name: "Nil",
         operand_widths: &[],
     },
     Definition {

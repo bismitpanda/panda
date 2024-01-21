@@ -55,7 +55,7 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
         }
 
         print!("{}", str_args.join(" "));
-        Object::Null
+        Object::Nil
     }),
     ("println", |_, args| {
         let mut str_args = Vec::new();
@@ -70,7 +70,7 @@ pub const BUILTINS: &[(&str, BuiltinFunction)] = &[
         }
 
         println!("{}", str_args.join(" "));
-        Object::Null
+        Object::Nil
     }),
 ];
 
@@ -703,7 +703,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
                         (Object::Str(Str { value: lhs }), Object::Str(Str { value: rhs })) => {
                             *lhs == *rhs
                         }
-                        (Object::Null, Object::Null) => true,
+                        (Object::Nil, Object::Nil) => true,
                         (Object::Array(_) | Object::Dict(_), _) => {
                             return Object::error(format!(
                                 "{} is not comparable. the array may contain same value",
@@ -756,7 +756,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             } else if let Some(first) = elements.first() {
                 first.clone()
             } else {
-                Object::Null
+                Object::Nil
             }
         }),
         ("last", |caller, params| {
@@ -768,7 +768,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             } else if let Some(last) = elements.last() {
                 last.clone()
             } else {
-                Object::Null
+                Object::Nil
             }
         }),
         ("rest", |caller, params| {
@@ -781,7 +781,7 @@ pub const BUILTIN_METHODS: &[&[(&str, BuiltinFunction)]] = &[
             } else if let Some((_, rest)) = elements.split_first() {
                 Object::array(rest.to_vec())
             } else {
-                Object::Null
+                Object::Nil
             }
         }),
         ("join", |caller, params| {

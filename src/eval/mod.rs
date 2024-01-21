@@ -66,7 +66,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 let val = if let Some(value) = value {
                     eval(Node::Expr(value), environment)?
                 } else {
-                    Object::Null
+                    Object::Nil
                 };
 
                 if is_error(&val) {
@@ -480,7 +480,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                     return eval_dict_literal(&pairs, environment);
                 }
 
-                Lit::Null => return Some(Object::Null),
+                Lit::Nil => return Some(Object::Nil),
             },
         },
     };
@@ -509,7 +509,7 @@ fn eval_constructor_expression(
             for stmt in class.body {
                 match stmt {
                     ClassStatement::Variable(decl) => {
-                        let obj = decl.value.map_or(Object::Null, |val| {
+                        let obj = decl.value.map_or(Object::Nil, |val| {
                             eval(Node::Expr(val), environment).unwrap()
                         });
                         members.insert(
@@ -566,7 +566,7 @@ fn eval_constructor_expression(
             for stmt in class.body {
                 match stmt {
                     ClassStatement::Variable(decl) => {
-                        let obj = decl.value.map_or(Object::Null, |val| {
+                        let obj = decl.value.map_or(Object::Nil, |val| {
                             eval(Node::Expr(val), environment).unwrap()
                         });
 
@@ -633,7 +633,7 @@ fn eval_constructor_expression(
                     for stmt in class.body {
                         match stmt {
                             ClassStatement::Variable(decl) => {
-                                let obj = decl.value.map_or(Object::Null, |val| {
+                                let obj = decl.value.map_or(Object::Nil, |val| {
                                     eval(Node::Expr(val), environment).unwrap()
                                 });
                                 members.insert(
@@ -693,7 +693,7 @@ fn eval_constructor_expression(
                     for stmt in class.body {
                         match stmt {
                             ClassStatement::Variable(decl) => {
-                                let obj = decl.value.map_or(Object::Null, |val| {
+                                let obj = decl.value.map_or(Object::Nil, |val| {
                                     eval(Node::Expr(val), environment).unwrap()
                                 });
                                 members.insert(
@@ -885,7 +885,7 @@ fn eval_minus_prefix_operator_expression(right: &Object) -> Object {
 
 fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Object {
     match (left.clone(), right.clone()) {
-        (Object::Null, Object::Null) => match operator {
+        (Object::Nil, Object::Nil) => match operator {
             Operator::Eq => Object::TRUE,
             Operator::NotEq => Object::FALSE,
             _ => Object::error(format!(
@@ -895,7 +895,7 @@ fn eval_infix_expression(operator: Operator, left: Object, right: Object) -> Obj
                 right.kind()
             )),
         },
-        (Object::Null, _) | (_, Object::Null) => match operator {
+        (Object::Nil, _) | (_, Object::Nil) => match operator {
             Operator::Eq => Object::FALSE,
             Operator::NotEq => Object::TRUE,
             _ => Object::error(format!(
@@ -1041,7 +1041,7 @@ fn eval_if_expression(
     } else if let Some(alternative) = alternative {
         eval_block_statement(&alternative, environment)
     } else {
-        Some(Object::Null)
+        Some(Object::Nil)
     }
 }
 
@@ -1104,7 +1104,7 @@ pub fn apply_function(func: &Object, args: &[Object]) -> Object {
         Object::EvaluatedFunction(func) => {
             let mut extended_env = extend_function_env(func.clone(), args);
             let evaluated =
-                eval_block_statement(&func.body, &mut extended_env).unwrap_or(Object::Null);
+                eval_block_statement(&func.body, &mut extended_env).unwrap_or(Object::Nil);
 
             if is_error(&evaluated) {
                 return evaluated;
@@ -1114,7 +1114,7 @@ pub fn apply_function(func: &Object, args: &[Object]) -> Object {
         }
 
         Object::Builtin(Builtin { func, caller, .. }) => func(
-            &(caller.clone().unwrap_or_else(|| Box::new(Object::Null))),
+            &(caller.clone().unwrap_or_else(|| Box::new(Object::Nil))),
             args,
         ),
 
@@ -1230,7 +1230,7 @@ fn eval_dict_index_expression(pairs: &HashMap<u64, DictPair>, index: &Object) ->
 
     pairs
         .get(&hashable.hash())
-        .map_or(Object::Null, |pair| pair.value.clone())
+        .map_or(Object::Nil, |pair| pair.value.clone())
 }
 
 fn eval_dict_literal(
@@ -1414,7 +1414,7 @@ fn eval_assign_expression(
 
 fn is_truthy(obj: &Object) -> bool {
     match obj {
-        Object::Null => false,
+        Object::Nil => false,
         Object::Bool(Bool { value }) => *value,
         Object::Int(Int { value }) => *value != 0,
         Object::Str(Str { value }) => !value.is_empty(),

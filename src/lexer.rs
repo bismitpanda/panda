@@ -284,7 +284,7 @@ if (5 < 10) {
 'c'
 '\x7f'
 '\u2022'
-null
+nil
 ^&| >= <= >> <<
 && || . .. ::
 
@@ -393,7 +393,7 @@ class test() {
             TestCase::new(Kind::CharLiteral, "c"),
             TestCase::new(Kind::CharLiteral, "\\x7f"),
             TestCase::new(Kind::CharLiteral, "\\u2022"),
-            TestCase::new(Kind::Null, "null"),
+            TestCase::new(Kind::Nil, "nil"),
             TestCase::new(Kind::Caret, "^"),
             TestCase::new(Kind::BitAnd, "&"),
             TestCase::new(Kind::BitOr, "|"),

@@ -1306,8 +1306,8 @@ fn test_char_literal_expression() {
 }
 
 #[test]
-fn test_null_literal_expression() {
-    let input = "null";
+fn test_nil_literal_expression() {
+    let input = "nil";
 
     let mut l = Lexer::new(input);
     let mut p = Parser::new(&mut l);
@@ -1321,7 +1321,7 @@ fn test_null_literal_expression() {
         assert_eq!(
             Statement::ExpressionStmt(ExpressionStmt {
                 returns: true,
-                expression: Expression::Literal(Literal { lit: Lit::Null })
+                expression: Expression::Literal(Literal { lit: Lit::Nil })
             }),
             statements[0]
         );

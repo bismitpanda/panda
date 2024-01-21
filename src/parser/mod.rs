@@ -281,7 +281,7 @@ impl<'a> Parser<'a> {
                     value: self.cur_token_is(Kind::True),
                 },
             })),
-            Kind::Null => Some(Expression::Literal(Literal { lit: Lit::Null })),
+            Kind::Nil => Some(Expression::Literal(Literal { lit: Lit::Nil })),
             Kind::Bang | Kind::Minus => self.parse_prefix_expression(),
             Kind::LParen => self.parse_grouped_expression(),
             Kind::If => self.parse_if_expression(),
@@ -291,7 +291,7 @@ impl<'a> Parser<'a> {
             Kind::LBracket => self.parse_array_literal(),
             Kind::LBrace => self.parse_dict_literal(),
             Kind::New => self.parse_constructor_expression(),
-            Kind::Semicolon => return Some(Expression::Literal(Literal { lit: Lit::Null })),
+            Kind::Semicolon => return Some(Expression::Literal(Literal { lit: Lit::Nil })),
             _ => {
                 self.no_prefix_parse_error(self.cur_tok.tok_type);
                 return None;

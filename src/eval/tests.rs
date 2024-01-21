@@ -307,7 +307,7 @@ fn test_if_else_expression() {
         },
         TestCase {
             input: "if (false) { 10 }",
-            expected: Object::Null,
+            expected: Object::Nil,
         },
         TestCase {
             input: "if (1) { 10 }",
@@ -319,7 +319,7 @@ fn test_if_else_expression() {
         },
         TestCase {
             input: "if (1 > 2) { 10 }",
-            expected: Object::Null,
+            expected: Object::Nil,
         },
         TestCase {
             input: "if (1 > 2) { 10 } else { 20 }",
@@ -571,10 +571,10 @@ fn test_char_literal() {
 }
 
 #[test]
-fn test_null_literal() {
-    let input = "null";
+fn test_nil_literal() {
+    let input = "nil";
     let evaluated = test_eval(input);
-    assert_eq!(evaluated, Object::Null);
+    assert_eq!(evaluated, Object::Nil);
 }
 
 #[test]
@@ -718,7 +718,7 @@ fn test_dict_index_expressions() {
         },
         TestCase {
             input: r#"{"foo": 5}["bar"]"#,
-            expected: Object::Null,
+            expected: Object::Nil,
         },
         TestCase {
             input: r#"var key = "foo"; {"foo": 5}[key]"#,
@@ -726,7 +726,7 @@ fn test_dict_index_expressions() {
         },
         TestCase {
             input: r#"{}["foo"]"#,
-            expected: Object::Null,
+            expected: Object::Nil,
         },
         TestCase {
             input: "{5: 5}[5]",

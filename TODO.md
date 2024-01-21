@@ -37,7 +37,7 @@
 -   [x] Int
 -   [x] Float
 -   [x] Bool
--   [x] Null
+-   [x] Nil
 -   [x] Str
 -   [x] Char
 -   [x] Array
@@ -84,7 +84,7 @@
 -   [x] Int
 -   [x] Float
 -   [x] Bool
--   [x] Null
+-   [x] Nil
 -   [x] Str
 -   [x] Char
 -   [x] Array
@@ -135,7 +135,7 @@
 -   [x] Int
 -   [x] Float
 -   [x] Bool
--   [x] Null
+-   [x] Nil
 -   [x] Str
 -   [x] Char
 -   [x] Array
@@ -195,7 +195,7 @@
 -   [x] Int
 -   [x] Float
 -   [x] Bool
--   [x] Null
+-   [x] Nil
 -   [x] Str
 -   [ ] Char
 -   [x] Array

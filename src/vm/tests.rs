@@ -458,10 +458,10 @@ fn test_boolean_expressions() {
 }
 
 #[test]
-fn test_null_expressions() {
+fn test_nil_expressions() {
     let test_cases = [TestCase {
-        input: "null".to_string(),
-        expected: Object::Null,
+        input: "nil".to_string(),
+        expected: Object::Nil,
     }];
 
     run_vm_tests(&test_cases);
@@ -504,7 +504,7 @@ fn test_conditionals() {
     let test_cases = [
         TestCase {
             input: "if (false) { 10 }".to_string(),
-            expected: Object::Null,
+            expected: Object::Nil,
         },
         TestCase {
             input: "if (true) { 10 } else { 20 }".to_string(),
@@ -745,7 +745,7 @@ fn test_functions_without_return_value() {
     let test_cases = [
         TestCase {
             input: "var noReturn = fn() { }; noReturn();".to_string(),
-            expected: Object::Null,
+            expected: Object::Nil,
         },
         TestCase {
             input: "
@@ -756,7 +756,7 @@ var noReturnTwo = fn() {
 noReturn();
 noReturnTwo();"
                 .to_string(),
-            expected: Object::Null,
+            expected: Object::Nil,
         },
     ];
 
@@ -1225,6 +1225,6 @@ fn run_vm_tests(test_cases: &[TestCase]) {
 
         let stack_elem = vm.last_popped_stack_elem;
 
-        assert_eq!(test_case.expected, stack_elem.unwrap_or(Object::Null));
+        assert_eq!(test_case.expected, stack_elem.unwrap_or(Object::Nil));
     }
 }

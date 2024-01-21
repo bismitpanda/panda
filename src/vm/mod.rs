@@ -71,7 +71,7 @@ impl<'a> VM<'a> {
         Self {
             constants: &bytecode.constants,
 
-            stack: vec![Object::Null; STACK_SIZE],
+            stack: vec![Object::Nil; STACK_SIZE],
             sp: 0,
 
             globals: s.to_vec(),
@@ -143,7 +143,7 @@ impl<'a> VM<'a> {
 
                 Opcode::True => self.push(Object::TRUE)?,
                 Opcode::False => self.push(Object::FALSE)?,
-                Opcode::Null => self.push(Object::Null)?,
+                Opcode::Nil => self.push(Object::Nil)?,
 
                 Opcode::Equal
                 | Opcode::GreaterThan
@@ -253,7 +253,7 @@ impl<'a> VM<'a> {
                     let frame = self.pop_frame();
                     self.sp = frame.bp - 1;
 
-                    self.push(Object::Null)?;
+                    self.push(Object::Nil)?;
                 }
 
                 Opcode::SetLocal => {
@@ -887,7 +887,7 @@ impl VM<'_> {
 
             Object::Builtin(Builtin { func, caller, .. }) => self.call_builtin(
                 func,
-                &(caller.unwrap_or_else(|| Box::new(Object::Null))),
+                &(caller.unwrap_or_else(|| Box::new(Object::Nil))),
                 num_args,
             ),
 
@@ -932,7 +932,7 @@ impl VM<'_> {
 
 fn is_truthy(obj: &Object) -> bool {
     match obj {
-        Object::Null => false,
+        Object::Nil => false,
         Object::Bool(Bool { value }) => *value,
         Object::Int(Int { value }) => *value != 0,
         Object::Str(Str { value }) => !value.is_empty(),
