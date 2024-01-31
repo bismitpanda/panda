@@ -2,10 +2,9 @@ use std::collections::HashMap;
 
 use pretty_assertions::assert_eq;
 
-use super::eval::{eval, Environment};
+use super::{eval::Evaluator, vm::VM};
 use crate::{
     compiler::Compiler,
-    interpreters::vm::VM,
     lexer::Lexer,
     object::{DictPair, Hashable, Object},
     parser::Parser,
@@ -24,9 +23,9 @@ fn run_tests(test_cases: &[TestCase]) {
         let program = p.parse_program().unwrap();
 
         // Evaluator
-        let mut env = Environment::new();
+        let mut evaluator = Evaluator::new();
 
-        let evaluated = eval(program.clone(), &mut env).unwrap_or(Object::Nil);
+        let evaluated = evaluator.eval(program.clone()).unwrap_or(Object::Nil);
 
         assert_eq!(test_case.expected, evaluated);
 

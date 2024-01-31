@@ -8,8 +8,10 @@ use std::{
 
 use ahash::AHasher;
 
-use super::{Environment, Write};
-use crate::{ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable};
+use crate::{
+    ast::BlockStatement, code::Instructions, compiler::symbol_table::SymbolTable,
+    interpreters::eval::environment::Environment,
+};
 
 pub type BuiltinFunction = fn(&Object, &[Object]) -> Object;
 
@@ -150,13 +152,6 @@ pub struct Closure {
     pub free: Vec<Object>,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, strum::Display)]
-#[strum(serialize_all = "lowercase")]
-pub enum ControlFlow {
-    Break,
-    Continue,
-}
-
 #[derive(Clone, PartialEq, Debug)]
 pub struct Iter {
     pub expr: Iterable,
@@ -183,7 +178,6 @@ pub enum Object {
     Range(Range),
     CompiledFunction(CompiledFunction),
     Closure(Closure),
-    ControlFlow(ControlFlow),
     Iter(Iter),
 }
 
@@ -293,8 +287,6 @@ impl Display for Object {
 
             Self::Closure(_) => write!(f, "<closure>"),
 
-            Self::ControlFlow(t) => write!(f, "{t}"),
-
             Self::Iter(Iter {
                 expr: iter,
                 current,
@@ -321,7 +313,6 @@ impl Object {
             | Self::Type(_)
             | Self::CompiledFunction(_)
             | Self::Closure(_)
-            | Self::ControlFlow(_)
             | Self::Iter(_) => self.to_string(),
 
             Self::Char(Char { value }) => format!("'{value}'"),
@@ -371,7 +362,6 @@ impl Object {
             Self::Dict(_) => "DICT",
             Self::CompiledFunction(_) => "COMPILED_FUNCTION",
             Self::Closure(_) => "CLOSURE",
-            Self::ControlFlow(_) => "CONTROL_FLOW",
             Self::Iter(_) => "ITER",
         };
 

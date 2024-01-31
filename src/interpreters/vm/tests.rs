@@ -26,7 +26,7 @@ fn test_calling_functions_with_wrong_arguments() {
     ];
 
     for test_case in test_cases {
-        let program = parse(&test_case.input);
+        let program = parse(test_case.input);
 
         let mut comp = Compiler::new();
 

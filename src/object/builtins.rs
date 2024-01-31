@@ -1,8 +1,8 @@
-use std::process::exit;
+use std::{io::Write, process::exit};
 
 use super::{
     allowed_in_array, intersperse, AHasher, Array, Bool, BuiltinFunction, Char, Class, Dict,
-    DictPair, Float, Hashable, Hasher, Int, Object, StdHash, Str, Type, Write,
+    DictPair, Float, Hashable, Hasher, Int, Object, StdHash, Str, Type,
 };
 
 pub const BUILTINS: &[(&str, BuiltinFunction)] = &[

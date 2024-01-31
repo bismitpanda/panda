@@ -1190,7 +1190,7 @@ fn run_compiler_tests(test_cases: &[TestCase]) {
 
         test_instructions(&test_case.expected_instructions, &bytecode.instructions).unwrap();
 
-        test_constants(&test_case.expected_constants, bytecode.constants);
+        test_constants(&test_case.expected_constants, &bytecode.constants);
     }
 }
 
@@ -1224,7 +1224,7 @@ fn test_instructions(expected: &[Instructions], actual: &[u8]) -> Result<(), Str
     Ok(())
 }
 
-fn test_constants(expected: &[Object], actual: Vec<Object>) {
+fn test_constants(expected: &[Object], actual: &[Object]) {
     assert_eq!(expected.len(), actual.len());
 
     for (i, constant) in expected.iter().enumerate() {

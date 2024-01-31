@@ -15,7 +15,7 @@ use cmd::{DebugOut, Engine};
 use code::instructions_to_string;
 use compiler::{symbol_table::SymbolTable, Compiler};
 use interpreters::{
-    eval::{eval, Environment},
+    eval::Evaluator,
     vm::{GLOBAL_SIZE, VM},
 };
 use object::{builtins::BUILTINS, Object, DIR_ENV_VAR_NAME};
@@ -121,7 +121,7 @@ fn start_repl(engine: Engine) -> std::io::Result<()> {
 
     match engine {
         Engine::Eval => {
-            let mut env = Environment::new();
+            let mut evaluator = Evaluator::new();
 
             loop {
                 print!("|> ");
@@ -142,7 +142,7 @@ fn start_repl(engine: Engine) -> std::io::Result<()> {
                     continue;
                 }
 
-                let evaluated = eval(program.unwrap(), &mut env);
+                let evaluated = evaluator.eval(program.unwrap());
 
                 if let Some(evaluated) = evaluated {
                     println!("{}", evaluated.inspect());
@@ -207,7 +207,7 @@ fn start_repl(engine: Engine) -> std::io::Result<()> {
 
 fn eval_file(fname: String, engine: Engine) -> std::io::Result<()> {
     let input = std::fs::read_to_string(fname)?;
-    let mut env = Environment::new();
+    let mut evalualtor = Evaluator::new();
 
     let mut lexer = lexer::Lexer::new(&input);
     let mut parser = parser::Parser::new(&mut lexer);
@@ -224,7 +224,7 @@ fn eval_file(fname: String, engine: Engine) -> std::io::Result<()> {
 
     match engine {
         Engine::Eval => {
-            let evaluated = interpreters::eval::eval(program.unwrap(), &mut env);
+            let evaluated = evalualtor.eval(program.unwrap());
 
             if let Some(evaluated) = evaluated {
                 if matches!(evaluated, Object::Error { .. }) {
