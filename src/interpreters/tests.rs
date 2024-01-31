@@ -20,9 +20,18 @@ fn run_tests(test_cases: &[TestCase]) {
         let mut l = Lexer::new(test_case.input);
         let mut p = Parser::new(&mut l);
 
+        if !p.errors.is_empty() {
+            for err in p.errors {
+                println!("parser error: {err}")
+            }
+
+            panic!()
+        }
+
         let program = p.parse_program().unwrap();
 
         // Evaluator
+
         let mut evaluator = Evaluator::new();
 
         let evaluated = evaluator.eval(program.clone()).unwrap_or(Object::Nil);
@@ -33,7 +42,8 @@ fn run_tests(test_cases: &[TestCase]) {
         let mut comp = Compiler::new();
 
         if let Err(err) = comp.compile(program) {
-            panic!("compiler error: {err}")
+            assert_eq!(test_case.expected, Object::error(err));
+            return;
         }
 
         let byte_code = comp.bytecode();
@@ -48,6 +58,84 @@ fn run_tests(test_cases: &[TestCase]) {
 
         assert_eq!(test_case.expected, evaluated);
     }
+}
+
+#[test]
+fn test_errors() {
+    run_tests(&[
+        TestCase {
+            input: "fn() { 1; }(1);",
+            expected: Object::error("wrong number of arguments. got: 1, want: 0".to_string()),
+        },
+        TestCase {
+            input: "fn(a) { a; }();",
+            expected: Object::error("wrong number of arguments. got: 0, want: 1".to_string()),
+        },
+        TestCase {
+            input: "fn(a, b) { a + b; }(1);",
+            expected: Object::error("wrong number of arguments. got: 1, want: 2".to_string()),
+        },
+        TestCase {
+            input: "5 + true;",
+            expected: Object::error(
+                "unsupported types for binary operation: INT + BOOLEAN".to_string(),
+            ),
+        },
+        TestCase {
+            input: "5 + true; 5;",
+            expected: Object::error(
+                "unsupported types for binary operation: INT + BOOLEAN".to_string(),
+            ),
+        },
+        TestCase {
+            input: "-true",
+            expected: Object::error("unsupported type for negation: BOOLEAN".to_string()),
+        },
+        TestCase {
+            input: "true + false;",
+            expected: Object::error(
+                "unsupported types for binary operation: BOOLEAN + BOOLEAN".to_string(),
+            ),
+        },
+        TestCase {
+            input: "5; true + false; 5",
+            expected: Object::error(
+                "unsupported types for binary operation: BOOLEAN + BOOLEAN".to_string(),
+            ),
+        },
+        TestCase {
+            input: "if (10 > 1) { true + false; }",
+            expected: Object::error(
+                "unsupported types for binary operation: BOOLEAN + BOOLEAN".to_string(),
+            ),
+        },
+        TestCase {
+            input: "if (10 > 1) { if (10 > 1) { return true + false; } return 1; }",
+            expected: Object::error(
+                "unsupported types for binary operation: BOOLEAN + BOOLEAN".to_string(),
+            ),
+        },
+        TestCase {
+            input: "foobar",
+            expected: Object::error("undefined variable foobar".to_string()),
+        },
+        TestCase {
+            input: r#""Hello" - "World""#,
+            expected: Object::error("unknown operator: STR - STR".to_string()),
+        },
+        TestCase {
+            input: r#"{"name": "Panda"}[fn(x) { x }];"#,
+            expected: Object::error("unusable as hash key: FUNCTION".to_string()),
+        },
+        TestCase {
+            input: "[1, 2, 3][3]",
+            expected: Object::error("index out of bounds. got: 3".to_string()),
+        },
+        TestCase {
+            input: r#"{"name": "Panda"}["foo"];"#,
+            expected: Object::error(r#"key error. got: "foo""#.to_string()),
+        },
+    ]);
 }
 
 #[test]

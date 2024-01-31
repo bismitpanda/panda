@@ -333,7 +333,7 @@ impl Evaluator {
                         return Some(args[0].clone());
                     }
 
-                    return Some(self.apply_function(&function, &args));
+                    return Some(self.eval_call_expression(&function, &args));
                 }
 
                 Expression::Index(Index { left, expr: index }) => {
@@ -485,7 +485,7 @@ impl Evaluator {
                                 return Some(args[0].clone());
                             }
 
-                            return Some(self.apply_function(&member, &args));
+                            return Some(self.eval_call_expression(&member, &args));
                         }
                         _ => {
                             return Some(Object::error("invalid scope expression".to_string()));
@@ -805,7 +805,7 @@ impl Evaluator {
         let evaluated = left.call_method(hash_method_name(method), arguments.map(|_| arg_objs));
 
         if let (Object::Class(_), func @ Object::EvaluatedFunction(_)) = (left, &evaluated) {
-            self.apply_function(func, arg_objs)
+            self.eval_call_expression(func, arg_objs)
         } else {
             evaluated
         }
@@ -921,7 +921,7 @@ impl Evaluator {
             Operator::Sub => match right {
                 Object::Int(Int { value }) => Object::int(-value),
                 Object::Float(Float { value }) => Object::float(-value),
-                _ => Object::error(format!("unknown operator: -{}", right.kind())),
+                _ => Object::error(format!("unsupported type for negation: {}", right.kind())),
             },
             _ => Object::error(format!("unknown operator: {}{}", operator, right.kind())),
         }
@@ -976,7 +976,9 @@ impl Evaluator {
                 match operator {
                     Operator::Eq => native_bool_boolean_object(left == right),
                     Operator::NotEq => native_bool_boolean_object(left != right),
-                    _ => Object::error(format!("unknown operator: BOOLEAN {operator} BOOLEAN",)),
+                    _ => Object::error(format!(
+                        "unsupported types for binary operation: BOOLEAN {operator} BOOLEAN",
+                    )),
                 }
             }
             (Object::Type(Type { id: left, .. }), Object::Type(Type { id: right, .. })) => {
@@ -990,7 +992,7 @@ impl Evaluator {
                 Self::eval_string_infix_expression(operator, &left, &right)
             }
             _ if left.kind() != right.kind() => Object::error(format!(
-                "type mismatch: {} {} {}",
+                "unsupported types for binary operation: {} {} {}",
                 left.kind(),
                 operator,
                 right.kind()
@@ -1102,7 +1104,7 @@ impl Evaluator {
                 caller: None,
             })
         } else {
-            Object::error(format!("identifier not found: {value}"))
+            Object::error(format!("undefined variable {value}"))
         }
     }
 
@@ -1146,9 +1148,17 @@ impl Evaluator {
         Some(result)
     }
 
-    pub fn apply_function(&mut self, func: &Object, args: &[Object]) -> Object {
+    pub fn eval_call_expression(&mut self, func: &Object, args: &[Object]) -> Object {
         match func {
             Object::EvaluatedFunction(func) => {
+                if func.parameters.len() != args.len() {
+                    return Object::error(format!(
+                        "wrong number of arguments. got: {}, want: {}",
+                        args.len(),
+                        func.parameters.len()
+                    ));
+                }
+
                 let extended_env = extend_function_env(func.clone(), args);
 
                 let old_env = self.environment.clone();
@@ -1326,7 +1336,7 @@ impl Evaluator {
                         Some(Object::error(format!("identifier is not mutable: {value}")))
                     }
                 } else {
-                    Some(Object::error(format!("identifier not found: {value}")))
+                    Some(Object::error(format!("undefined variable {value}")))
                 }
             }
 
@@ -1411,7 +1421,7 @@ impl Evaluator {
                         }
                         return Some(Object::error(format!("identifier is not mutable: {value}")));
                     }
-                    return Some(Object::error(format!("identifier not found: {value}")));
+                    return Some(Object::error(format!("undefined variable {value}")));
                 }
 
                 Some(Object::error("cannot assign".to_string()))
@@ -1445,7 +1455,7 @@ impl Evaluator {
                         }
                         return Some(Object::error(format!("identifier is not mutable: {value}")));
                     }
-                    return Some(Object::error(format!("identifier not found: {value}")));
+                    return Some(Object::error(format!("undefined variable {value}")));
                 }
 
                 Some(Object::error(format!("cannot assign to method '{method}'")))

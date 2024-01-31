@@ -9,9 +9,6 @@ use crate::{
     },
 };
 
-#[cfg(test)]
-mod tests;
-
 #[derive(Clone, Debug)]
 pub struct Frame {
     pub cl: Closure,
@@ -546,8 +543,9 @@ impl VM<'_> {
             ) => self.execute_binary_char_operation(op, &left_value.to_string(), *right_value),
             _ => {
                 return Err(format!(
-                    "unsupported types for binary operation: {} {op} {}",
+                    "unsupported types for binary operation: {} {} {}",
                     left.kind(),
+                    opcode_to_operator(op),
                     right.kind()
                 ))
             }
@@ -947,4 +945,22 @@ fn is_truthy(obj: &Object) -> bool {
 
 fn normalize_index(idx: isize, max: isize) -> usize {
     usize::try_from(if idx.is_negative() { max + idx } else { idx }).unwrap()
+}
+
+fn opcode_to_operator(op: Opcode) -> String {
+    let operator = match op {
+        Opcode::Add => "+",
+        Opcode::Sub => "-",
+        Opcode::Mul => "*",
+        Opcode::Div => "/",
+        Opcode::Mod => "%",
+        Opcode::BitXor => "^",
+        Opcode::BitAnd => "&",
+        Opcode::BitOr => "|",
+        Opcode::Shl => "<<",
+        Opcode::Shr => ">>",
+        _ => "",
+    };
+
+    operator.to_string()
 }
