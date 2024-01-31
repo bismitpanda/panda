@@ -19,10 +19,7 @@ use crate::{
     },
     code::{make, Instructions, Opcode},
     lexer::Lexer,
-    object::{
-        builtins::BUILTINS, hash_method_name, CompiledFunction, CompiledModule, Object, Str,
-        DIR_ENV_VAR_NAME,
-    },
+    object::{builtins::BUILTINS, hash_method_name, CompiledModule, Object, Str, DIR_ENV_VAR_NAME},
     parser::Parser,
 };
 
@@ -196,11 +193,7 @@ impl Compiler {
                         self.load_symbol(symbol);
                     }
 
-                    let compiled_fn = Object::CompiledFunction(CompiledFunction {
-                        instructions,
-                        num_locals,
-                        num_parameters,
-                    });
+                    let compiled_fn = Object::compiled_fn(instructions, num_locals, num_parameters);
 
                     let idx = self.add_constant(compiled_fn);
                     self.emit(Opcode::Closure, &[idx, free_symbols.len()]);
@@ -585,11 +578,7 @@ impl Compiler {
                         self.load_symbol(symbol);
                     }
 
-                    let compiled_fn = Object::CompiledFunction(CompiledFunction {
-                        instructions,
-                        num_locals,
-                        num_parameters,
-                    });
+                    let compiled_fn = Object::compiled_fn(instructions, num_locals, num_parameters);
 
                     let idx = self.add_constant(compiled_fn);
                     self.emit(Opcode::Closure, &[idx, free_symbols.len()]);
@@ -739,12 +728,11 @@ impl Compiler {
                                             self.load_symbol(symbol);
                                         }
 
-                                        let compiled_fn =
-                                            Object::CompiledFunction(CompiledFunction {
-                                                instructions,
-                                                num_locals,
-                                                num_parameters,
-                                            });
+                                        let compiled_fn = Object::compiled_fn(
+                                            instructions,
+                                            num_locals,
+                                            num_parameters,
+                                        );
 
                                         let idx = self.add_constant(compiled_fn);
                                         self.emit(Opcode::Closure, &[idx, free_symbols.len()]);

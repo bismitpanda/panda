@@ -2,12 +2,11 @@ mod ast;
 mod cmd;
 mod code;
 mod compiler;
-mod eval;
+mod interpreters;
 mod lexer;
 mod object;
 mod parser;
 mod token;
-mod vm;
 
 use std::{io::Write, process::exit};
 
@@ -15,9 +14,11 @@ use clap::Parser;
 use cmd::{DebugOut, Engine};
 use code::instructions_to_string;
 use compiler::{symbol_table::SymbolTable, Compiler};
-use eval::{eval, Environment};
+use interpreters::{
+    eval::{eval, Environment},
+    vm::{GLOBAL_SIZE, VM},
+};
 use object::{builtins::BUILTINS, Object, DIR_ENV_VAR_NAME};
-use vm::{GLOBAL_SIZE, VM};
 
 fn main() {
     let cli = cmd::Cli::parse();
@@ -223,7 +224,7 @@ fn eval_file(fname: String, engine: Engine) -> std::io::Result<()> {
 
     match engine {
         Engine::Eval => {
-            let evaluated = eval::eval(program.unwrap(), &mut env);
+            let evaluated = interpreters::eval::eval(program.unwrap(), &mut env);
 
             if let Some(evaluated) = evaluated {
                 if matches!(evaluated, Object::Error { .. }) {

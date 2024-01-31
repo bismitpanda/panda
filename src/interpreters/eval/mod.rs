@@ -23,9 +23,6 @@ use crate::{
 mod environment;
 pub use environment::*;
 
-#[cfg(test)]
-mod tests;
-
 pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
     match node {
         Node::Program { statements } => {
@@ -63,7 +60,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 value,
                 ..
             }) => {
-                let val = if let Some(value) = value {
+                let mut val = if let Some(value) = value {
                     eval(Node::Expr(value), environment)?
                 } else {
                     Object::Nil
@@ -71,6 +68,10 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
 
                 if is_error(&val) {
                     return Some(val);
+                }
+
+                if let Object::EvaluatedFunction(ref mut func) = val {
+                    func.name = name.clone();
                 }
 
                 environment.set(name, val, mutable);
@@ -83,8 +84,9 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 ..
             }) => {
                 environment.set(
-                    ident,
+                    ident.clone(),
                     Object::EvaluatedFunction(EvaluatedFunction {
+                        name: ident,
                         parameters,
                         environment: environment.clone(),
                         body,
@@ -268,6 +270,7 @@ pub fn eval(node: Node, environment: &mut Environment) -> Option<Object> {
                 parameters, body, ..
             }) => {
                 return Some(Object::EvaluatedFunction(EvaluatedFunction {
+                    name: String::new(),
                     parameters,
                     environment: environment.clone(),
                     body,
@@ -520,10 +523,12 @@ fn eval_constructor_expression(
 
                     ClassStatement::Method(func) => {
                         let obj = Object::EvaluatedFunction(EvaluatedFunction {
+                            name: func.name.clone(),
                             parameters: func.parameters,
                             environment: environment.clone(),
                             body: func.body,
                         });
+
                         members.insert(
                             hash_method_name(&func.name),
                             ClassMember::new(func.name, obj),
@@ -578,6 +583,7 @@ fn eval_constructor_expression(
 
                     ClassStatement::Method(func) => {
                         let obj = Object::EvaluatedFunction(EvaluatedFunction {
+                            name: func.name.clone(),
                             parameters: func.parameters,
                             environment: environment.clone(),
                             body: func.body,
@@ -644,10 +650,12 @@ fn eval_constructor_expression(
 
                             ClassStatement::Method(func) => {
                                 let obj = Object::EvaluatedFunction(EvaluatedFunction {
+                                    name: func.name.clone(),
                                     parameters: func.parameters,
                                     environment: environment.clone(),
                                     body: func.body,
                                 });
+
                                 members.insert(
                                     hash_method_name(&func.name),
                                     ClassMember::new(func.name, obj),
@@ -704,10 +712,12 @@ fn eval_constructor_expression(
 
                             ClassStatement::Method(func) => {
                                 let obj = Object::EvaluatedFunction(EvaluatedFunction {
+                                    name: func.name.clone(),
                                     parameters: func.parameters,
                                     environment: environment.clone(),
                                     body: func.body,
                                 });
+
                                 members.insert(
                                     hash_method_name(&func.name),
                                     ClassMember::new(func.name, obj),
@@ -1002,6 +1012,8 @@ fn eval_char_infix_expression(operator: Operator, left: char, right: char) -> Ob
     match operator {
         Operator::Lt => native_bool_boolean_object(left < right),
         Operator::Gt => native_bool_boolean_object(left > right),
+        Operator::LtEq => native_bool_boolean_object(left <= right),
+        Operator::GtEq => native_bool_boolean_object(left >= right),
         Operator::Eq => native_bool_boolean_object(left == right),
         Operator::NotEq => native_bool_boolean_object(left != right),
         Operator::Add => Object::Str(Str {
@@ -1103,6 +1115,9 @@ pub fn apply_function(func: &Object, args: &[Object]) -> Object {
     match func {
         Object::EvaluatedFunction(func) => {
             let mut extended_env = extend_function_env(func.clone(), args);
+
+            dbg!(&extended_env);
+
             let evaluated =
                 eval_block_statement(&func.body, &mut extended_env).unwrap_or(Object::Nil);
 
@@ -1123,11 +1138,13 @@ pub fn apply_function(func: &Object, args: &[Object]) -> Object {
 }
 
 fn extend_function_env(func: EvaluatedFunction, args: &[Object]) -> Environment {
-    let mut environment = Environment::new_enclosed(func.environment);
+    let mut environment = Environment::new_enclosed(func.environment.clone());
 
     for (param_idx, param) in func.parameters.iter().enumerate() {
         environment.set(param.clone(), args[param_idx].clone(), false);
     }
+
+    environment.set(func.name.clone(), Object::EvaluatedFunction(func), false);
 
     environment
 }
@@ -1228,9 +1245,10 @@ fn eval_dict_index_expression(pairs: &HashMap<u64, DictPair>, index: &Object) ->
         return Object::error(format!("unusable as hash key: {}", index.kind()));
     };
 
-    pairs
-        .get(&hashable.hash())
-        .map_or(Object::Nil, |pair| pair.value.clone())
+    pairs.get(&hashable.hash()).map_or(
+        Object::error(format!("key error. got: {}", index.to_string())),
+        |pair| pair.value.clone(),
+    )
 }
 
 fn eval_dict_literal(

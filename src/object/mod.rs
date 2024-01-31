@@ -58,6 +58,7 @@ pub struct ReturnValue {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct EvaluatedFunction {
+    pub name: String,
     pub parameters: Vec<String>,
     pub body: BlockStatement,
     pub environment: Environment,
@@ -220,6 +221,18 @@ impl Object {
 
     pub const fn dict(pairs: HashMap<u64, DictPair>) -> Self {
         Self::Dict(Dict { pairs })
+    }
+
+    pub const fn compiled_fn(
+        instructions: Vec<u8>,
+        num_locals: usize,
+        num_parameters: usize,
+    ) -> Self {
+        Self::CompiledFunction(CompiledFunction {
+            instructions,
+            num_locals,
+            num_parameters,
+        })
     }
 }
 

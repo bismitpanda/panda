@@ -490,7 +490,7 @@ fn test_class_statement() {
     }
 }
 
-struct ImportStatementTestCase {
+struct StatementTestCase {
     input: &'static str,
     expected: Statement,
 }
@@ -498,7 +498,7 @@ struct ImportStatementTestCase {
 #[test]
 fn test_import_statement() {
     let test_cases = [
-        ImportStatementTestCase {
+        StatementTestCase {
             input: r#"import "fs""#,
             expected: Statement::Import(Import {
                 path: "fs".to_string(),
@@ -506,7 +506,7 @@ fn test_import_statement() {
                 class: false,
             }),
         },
-        ImportStatementTestCase {
+        StatementTestCase {
             input: r#"import "std/datetime/duration""#,
             expected: Statement::Import(Import {
                 path: "std/datetime/duration".to_string(),
@@ -514,7 +514,7 @@ fn test_import_statement() {
                 class: false,
             }),
         },
-        ImportStatementTestCase {
+        StatementTestCase {
             input: r#"import class "std/datetime/duration" as dur"#,
             expected: Statement::Import(Import {
                 path: "std/datetime/duration".to_string(),
@@ -649,15 +649,10 @@ fn test_float_literal() {
     }
 }
 
-struct PrefixExpressionsTestCase {
-    input: &'static str,
-    expected: Statement,
-}
-
 #[test]
 fn test_parsing_prefix_expressions() {
     let test_cases = [
-        PrefixExpressionsTestCase {
+        StatementTestCase {
             input: "!5",
             expected: Statement::ExpressionStmt(ExpressionStmt {
                 returns: true,
@@ -669,7 +664,7 @@ fn test_parsing_prefix_expressions() {
                 }),
             }),
         },
-        PrefixExpressionsTestCase {
+        StatementTestCase {
             input: "-15",
             expected: Statement::ExpressionStmt(ExpressionStmt {
                 returns: true,

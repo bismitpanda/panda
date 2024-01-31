@@ -1,35 +1,28 @@
-use std::any::Any;
-
 use pretty_assertions::assert_eq;
 
 use super::*;
-use crate::{
-    code::*,
-    lexer::Lexer,
-    object::{CompiledFunction, Str},
-    parser::Parser,
-};
+use crate::{code::*, lexer::Lexer, parser::Parser};
 
-struct CompilerTestCase {
+struct TestCase {
     input: String,
-    expected_constants: Vec<Box<dyn Any>>,
+    expected_constants: Vec<Object>,
     expected_instructions: Vec<Instructions>,
 }
 
 #[test]
 fn test_integer_arithmetic() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "1".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>]),
+            expected_constants: Vec::from([Object::int(1)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 + 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -37,9 +30,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1; 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::PopNoRet, &[]),
@@ -47,9 +40,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 - 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -57,9 +50,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 * 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -67,9 +60,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 / 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -77,9 +70,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 % 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -87,9 +80,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 ^ 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -97,9 +90,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 & 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -107,9 +100,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 | 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -117,9 +110,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 >> 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -127,9 +120,9 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 << 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -137,45 +130,43 @@ fn test_integer_arithmetic() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "-1".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>]),
+            expected_constants: Vec::from([Object::int(1)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Minus, &[]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "-1.0".to_string(),
-            expected_constants: Vec::from([Box::new(1.0) as Box<dyn Any>]),
+            expected_constants: Vec::from([Object::float(1.0)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Minus, &[]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_boolean_expressions() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "true".to_string(),
             expected_constants: Vec::new(),
             expected_instructions: Vec::from([make(Opcode::True, &[]), make(Opcode::Pop, &[])]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "false".to_string(),
             expected_constants: Vec::new(),
             expected_instructions: Vec::from([make(Opcode::False, &[]), make(Opcode::Pop, &[])]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 < 2".to_string(),
-            expected_constants: Vec::from([Box::new(2) as Box<dyn Any>, Box::new(1)]),
+            expected_constants: Vec::from([Object::int(2), Object::int(1)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -183,9 +174,9 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 > 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -193,9 +184,9 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 <= 2".to_string(),
-            expected_constants: Vec::from([Box::new(2) as Box<dyn Any>, Box::new(1)]),
+            expected_constants: Vec::from([Object::int(2), Object::int(1)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -203,9 +194,9 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 >= 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -213,9 +204,9 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 == 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -223,9 +214,9 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "1 != 2".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -233,7 +224,7 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "true == false".to_string(),
             expected_constants: Vec::new(),
             expected_instructions: Vec::from([
@@ -243,7 +234,7 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "true != false".to_string(),
             expected_constants: Vec::new(),
             expected_instructions: Vec::from([
@@ -253,7 +244,7 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "!true".to_string(),
             expected_constants: Vec::new(),
             expected_instructions: Vec::from([
@@ -262,28 +253,24 @@ fn test_boolean_expressions() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_nil_literal() {
-    let test_cases = [CompilerTestCase {
+    run_compiler_tests(&[TestCase {
         input: "nil".to_string(),
         expected_constants: Vec::new(),
         expected_instructions: Vec::from([make(Opcode::Nil, &[]), make(Opcode::Pop, &[])]),
-    }];
-
-    run_compiler_tests(&test_cases);
+    }]);
 }
 
 #[test]
 fn test_conditionals() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "if (true) { 10 }; 3333;".to_string(),
-            expected_constants: Vec::from([Box::new(10) as Box<dyn Any>, Box::new(3333)]),
+            expected_constants: Vec::from([Object::int(10), Object::int(3333)]),
             expected_instructions: Vec::from([
                 make(Opcode::True, &[]),
                 make(Opcode::JumpNotTruthy, &[10]),
@@ -295,13 +282,9 @@ fn test_conditionals() {
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "if (true) { 10 } else { 20 }; 3333;".to_string(),
-            expected_constants: Vec::from([
-                Box::new(10) as Box<dyn Any>,
-                Box::new(20),
-                Box::new(3333),
-            ]),
+            expected_constants: Vec::from([Object::int(10), Object::int(20), Object::int(3333)]),
             expected_instructions: Vec::from([
                 make(Opcode::True, &[]),
                 make(Opcode::JumpNotTruthy, &[10]),
@@ -313,16 +296,14 @@ fn test_conditionals() {
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_while_loop() {
-    let test_cases = [CompilerTestCase {
+    run_compiler_tests(&[TestCase {
         input: "while (true) { 10; }".to_string(),
-        expected_constants: Vec::from([Box::new(10) as Box<dyn Any>]),
+        expected_constants: Vec::from([Object::int(10)]),
         expected_instructions: Vec::from([
             make(Opcode::True, &[]),
             make(Opcode::JumpNotTruthy, &[12]),
@@ -331,16 +312,14 @@ fn test_while_loop() {
             make(Opcode::Jump, &[0]),
             make(Opcode::Pop, &[]),
         ]),
-    }];
-
-    run_compiler_tests(&test_cases);
+    }]);
 }
 
 #[test]
 fn test_global_declaration_expressions() {
-    let test_cases = [CompilerTestCase {
+    run_compiler_tests(&[TestCase {
         input: "var one = 1; one = 2;".to_string(),
-        expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2)]),
+        expected_constants: Vec::from([Object::int(1), Object::int(2)]),
         expected_instructions: Vec::from([
             make(Opcode::Constant, &[0]),
             make(Opcode::SetGlobal, &[0]),
@@ -349,24 +328,22 @@ fn test_global_declaration_expressions() {
             make(Opcode::SetGlobal, &[0]),
             make(Opcode::PopNoRet, &[]),
         ]),
-    }];
-
-    run_compiler_tests(&test_cases);
+    }]);
 }
 
 #[test]
 fn test_string_expressions() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "\"panda\"".to_string(),
-            expected_constants: Vec::from([Box::new("panda".to_string()) as Box<dyn Any>]),
+            expected_constants: Vec::from([Object::str("panda".to_string())]),
             expected_instructions: [make(Opcode::Constant, &[0]), make(Opcode::Pop, &[])].to_vec(),
         },
-        CompilerTestCase {
+        TestCase {
             input: "\"mon\" + \"key\"".to_string(),
             expected_constants: Vec::from([
-                Box::new("mon".to_string()) as Box<dyn Any>,
-                Box::new("key".to_string()),
+                Object::str("mon".to_string()),
+                Object::str("key".to_string()),
             ]),
             expected_instructions: [
                 make(Opcode::Constant, &[0]),
@@ -376,22 +353,20 @@ fn test_string_expressions() {
             ]
             .to_vec(),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_char_expressions() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "'a'".to_string(),
-            expected_constants: Vec::from([Box::new('a') as Box<dyn Any>]),
+            expected_constants: Vec::from([Object::char('a')]),
             expected_instructions: [make(Opcode::Constant, &[0]), make(Opcode::Pop, &[])].to_vec(),
         },
-        CompilerTestCase {
+        TestCase {
             input: "'h' + 'i'".to_string(),
-            expected_constants: Vec::from([Box::new('h') as Box<dyn Any>, Box::new('i')]),
+            expected_constants: Vec::from([Object::char('h'), Object::char('i')]),
             expected_instructions: [
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -400,22 +375,20 @@ fn test_char_expressions() {
             ]
             .to_vec(),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_array_literals() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "[]".to_string(),
             expected_constants: Vec::from([]),
             expected_instructions: Vec::from([make(Opcode::Array, &[0]), make(Opcode::Pop, &[])]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "[1, 2, 3]".to_string(),
-            expected_constants: Vec::from([Box::new(1) as Box<dyn Any>, Box::new(2), Box::new(3)]),
+            expected_constants: Vec::from([Object::int(1), Object::int(2), Object::int(3)]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
                 make(Opcode::Constant, &[1]),
@@ -424,15 +397,15 @@ fn test_array_literals() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "[1 + 2, 3 - 4, 5 * 6]".to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(2),
-                Box::new(3),
-                Box::new(4),
-                Box::new(5),
-                Box::new(6),
+                Object::int(1),
+                Object::int(2),
+                Object::int(3),
+                Object::int(4),
+                Object::int(5),
+                Object::int(6),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
@@ -448,28 +421,26 @@ fn test_array_literals() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_dict_literals() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "{}".to_string(),
             expected_constants: Vec::new(),
             expected_instructions: Vec::from([make(Opcode::Dict, &[0]), make(Opcode::Pop, &[])]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "{1: 2, 3: 4, 5: 6}".to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(2),
-                Box::new(3),
-                Box::new(4),
-                Box::new(5),
-                Box::new(6),
+                Object::int(1),
+                Object::int(2),
+                Object::int(3),
+                Object::int(4),
+                Object::int(5),
+                Object::int(6),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
@@ -482,15 +453,15 @@ fn test_dict_literals() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "{1: 2 + 3, 4: 5 * 6}".to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(2),
-                Box::new(3),
-                Box::new(4),
-                Box::new(5),
-                Box::new(6),
+                Object::int(1),
+                Object::int(2),
+                Object::int(3),
+                Object::int(4),
+                Object::int(5),
+                Object::int(6),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
@@ -505,22 +476,20 @@ fn test_dict_literals() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_index_expression() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "[1, 2, 3][1 + 1]".to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(2),
-                Box::new(3),
-                Box::new(1),
-                Box::new(1),
+                Object::int(1),
+                Object::int(2),
+                Object::int(3),
+                Object::int(1),
+                Object::int(1),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
@@ -534,13 +503,13 @@ fn test_index_expression() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "{1: 2}[2 - 1]".to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(2),
-                Box::new(2),
-                Box::new(1),
+                Object::int(1),
+                Object::int(2),
+                Object::int(2),
+                Object::int(1),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
@@ -553,68 +522,79 @@ fn test_index_expression() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_lambdas() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "fn() { return 5 + 10 }".to_string(),
             expected_constants: Vec::from([
-                Box::new(5) as Box<dyn Any>,
-                Box::new(10),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::Constant, &[1]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(5),
+                Object::int(10),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[0]),
+                        make(Opcode::Constant, &[1]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[2, 0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "fn() { 5 + 10 }".to_string(),
             expected_constants: Vec::from([
-                Box::new(5) as Box<dyn Any>,
-                Box::new(10),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::Constant, &[1]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(5),
+                Object::int(10),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[0]),
+                        make(Opcode::Constant, &[1]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[2, 0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "fn() { 1; 2 }".to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(2),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::PopNoRet, &[]),
-                    make(Opcode::Constant, &[1]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(1),
+                Object::int(2),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[0]),
+                        make(Opcode::PopNoRet, &[]),
+                        make(Opcode::Constant, &[1]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[2, 0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
@@ -662,28 +642,29 @@ fn test_compiler_scopes() {
 
 #[test]
 fn test_functions_without_return_value() {
-    let test_cases = [CompilerTestCase {
+    run_compiler_tests(&[TestCase {
         input: "fn() { }".to_string(),
-        expected_constants: Vec::from([
-            Box::new(Vec::from([make(Opcode::Return, &[])])) as Box<dyn Any>
-        ]),
+        expected_constants: Vec::from([Object::compiled_fn(
+            [make(Opcode::Return, &[])].concat(),
+            0,
+            0,
+        )]),
         expected_instructions: Vec::from([make(Opcode::Closure, &[0, 0]), make(Opcode::Pop, &[])]),
-    }];
-
-    run_compiler_tests(&test_cases);
+    }]);
 }
 
 #[test]
 fn test_function_calls() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "fn() { 24 }()".to_string(),
             expected_constants: Vec::from([
-                Box::new(24) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(24),
+                Object::compiled_fn(
+                    [make(Opcode::Constant, &[0]), make(Opcode::ReturnValue, &[])].concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[1, 0]),
@@ -691,14 +672,15 @@ fn test_function_calls() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "const noArg = fn() { 24 }; noArg()".to_string(),
             expected_constants: Vec::from([
-                Box::new(24) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(24),
+                Object::compiled_fn(
+                    [make(Opcode::Constant, &[0]), make(Opcode::ReturnValue, &[])].concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[1, 0]),
@@ -708,19 +690,21 @@ fn test_function_calls() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "const fn1 = fn() { 24 }; const fn2 = fn() { 24 }; fn1() + fn2()".to_string(),
             expected_constants: Vec::from([
-                Box::new(24) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
-                Box::new(24),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[2]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(24),
+                Object::compiled_fn(
+                    [make(Opcode::Constant, &[0]), make(Opcode::ReturnValue, &[])].concat(),
+                    0,
+                    0,
+                ),
+                Object::int(24),
+                Object::compiled_fn(
+                    [make(Opcode::Constant, &[2]), make(Opcode::ReturnValue, &[])].concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[1, 0]),
@@ -735,14 +719,15 @@ fn test_function_calls() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "fn noArg() { 24 }; noArg()".to_string(),
             expected_constants: Vec::from([
-                Box::new(24) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(24),
+                Object::compiled_fn(
+                    [make(Opcode::Constant, &[0]), make(Opcode::ReturnValue, &[])].concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[1, 0]),
@@ -752,11 +737,11 @@ fn test_function_calls() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "const oneArg = fn(a) { }; oneArg(24);".to_string(),
             expected_constants: Vec::from([
-                Box::new(Vec::from([make(Opcode::Return, &[])])) as Box<dyn Any>,
-                Box::new(24),
+                Object::compiled_fn([make(Opcode::Return, &[])].concat(), 1, 1),
+                Object::int(24),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[0, 0]),
@@ -767,14 +752,15 @@ fn test_function_calls() {
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "const oneArg = fn(a) { a }; oneArg(24);".to_string(),
             expected_constants: Vec::from([
-                Box::new(Vec::from([
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::ReturnValue, &[]),
-                ])) as Box<dyn Any>,
-                Box::new(24),
+                Object::compiled_fn(
+                    [make(Opcode::GetLocal, &[0]), make(Opcode::ReturnValue, &[])].concat(),
+                    1,
+                    1,
+                ),
+                Object::int(24),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[0, 0]),
@@ -785,13 +771,13 @@ fn test_function_calls() {
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "const manyArgs = fn(a, b, c) { }; manyArgs(24, 25, 26)".to_string(),
             expected_constants: Vec::from([
-                Box::new(Vec::from([make(Opcode::Return, &[])])) as Box<dyn Any>,
-                Box::new(24),
-                Box::new(25),
-                Box::new(26),
+                Object::compiled_fn([make(Opcode::Return, &[])].concat(), 3, 3),
+                Object::int(24),
+                Object::int(25),
+                Object::int(26),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[0, 0]),
@@ -804,20 +790,25 @@ fn test_function_calls() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "const manyArgs = fn(a, b, c) { a; b; c }; manyArgs(24, 25, 26);".to_string(),
             expected_constants: Vec::from([
-                Box::new(Vec::from([
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::PopNoRet, &[]),
-                    make(Opcode::GetLocal, &[1]),
-                    make(Opcode::PopNoRet, &[]),
-                    make(Opcode::GetLocal, &[2]),
-                    make(Opcode::ReturnValue, &[]),
-                ])) as Box<dyn Any>,
-                Box::new(24),
-                Box::new(25),
-                Box::new(26),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::PopNoRet, &[]),
+                        make(Opcode::GetLocal, &[1]),
+                        make(Opcode::PopNoRet, &[]),
+                        make(Opcode::GetLocal, &[2]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    3,
+                    3,
+                ),
+                Object::int(24),
+                Object::int(25),
+                Object::int(26),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[0, 0]),
@@ -830,22 +821,25 @@ fn test_function_calls() {
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_declaration_statement_scopes() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "var num = 55; fn() { num }".to_string(),
             expected_constants: Vec::from([
-                Box::new(55) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::GetGlobal, &[0]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(55),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::GetGlobal, &[0]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    0,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
@@ -854,54 +848,62 @@ fn test_declaration_statement_scopes() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "fn() { const num = 55; num }".to_string(),
             expected_constants: Vec::from([
-                Box::new(55) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::SetLocal, &[0]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(55),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[0]),
+                        make(Opcode::SetLocal, &[0]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[1, 0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "fn() { const a = 55; const b = 77; a + b }".to_string(),
             expected_constants: Vec::from([
-                Box::new(55) as Box<dyn Any>,
-                Box::new(77),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::SetLocal, &[0]),
-                    make(Opcode::Constant, &[1]),
-                    make(Opcode::SetLocal, &[1]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::GetLocal, &[1]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(55),
+                Object::int(77),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[0]),
+                        make(Opcode::SetLocal, &[0]),
+                        make(Opcode::Constant, &[1]),
+                        make(Opcode::SetLocal, &[1]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::GetLocal, &[1]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    2,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[2, 0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_builtins() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "print([]); print(\"\")".to_string(),
-            expected_constants: Vec::from([Box::new("") as Box<dyn Any>]),
+            expected_constants: Vec::from([Object::str(String::new())]),
             expected_instructions: Vec::from([
                 make(Opcode::GetBuiltin, &[3]),
                 make(Opcode::Array, &[0]),
@@ -913,48 +915,61 @@ fn test_builtins() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "fn() { print([]) }".to_string(),
-            expected_constants: Vec::from([Box::new(Vec::from([
-                make(Opcode::GetBuiltin, &[3]),
-                make(Opcode::Array, &[0]),
-                make(Opcode::Call, &[1]),
-                make(Opcode::ReturnValue, &[]),
-            ])) as Box<dyn Any>]),
+            expected_constants: Vec::from([Object::compiled_fn(
+                [
+                    make(Opcode::GetBuiltin, &[3]),
+                    make(Opcode::Array, &[0]),
+                    make(Opcode::Call, &[1]),
+                    make(Opcode::ReturnValue, &[]),
+                ]
+                .concat(),
+                0,
+                0,
+            )]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[0, 0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_closures() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "fn(a) { fn(b) { a + b } }".to_string(),
             expected_constants: Vec::from([
-                Box::new(Vec::from([
-                    make(Opcode::GetFree, &[0]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::ReturnValue, &[]),
-                ])) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Closure, &[0, 1]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::GetFree, &[0]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    1,
+                ),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Closure, &[0, 1]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    1,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[1, 0]),
                 make(Opcode::Pop, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "fn(a) {
     fn(b) {
         fn(c) {
@@ -964,32 +979,47 @@ fn test_closures() {
 };"
             .to_string(),
             expected_constants: Vec::from([
-                Box::new(Vec::from([
-                    make(Opcode::GetFree, &[0]),
-                    make(Opcode::GetFree, &[1]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::ReturnValue, &[]),
-                ])) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::GetFree, &[0]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Closure, &[0, 2]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
-                Box::new(Vec::from([
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Closure, &[1, 1]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::GetFree, &[0]),
+                        make(Opcode::GetFree, &[1]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    1,
+                ),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::GetFree, &[0]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Closure, &[0, 2]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    1,
+                ),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Closure, &[1, 1]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    1,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[2, 0]),
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "
 var global = 55;
 fn() {
@@ -1005,37 +1035,52 @@ fn() {
             "
             .to_string(),
             expected_constants: Vec::from([
-                Box::new(55) as Box<dyn Any>,
-                Box::new(66),
-                Box::new(77),
-                Box::new(88),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[3]),
-                    make(Opcode::SetLocal, &[0]),
-                    make(Opcode::GetGlobal, &[0]),
-                    make(Opcode::GetFree, &[0]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::GetFree, &[1]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Add, &[]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[2]),
-                    make(Opcode::SetLocal, &[0]),
-                    make(Opcode::GetFree, &[0]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Closure, &[4, 2]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
-                Box::new(Vec::from([
-                    make(Opcode::Constant, &[1]),
-                    make(Opcode::SetLocal, &[0]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Closure, &[5, 1]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
+                Object::int(55),
+                Object::int(66),
+                Object::int(77),
+                Object::int(88),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[3]),
+                        make(Opcode::SetLocal, &[0]),
+                        make(Opcode::GetGlobal, &[0]),
+                        make(Opcode::GetFree, &[0]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::GetFree, &[1]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Add, &[]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    0,
+                ),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[2]),
+                        make(Opcode::SetLocal, &[0]),
+                        make(Opcode::GetFree, &[0]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Closure, &[4, 2]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    0,
+                ),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Constant, &[1]),
+                        make(Opcode::SetLocal, &[0]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Closure, &[5, 1]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Constant, &[0]),
@@ -1044,29 +1089,32 @@ fn() {
                 make(Opcode::Pop, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
 #[test]
 fn test_recursive_functions() {
-    let test_cases = [
-        CompilerTestCase {
+    run_compiler_tests(&[
+        TestCase {
             input: "var countDown = fn(x) { countDown(x - 1) };
             countDown(1);"
                 .to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::CurrentClosure, &[]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::Sub, &[]),
-                    make(Opcode::Call, &[1]),
-                    make(Opcode::ReturnValue, &[]),
-                ])),
-                Box::new(1),
+                Object::int(1),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::CurrentClosure, &[]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Constant, &[0]),
+                        make(Opcode::Sub, &[]),
+                        make(Opcode::Call, &[1]),
+                        make(Opcode::ReturnValue, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    1,
+                ),
+                Object::int(1),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[1, 0]),
@@ -1077,7 +1125,7 @@ fn test_recursive_functions() {
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-        CompilerTestCase {
+        TestCase {
             input: "
 var wrapper = fn() {
     var countDown = fn(x) { countDown(x - 1); };
@@ -1087,24 +1135,34 @@ wrapper();
             "
             .to_string(),
             expected_constants: Vec::from([
-                Box::new(1) as Box<dyn Any>,
-                Box::new(Vec::from([
-                    make(Opcode::CurrentClosure, &[]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Constant, &[0]),
-                    make(Opcode::Sub, &[]),
-                    make(Opcode::Call, &[1]),
-                    make(Opcode::Return, &[]),
-                ])),
-                Box::new(1),
-                Box::new(Vec::from([
-                    make(Opcode::Closure, &[1, 0]),
-                    make(Opcode::SetLocal, &[0]),
-                    make(Opcode::GetLocal, &[0]),
-                    make(Opcode::Constant, &[2]),
-                    make(Opcode::Call, &[1]),
-                    make(Opcode::Return, &[]),
-                ])),
+                Object::int(1),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::CurrentClosure, &[]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Constant, &[0]),
+                        make(Opcode::Sub, &[]),
+                        make(Opcode::Call, &[1]),
+                        make(Opcode::Return, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    1,
+                ),
+                Object::int(1),
+                Object::compiled_fn(
+                    [
+                        make(Opcode::Closure, &[1, 0]),
+                        make(Opcode::SetLocal, &[0]),
+                        make(Opcode::GetLocal, &[0]),
+                        make(Opcode::Constant, &[2]),
+                        make(Opcode::Call, &[1]),
+                        make(Opcode::Return, &[]),
+                    ]
+                    .concat(),
+                    1,
+                    0,
+                ),
             ]),
             expected_instructions: Vec::from([
                 make(Opcode::Closure, &[3, 0]),
@@ -1114,12 +1172,10 @@ wrapper();
                 make(Opcode::PopNoRet, &[]),
             ]),
         },
-    ];
-
-    run_compiler_tests(&test_cases);
+    ]);
 }
 
-fn run_compiler_tests(test_cases: &[CompilerTestCase]) {
+fn run_compiler_tests(test_cases: &[TestCase]) {
     for test_case in test_cases {
         let program = parse(&test_case.input);
 
@@ -1146,7 +1202,7 @@ fn parse(input: &str) -> Option<Node> {
 }
 
 fn test_instructions(expected: &[Instructions], actual: &[u8]) -> Result<(), String> {
-    let concatted = concat_instructions(expected);
+    let concatted = expected.concat();
     if actual.len() != concatted.len() {
         return Err(format!(
             "wrong instructions length.\n\twant: {}\n\tgot: {}",
@@ -1168,63 +1224,10 @@ fn test_instructions(expected: &[Instructions], actual: &[u8]) -> Result<(), Str
     Ok(())
 }
 
-fn concat_instructions(s: &[Instructions]) -> Instructions {
-    s.concat()
-}
-
-fn test_constants(expected: &[Box<dyn Any>], actual: Vec<Object>) {
+fn test_constants(expected: &[Object], actual: Vec<Object>) {
     assert_eq!(expected.len(), actual.len());
 
     for (i, constant) in expected.iter().enumerate() {
-        if let Some(constant) = (*constant).downcast_ref::<i32>() {
-            test_integer_object(*constant as isize, &actual[i]);
-        } else if let Some(constant) = (*constant).downcast_ref::<bool>() {
-            test_boolean_object(*constant, &actual[i]);
-        } else if let Some(constant) = (*constant).downcast_ref::<f64>() {
-            test_float_object(*constant, &actual[i]);
-        } else if let Some(constant) = (*constant).downcast_ref::<char>() {
-            test_char_object(*constant, &actual[i]);
-        } else if let Some(constant) = (*constant).downcast_ref::<String>() {
-            test_string_object(constant, &actual[i]);
-        } else if let Some(constant) = (*constant).downcast_ref::<&str>() {
-            test_string_object(constant, &actual[i]);
-        } else if let Some(constant) = (*constant).downcast_ref::<Vec<Vec<u8>>>() {
-            test_function_object(constant, &actual[i]);
-        } else {
-            assert_eq!(&Object::Nil, &actual[i]);
-        }
+        assert_eq!(constant, &actual[i]);
     }
-}
-
-fn test_integer_object(expected: isize, actual: &Object) {
-    assert_eq!(&Object::int(expected), actual);
-}
-
-fn test_boolean_object(expected: bool, actual: &Object) {
-    assert_eq!(&Object::bool(expected), actual);
-}
-
-fn test_float_object(expected: f64, actual: &Object) {
-    assert_eq!(&Object::float(expected), actual);
-}
-
-fn test_char_object(expected: char, actual: &Object) {
-    assert_eq!(&Object::char(expected), actual);
-}
-
-fn test_string_object(expected: &str, actual: &Object) {
-    assert_eq!(
-        &Object::Str(Str {
-            value: expected.to_string()
-        }),
-        actual
-    );
-}
-
-fn test_function_object(expected: &[Instructions], actual: &Object) {
-    let Object::CompiledFunction(CompiledFunction { instructions, .. }) = actual else {
-        panic!("not a function")
-    };
-
-    test_instructions(expected, instructions).unwrap();
 }

@@ -216,7 +216,7 @@ impl<'a> VM<'a> {
 
                 Opcode::Dict => {
                     let num_pairs = code::read_u16(&ins, ip + 1);
-                    self.exec_dict_literal(num_pairs)?;
+                    self.execute_dict_literal(num_pairs)?;
                 }
 
                 Opcode::Index => {
@@ -381,7 +381,70 @@ impl<'a> VM<'a> {
         Ok(())
     }
 
-    fn exec_dict_literal(&mut self, num_pairs: usize) -> Result<(), String> {
+    fn push(&mut self, o: Object) -> Result<(), String> {
+        if self.sp >= STACK_SIZE {
+            return Err("stack overflow".to_string());
+        }
+
+        self.stack[self.sp] = o;
+        self.sp += 1;
+
+        Ok(())
+    }
+
+    fn pop(&mut self) -> Object {
+        let obj = self.stack[self.sp - 1].clone();
+        self.sp -= 1;
+        self.last_popped_stack_elem = Some(obj.clone());
+
+        obj
+    }
+
+    fn dup(&mut self) -> Result<(), String> {
+        if self.sp >= STACK_SIZE {
+            return Err("stack overflow".to_string());
+        }
+
+        self.stack[self.sp] = self.stack[self.sp - 1].clone();
+        self.sp += 1;
+
+        Ok(())
+    }
+
+    fn current_frame(&mut self) -> &mut Frame {
+        self.frames.get_mut(self.frames_index - 1).unwrap()
+    }
+
+    fn push_frame(&mut self, f: Frame) {
+        self.frames.push(f);
+        self.frames_index += 1;
+    }
+
+    fn pop_frame(&mut self) -> Frame {
+        self.frames_index -= 1;
+        self.frames.pop().unwrap()
+    }
+
+    fn push_closure(&mut self, const_idx: usize, num_free: usize) -> Result<(), String> {
+        let constant = self.constants[const_idx].clone();
+
+        if let Object::CompiledFunction(func) = constant {
+            let mut free = Vec::with_capacity(num_free);
+            for i in 0..num_free {
+                free.push(self.stack[self.sp - num_free + i].clone());
+            }
+
+            self.sp -= num_free;
+
+            self.push(Object::Closure(Closure { func, free }))
+        } else {
+            Err(format!("not a function: {constant:#?}"))
+        }
+    }
+}
+
+impl VM<'_> {
+    fn execute_dict_literal(&mut self, num_pairs: usize) -> Result<(), String> {
         self.current_frame().ip += 2;
         let mut pairs = HashMap::new();
         for _ in 0..num_pairs {
@@ -459,69 +522,6 @@ impl<'a> VM<'a> {
         Ok(())
     }
 
-    fn push(&mut self, o: Object) -> Result<(), String> {
-        if self.sp >= STACK_SIZE {
-            return Err("stack overflow".to_string());
-        }
-
-        self.stack[self.sp] = o;
-        self.sp += 1;
-
-        Ok(())
-    }
-
-    fn pop(&mut self) -> Object {
-        let obj = self.stack[self.sp - 1].clone();
-        self.sp -= 1;
-        self.last_popped_stack_elem = Some(obj.clone());
-
-        obj
-    }
-
-    fn dup(&mut self) -> Result<(), String> {
-        if self.sp >= STACK_SIZE {
-            return Err("stack overflow".to_string());
-        }
-
-        self.stack[self.sp] = self.stack[self.sp - 1].clone();
-        self.sp += 1;
-
-        Ok(())
-    }
-
-    fn current_frame(&mut self) -> &mut Frame {
-        self.frames.get_mut(self.frames_index - 1).unwrap()
-    }
-
-    fn push_frame(&mut self, f: Frame) {
-        self.frames.push(f);
-        self.frames_index += 1;
-    }
-
-    fn pop_frame(&mut self) -> Frame {
-        self.frames_index -= 1;
-        self.frames.pop().unwrap()
-    }
-
-    fn push_closure(&mut self, const_idx: usize, num_free: usize) -> Result<(), String> {
-        let constant = self.constants[const_idx].clone();
-
-        if let Object::CompiledFunction(func) = constant {
-            let mut free = Vec::with_capacity(num_free);
-            for i in 0..num_free {
-                free.push(self.stack[self.sp - num_free + i].clone());
-            }
-
-            self.sp -= num_free;
-
-            self.push(Object::Closure(Closure { func, free }))
-        } else {
-            Err(format!("not a function: {constant:#?}"))
-        }
-    }
-}
-
-impl VM<'_> {
     fn execute_binary_operation(&mut self, op: Opcode) -> Result<(), String> {
         let right = self.pop();
         let left = self.pop();
