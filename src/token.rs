@@ -9,7 +9,7 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(tok_type: Kind, tok_lit: String) -> Self {
+    pub const fn new(tok_type: Kind, tok_lit: String) -> Self {
         Self { tok_type, tok_lit }
     }
 }

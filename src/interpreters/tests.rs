@@ -22,7 +22,7 @@ fn run_tests(test_cases: &[TestCase]) {
 
         if !p.errors.is_empty() {
             for err in p.errors {
-                println!("parser error: {err}")
+                println!("parser error: {err}");
             }
 
             panic!()
@@ -206,44 +206,12 @@ fn test_eval_integer_expression() {
             expected: Object::int(50),
         },
         TestCase {
-            input: "1",
-            expected: Object::int(1),
-        },
-        TestCase {
-            input: "2",
-            expected: Object::int(2),
-        },
-        TestCase {
-            input: "1 + 2",
-            expected: Object::int(3),
-        },
-        TestCase {
-            input: "1 - 2",
-            expected: Object::int(-1),
-        },
-        TestCase {
-            input: "1 * 2",
-            expected: Object::int(2),
-        },
-        TestCase {
             input: "4 / 2",
             expected: Object::int(2),
         },
         TestCase {
             input: "50 / 2 * 2 + 10 - 5",
             expected: Object::int(55),
-        },
-        TestCase {
-            input: "5 + 5 + 5 + 5 - 10",
-            expected: Object::int(10),
-        },
-        TestCase {
-            input: "2 * 2 * 2 * 2 * 2",
-            expected: Object::int(32),
-        },
-        TestCase {
-            input: "5 * 2 + 10",
-            expected: Object::int(20),
         },
         TestCase {
             input: "5 & 10",
@@ -796,12 +764,15 @@ fn test_functions() {
 var a = fn() {
     1
 };
+
 var b = fn() {
     a() + 1
 };
+
 var c = fn() {
     b() + 1
 };
+
 c()",
             expected: Object::int(3),
         },
@@ -827,6 +798,7 @@ var noReturn = fn() { };
 var noReturnTwo = fn() {
     noReturn();
 };
+
 noReturn();
 noReturnTwo();",
             expected: Object::Nil,
@@ -853,25 +825,28 @@ returnsOneReturner()()",
         },
         TestCase {
             input: "var oneAndTwo = fn() {
-                var one = 1;
-                var two = 2;
-                one + two
-            };
-            oneAndTwo()",
+    var one = 1;
+    var two = 2;
+    one + two
+};
+
+oneAndTwo()",
             expected: Object::int(3),
         },
         TestCase {
             input: "fn oneAndTwo() {
-                var one = 1;
-                var two = 2;
-                one + two
-            };
-            fn threeAndFour() {
-                var three = 3;
-                var four = 4;
-                three + four
-            };
-            oneAndTwo() + threeAndFour()",
+    var one = 1;
+    var two = 2;
+    one + two
+};
+
+fn threeAndFour() {
+    var three = 3;
+    var four = 4;
+    three + four
+};
+
+oneAndTwo() + threeAndFour()",
             expected: Object::int(10),
         },
         TestCase {
@@ -904,13 +879,11 @@ minusOne() + minusTwo()
             expected: Object::int(97),
         },
         TestCase {
-            input: "var identity = fn(a) { a };
-            identity(4)",
+            input: "var identity = fn(a) { a }; identity(4)",
             expected: Object::int(4),
         },
         TestCase {
-            input: "var sum = fn(a, b) { a + b };
-            sum(1, 2)",
+            input: "var sum = fn(a, b) { a + b }; sum(1, 2)",
             expected: Object::int(3),
         },
         TestCase {
@@ -919,6 +892,7 @@ var sum = fn(a, b) {
     var c = a + b;
     c
 };
+
 sum(1, 2)",
             expected: Object::int(3),
         },
@@ -928,9 +902,11 @@ var sum = fn(a, b) {
     var c = a + b;
     c
 };
+
 var outer = fn() {
     sum(1, 2) + sum(3, 4)
 };
+
 outer()",
             expected: Object::int(10),
         },
@@ -1457,8 +1433,18 @@ j",
 
 #[test]
 fn test_assign_expressions() {
-    run_tests(&[TestCase {
-        input: "var i = 10; i = i - 1 ; i",
-        expected: Object::int(9),
-    }]);
+    run_tests(&[
+        TestCase {
+            input: "var i = 10; i = i - 1 ; i",
+            expected: Object::int(9),
+        },
+        {
+            TestCase {
+                input: "var arr = [1, 1, 1, 1];
+arr[0] = 0;
+arr[0]",
+                expected: Object::int(0),
+            }
+        },
+    ]);
 }

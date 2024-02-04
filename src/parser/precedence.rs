@@ -21,7 +21,7 @@ pub enum Precedence {
     Assign,
 }
 
-pub fn precedences(t: Kind) -> Precedence {
+pub const fn precedences(t: Kind) -> Precedence {
     match t {
         Kind::Range => Precedence::Range,
         Kind::Or => Precedence::Or,

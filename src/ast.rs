@@ -292,7 +292,7 @@ pub struct Call {
 #[derive(Clone, PartialEq, Debug)]
 pub struct Index {
     pub left: Box<Expression>,
-    pub expr: Box<Expression>,
+    pub index: Box<Expression>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -384,7 +384,7 @@ impl Display for Expression {
                 ))
             ),
 
-            Self::Index(Index { left, expr: index }) => write!(f, "({left}[{index}])"),
+            Self::Index(Index { left, index }) => write!(f, "({left}[{index}])"),
 
             Self::Infix(Infix {
                 left,
@@ -639,7 +639,7 @@ impl Display for Assignable {
                     ))
             ),
 
-            Self::Index(Index { left, expr: index }) => write!(f, "{left}[{index}]"),
+            Self::Index(Index { left, index }) => write!(f, "{left}[{index}]"),
 
             Self::Identifier(Identifier { value }) => write!(f, "{value}"),
         }

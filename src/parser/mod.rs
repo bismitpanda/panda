@@ -688,7 +688,7 @@ impl Parser<'_> {
 
         Some(Expression::Index(Index {
             left: Box::new(left),
-            expr: Box::new(index),
+            index: Box::new(index),
         }))
     }
 

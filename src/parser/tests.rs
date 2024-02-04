@@ -1396,7 +1396,7 @@ fn test_parsing_index_expressions() {
                     left: Box::new(Expression::Identifier(Identifier {
                         value: "myArray".to_string()
                     })),
-                    expr: Box::new(Expression::Infix(Infix {
+                    index: Box::new(Expression::Infix(Infix {
                         left: Box::new(Expression::Literal(Literal {
                             lit: Lit::Int { value: 2 }
                         })),
@@ -1754,7 +1754,7 @@ fn test_assign_expression() {
                     left: Box::new(Expression::Identifier(Identifier {
                         value: "a".to_string(),
                     })),
-                    expr: Box::new(Expression::Identifier(Identifier {
+                    index: Box::new(Expression::Identifier(Identifier {
                         value: "b".to_string(),
                     })),
                 }),

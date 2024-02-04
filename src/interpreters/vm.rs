@@ -313,7 +313,7 @@ impl<'a> VM<'a> {
                 }
 
                 Opcode::Method => {
-                    let method_idx = code::read_usize(&ins, ip + 1);
+                    let method_idx = code::read_u64(&ins, ip + 1);
                     let has_arguments = code::read_bool(&ins, ip + 9);
                     let num_args = code::read_u8(&ins, ip + 10);
 
@@ -794,25 +794,25 @@ impl VM<'_> {
     }
 
     fn exec_array_index_expression(&mut self, array: &[Object], idx: isize) -> Result<(), String> {
-        let max: isize = TryInto::<isize>::try_into(array.len()).unwrap();
+        let max = array.len();
+        let idx = normalize_index(idx, max);
 
-        if idx >= max || idx < -max {
+        if idx >= max {
             return Err(format!("index out of bounds. got: {idx}"));
         }
 
-        self.push(array[normalize_index(idx, max)].clone())
+        self.push(array[idx].clone())
     }
 
     fn exec_string_index_expression(&mut self, string: &str, idx: isize) -> Result<(), String> {
-        let max = TryInto::<isize>::try_into(string.len()).unwrap();
+        let max = string.len();
+        let idx = normalize_index(idx, max);
 
-        if idx >= max || idx < -max {
+        if idx >= max {
             return Err(format!("index out of bounds. got: {idx}"));
         }
 
-        self.push(Object::char(
-            string.chars().nth(normalize_index(idx, max)).unwrap(),
-        ))
+        self.push(Object::char(string.chars().nth(idx).unwrap()))
     }
 
     fn exec_array_slice_expression(
@@ -943,7 +943,9 @@ fn is_truthy(obj: &Object) -> bool {
     }
 }
 
-fn normalize_index(idx: isize, max: isize) -> usize {
+fn normalize_index(idx: isize, max: usize) -> usize {
+    let max: isize = max.try_into().unwrap();
+
     usize::try_from(if idx.is_negative() { max + idx } else { idx }).unwrap()
 }
 

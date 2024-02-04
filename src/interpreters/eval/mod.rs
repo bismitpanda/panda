@@ -336,7 +336,7 @@ impl Evaluator {
                     return Some(self.eval_call_expression(&function, &args));
                 }
 
-                Expression::Index(Index { left, expr: index }) => {
+                Expression::Index(Index { left, index }) => {
                     let left = self.eval(Node::Expr(*left))?;
 
                     if is_error(&left) {
@@ -1208,23 +1208,25 @@ impl Evaluator {
     }
 
     fn eval_array_index_expression(array: &[Object], idx: isize) -> Object {
-        let max: isize = TryInto::<isize>::try_into(array.len()).unwrap();
+        let max = array.len();
+        let idx = normalize_index(idx, max);
 
-        if idx >= max || idx < -max {
+        if idx >= max {
             return Object::error(format!("index out of bounds. got: {idx}"));
         }
 
-        array[normalize_index(idx, max)].clone()
+        array[idx].clone()
     }
 
     fn eval_string_index_expression(string: &str, idx: isize) -> Object {
-        let max: isize = TryInto::<isize>::try_into(string.len()).unwrap();
+        let max = string.len();
+        let idx = normalize_index(idx, max);
 
-        if idx >= max || idx < -max {
+        if idx >= max {
             return Object::error(format!("index out of bounds. got: {idx}"));
         }
 
-        Object::char(string.chars().nth(normalize_index(idx, max)).unwrap())
+        Object::char(string.chars().nth(idx).unwrap())
     }
 
     fn eval_array_slice_expression(
@@ -1340,7 +1342,7 @@ impl Evaluator {
                 }
             }
 
-            Assignable::Index(Index { left, expr: index }) => {
+            Assignable::Index(Index { left, index }) => {
                 let index = self.eval(Node::Expr(*index))?;
 
                 if is_error(&index) {
@@ -1356,9 +1358,10 @@ impl Evaluator {
                                     Object::Int(Int { value: idx }),
                                 ) => {
                                     let mut new_data = elements.clone();
-                                    let max = (elements.len() - 1).try_into().unwrap();
-                                    if idx > 0 && idx < max {
-                                        new_data[usize::try_from(idx).unwrap()] = val.clone();
+                                    let max = elements.len();
+                                    let idx = normalize_index(idx, max);
+                                    if idx < max {
+                                        new_data[idx] = val.clone();
                                     }
 
                                     self.environment.set(
@@ -1370,8 +1373,13 @@ impl Evaluator {
 
                                 (Object::Str(Str { value }), Object::Int(Int { value: idx })) => {
                                     let mut new_data = value.chars().collect::<Vec<_>>();
+                                    let max = value.len();
+                                    let idx = normalize_index(idx, max);
+
                                     if let Object::Char(Char { value: ch }) = val {
-                                        new_data[usize::try_from(idx).unwrap()] = ch;
+                                        if idx < max {
+                                            new_data[idx] = ch;
+                                        }
                                         self.environment.set(
                                             index_ident,
                                             Object::Str(Str {
@@ -1523,6 +1531,8 @@ fn validate_range(range: &RangeObj) -> Result<(), Error> {
     }
 }
 
-fn normalize_index(idx: isize, max: isize) -> usize {
+fn normalize_index(idx: isize, max: usize) -> usize {
+    let max: isize = max.try_into().unwrap();
+
     usize::try_from(if idx.is_negative() { max + idx } else { idx }).unwrap()
 }

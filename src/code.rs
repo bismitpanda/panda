@@ -350,10 +350,10 @@ pub fn make(op: Opcode, operands: &[usize]) -> Instructions {
     instruction
 }
 
-pub fn read_usize(ins: &[u8], offset: usize) -> usize {
+pub fn read_u64(ins: &[u8], offset: usize) -> usize {
     let u: [u8; 8] = ins[offset..offset + 8].try_into().unwrap();
 
-    usize::from_be_bytes(u)
+    u64::from_be_bytes(u) as usize
 }
 
 pub fn read_u16(ins: &[u8], offset: usize) -> usize {
@@ -432,7 +432,7 @@ pub fn read_operands(def: &Definition, ins: &[u8]) -> (Vec<usize>, usize) {
         match *width {
             1 => operands[i] = read_u8(ins, offset),
             2 => operands[i] = read_u16(ins, offset),
-            8 => operands[i] = read_usize(ins, offset),
+            8 => operands[i] = read_u64(ins, offset),
 
             _ => {}
         }

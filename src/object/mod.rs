@@ -560,7 +560,8 @@ pub fn hash_method_name(method_name: &str) -> usize {
     let mut hasher = AHasher::default();
 
     method_name.hash(&mut hasher);
-    hasher.finish() as usize
+
+    usize::try_from(hasher.finish()).unwrap()
 }
 
 #[cfg(test)]
