@@ -25,9 +25,6 @@ print(hello, world); // Output: Hello, World!
 -   `STR`'s are a `Vec<char>` instead of standard `String`/`&str` as it makes manipulation easier.
 -   Changed `is_truthy()` evaluation criteria and makin it similar to `python`'s implementation with empty strings, arrays and hashes as well zero (both for `INT` and `FLOAT`) being _`falsey`_.
 -   Restricted allowed types inside arrays.
--   Added `class` without inheritance using [`duck-typing`](https://en.wikipedia.org/wiki/Duck_typing).
--   Added method expressions with assignment support.
--   Added constructor for classes with initializer.
 -   Added rust style range expression using `..` with reverse, negative and step support in the format `<EXPR>..<EXPR>[..<EXPR>]`.
 -   Added `STR` and `ARRAY` slicing using `RANGE`.
 -   Added a simple type system.

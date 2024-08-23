@@ -209,11 +209,6 @@
 -   [x] Recursive Functions
 -   [x] Builtin
 
-# Opcode:
-
--   [ ] Implement class method call `Opcode::Method`
--   [ ] Implement `Opcode::Contructor` and `Opcode::Scope`
-
 # Compiler:
 
 -   [ ] Implement `Expression::Assign` for method and index expressions
